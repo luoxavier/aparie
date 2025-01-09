@@ -18,13 +18,26 @@ export function LoginForm() {
     try {
       await signIn(identifier, password);
       navigate("/profile");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in:", error);
-      toast({
-        title: "Incorrect password",
-        description: "Do you need a flashcard to help you remember your password?",
-        variant: "destructive",
-      });
+      
+      // Check if it's an invalid credentials error
+      const isInvalidCredentials = error.message?.includes("Invalid login credentials") ||
+                                 error.error?.message?.includes("Invalid login credentials");
+      
+      if (isInvalidCredentials) {
+        toast({
+          title: "Incorrect password",
+          description: "Do you need a flashcard to help you remember your password?",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error signing in",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
