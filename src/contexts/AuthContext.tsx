@@ -19,7 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check active sessions and set the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -52,12 +51,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, username: string) => {
-    // First check if username is taken
-    const { data: existingUser } = await supabase
+    // First check if username is taken using maybeSingle() instead of single()
+    const { data: existingUser, error: queryError } = await supabase
       .from('profiles')
       .select()
       .eq('username', username)
-      .single();
+      .maybeSingle();
+
+    if (queryError) {
+      toast({
+        variant: "destructive",
+        title: "Error checking username",
+        description: queryError.message,
+      });
+      throw queryError;
+    }
 
     if (existingUser) {
       toast({
@@ -79,13 +87,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (signUpError) {
+      let errorMessage = signUpError.message;
+      if (signUpError.message.includes('email_provider_disabled')) {
+        errorMessage = 'Email signup is currently disabled. Please contact the administrator.';
+      }
+      
       toast({
         variant: "destructive",
         title: "Error signing up",
-        description: signUpError.message,
+        description: errorMessage,
       });
       throw signUpError;
     }
+
+    toast({
+      title: "Success",
+      description: "Account created successfully! Please check your email to verify your account.",
+    });
   };
 
   const signOut = async () => {
