@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useNavigate } from "react-router-dom";
 
 interface Creator {
   display_name: string;
@@ -27,8 +28,11 @@ interface FlashcardFolderProps {
 }
 
 export function FlashcardFolder({ title, flashcards, onStudy, showCreator = false }: FlashcardFolderProps) {
+  const navigate = useNavigate();
+
   const handleStudy = () => {
     onStudy(flashcards);
+    navigate('/study-folder', { state: { flashcards, folderName: title } });
   };
 
   return (

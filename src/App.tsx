@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Study from "./pages/Study";
+import StudyFolder from "./pages/StudyFolder";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
@@ -35,6 +36,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Study />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/study-folder"
+              element={
+                <ProtectedRoute>
+                  <StudyFolder />
                 </ProtectedRoute>
               }
             />
