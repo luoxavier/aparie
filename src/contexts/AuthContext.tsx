@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Session, User } from '@supabase/supabase-js';
+import { checkExistingUsername, handleSignUpError } from '@/utils/auth-utils';
 
 interface AuthContextType {
   user: User | null;
@@ -51,32 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, username: string, displayName: string) => {
-    // First check if username is taken using maybeSingle() instead of single()
-    const { data: existingUser, error: queryError } = await supabase
-      .from('profiles')
-      .select()
-      .eq('username', username)
-      .maybeSingle();
+    await checkExistingUsername(username);
 
-    if (queryError) {
-      toast({
-        variant: "destructive",
-        title: "Error checking username",
-        description: queryError.message,
-      });
-      throw queryError;
-    }
-
-    if (existingUser) {
-      toast({
-        variant: "destructive",
-        title: "Username taken",
-        description: "This username has already been taken. Please choose another one.",
-      });
-      throw new Error("Username taken");
-    }
-
-    const { error: signUpError, data } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -88,17 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (signUpError) {
-      let errorMessage = signUpError.message;
-      if (signUpError.message.includes('email_provider_disabled')) {
-        errorMessage = 'Email signup is currently disabled. Please contact the administrator.';
-      }
-      
-      toast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: errorMessage,
-      });
-      throw signUpError;
+      handleSignUpError(signUpError);
     }
 
     toast({
