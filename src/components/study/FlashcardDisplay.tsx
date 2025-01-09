@@ -51,7 +51,7 @@ export function FlashcardDisplay({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className={cn(
-            "bg-white rounded-lg p-8 min-h-[200px] flex flex-col items-center justify-center relative",
+            "bg-white rounded-lg p-8 min-h-[200px] flex flex-col items-center justify-center relative border border-gray-200",
             isCorrect === true && "animate-[sparkle_1s_ease-in-out]",
             isCorrect === false && "animate-[glow-red_1s_ease-in-out]"
           )}
@@ -61,7 +61,7 @@ export function FlashcardDisplay({
             }
           }}
         >
-          <p className="text-xl font-medium text-center">
+          <p className="text-2xl font-semibold text-center">
             {currentCard.front}
           </p>
           {showAnswer && (
@@ -89,20 +89,18 @@ export function FlashcardDisplay({
         ))}
       </div>
 
-      <div className="flex gap-4 mt-8">
+      <div className="flex flex-col gap-4 mt-8">
         <Button
           variant="outline"
-          className="flex-1"
           onClick={onReviewMistakes}
         >
           Review Mistakes
         </Button>
         <Button
           variant="secondary"
-          className="flex-1"
           onClick={() => navigate("/profile")}
         >
-          Back to Menu
+          Return Home
         </Button>
       </div>
     </div>

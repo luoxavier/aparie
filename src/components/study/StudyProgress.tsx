@@ -14,8 +14,8 @@ export function StudyProgress({
   perfectCycles = 0 
 }: StudyProgressProps) {
   return (
-    <div className="text-center text-gray-600">
-      Card {currentIndex + 1} of {totalCards}
+    <div className="text-center text-gray-600 text-sm mt-2 mb-4">
+      {currentIndex + 1}/{totalCards}
       {mode === "infinite" && (
         <div>Cycle {infiniteCycles + 1} - Perfect Cycles: {perfectCycles}/3</div>
       )}
