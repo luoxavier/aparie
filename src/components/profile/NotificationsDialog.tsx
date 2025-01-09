@@ -28,6 +28,7 @@ export function NotificationsDialog() {
           sender:profiles!notifications_sender_id_fkey (
             id,
             display_name,
+            username,
             avatar_url
           )
         `)
@@ -49,6 +50,7 @@ export function NotificationsDialog() {
           user_id,
           profiles!friend_connections_user_id_fkey (
             display_name,
+            username,
             avatar_url
           )
         `)
@@ -100,7 +102,15 @@ export function NotificationsDialog() {
           
           {notifications && notifications.length > 0 && (
             <NotificationsList 
-              notifications={notifications}
+              notifications={notifications.map(notification => ({
+                ...notification,
+                sender: {
+                  ...notification.sender,
+                  display_name: notification.sender.username 
+                    ? `${notification.sender.display_name} (@${notification.sender.username})`
+                    : notification.sender.display_name
+                }
+              }))}
               onMarkAsRead={markAsRead}
             />
           )}

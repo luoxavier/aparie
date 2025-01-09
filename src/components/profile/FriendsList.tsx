@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 
 export function FriendsList() {
   const { user } = useAuth();
-  const [selectedFriend, setSelectedFriend] = useState<{ id: string; display_name: string } | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<{ id: string; display_name: string; username: string | null } | null>(null);
 
   const { data: friends } = useQuery({
     queryKey: ['friends', user?.id],
@@ -23,6 +23,7 @@ export function FriendsList() {
           profiles!friend_connections_friend_id_fkey (
             id,
             display_name,
+            username,
             avatar_url
           )
         `)
@@ -35,12 +36,9 @@ export function FriendsList() {
         const isFriend = connection.friend_id === user?.id;
         return {
           id: isFriend ? connection.user_id : connection.friend_id,
-          display_name: isFriend ? 
-            connection.profiles.display_name : 
-            connection.profiles.display_name,
-          avatar_url: isFriend ? 
-            connection.profiles.avatar_url : 
-            connection.profiles.avatar_url
+          display_name: connection.profiles.display_name,
+          username: connection.profiles.username,
+          avatar_url: connection.profiles.avatar_url
         };
       });
     },
@@ -117,14 +115,24 @@ export function FriendsList() {
                       />
                     )}
                     <div>
-                      <h3 className="font-medium">{friend.display_name}</h3>
+                      <h3 className="font-medium">
+                        {friend.display_name}
+                        {friend.username && (
+                          <span className="text-sm text-muted-foreground ml-1">
+                            @{friend.username}
+                          </span>
+                        )}
+                      </h3>
                     </div>
                   </div>
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Flashcard for {friend.display_name}</DialogTitle>
+                  <DialogTitle>
+                    Create Flashcard for {friend.display_name}
+                    {friend.username && ` (@${friend.username})`}
+                  </DialogTitle>
                 </DialogHeader>
                 <CreateCard onSave={handleSaveCard} />
               </DialogContent>
