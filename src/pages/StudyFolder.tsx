@@ -1,9 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { StudyModeSelector } from "@/components/study/StudyModeSelector";
+import { StudyHeader } from "@/components/study/StudyHeader";
+import { ScoreDisplay } from "@/components/study/ScoreDisplay";
+import { FlashcardDisplay } from "@/components/study/FlashcardDisplay";
+import { StudyProgress } from "@/components/study/StudyProgress";
 
 interface Flashcard {
   id: string;
@@ -22,7 +24,6 @@ export default function StudyFolder() {
   const [mode, setMode] = useState<StudyMode | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [mistakes, setMistakes] = useState<Flashcard[]>([]);
-  const [isFlipped, setIsFlipped] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [infiniteCycles, setInfiniteCycles] = useState(0);
@@ -32,9 +33,10 @@ export default function StudyFolder() {
   const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
   
   const currentDeck = isReviewingMistakes ? mistakes : flashcards;
-  
-  const handleModeSelect = (selectedMode: StudyMode) => {
-    setMode(selectedMode);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
   };
 
   const handleAnswer = (selectedAnswer: string) => {
@@ -82,124 +84,43 @@ export default function StudyFolder() {
     setIsComplete(false);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/login");
-  };
-
   if (!mode) {
-    return (
-      <div className="container max-w-md mx-auto py-8 px-4">
-        <h1 className="text-2xl font-bold text-center mb-8">{folderName}</h1>
-        <div className="space-y-4">
-          <Button 
-            className="w-full h-24 text-xl"
-            onClick={() => handleModeSelect("normal")}
-          >
-            Study Mode
-          </Button>
-          <Button 
-            className="w-full h-24 text-xl"
-            variant="secondary"
-            onClick={() => handleModeSelect("infinite")}
-          >
-            Infinite Mode
-          </Button>
-        </div>
-      </div>
-    );
+    return <StudyModeSelector onModeSelect={setMode} folderName={folderName} />;
   }
 
   return (
     <div className="container max-w-md mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <div className="text-lg font-medium">{user?.email}</div>
-        <Button variant="ghost" onClick={handleSignOut}>
-          Sign out
-        </Button>
-      </div>
-
-      <h1 className="text-2xl font-bold text-center mb-8">{folderName}</h1>
+      <StudyHeader 
+        userEmail={user?.email} 
+        onSignOut={handleSignOut}
+        folderName={folderName}
+      />
 
       {isComplete ? (
-        <div className="text-center space-y-6">
-          <h2 className="text-3xl font-bold">
-            Score: {score}/{currentDeck.length}
-          </h2>
-          {mistakes.length > 0 && !isReviewingMistakes && (
-            <Button 
-              onClick={handleReviewMistakes}
-              className="w-full"
-            >
-              Review Mistakes ({mistakes.length})
-            </Button>
-          )}
-          {(mistakes.length === 0 || isReviewingMistakes) && (
-            <div className="space-y-4">
-              <h3 className="text-2xl">🎉 Congratulations!</h3>
-              <Button 
-                onClick={() => navigate("/profile")}
-                className="w-full"
-              >
-                Back to Main Menu
-              </Button>
-            </div>
-          )}
-        </div>
+        <ScoreDisplay
+          score={score}
+          totalCards={currentDeck.length}
+          mistakes={mistakes}
+          isReviewingMistakes={isReviewingMistakes}
+          onReviewMistakes={handleReviewMistakes}
+        />
       ) : (
-        <div className="space-y-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentCardIndex}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className={cn(
-                "bg-white rounded-lg p-8 min-h-[200px] flex flex-col items-center justify-center relative",
-                isCorrect === true && "animate-[sparkle_1s_ease-in-out]",
-                isCorrect === false && "animate-[glow-red_1s_ease-in-out]"
-              )}
-              onClick={() => {
-                if (showAnswer) {
-                  handleAnswer(currentDeck[currentCardIndex].back);
-                }
-              }}
-            >
-              <p className="text-xl font-medium text-center">
-                {currentDeck[currentCardIndex].front}
-              </p>
-              {showAnswer && (
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-lg text-red-500 mt-4"
-                >
-                  Answer: {currentDeck[currentCardIndex].back}
-                </motion.p>
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          <div className="grid grid-cols-2 gap-4">
-            {!showAnswer && currentDeck.map((card, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="h-auto py-4 text-left"
-                onClick={() => handleAnswer(card.back)}
-              >
-                {card.back}
-              </Button>
-            )).sort(() => Math.random() - 0.5).slice(0, 4)}
-          </div>
-
-          <div className="text-center text-gray-600">
-            Card {currentCardIndex + 1} of {currentDeck.length}
-            {mode === "infinite" && (
-              <div>Cycle {infiniteCycles + 1} - Perfect Cycles: {perfectCycles}/3</div>
-            )}
-          </div>
-        </div>
+        <>
+          <FlashcardDisplay
+            currentCard={currentDeck[currentCardIndex]}
+            deck={currentDeck}
+            isCorrect={isCorrect}
+            showAnswer={showAnswer}
+            onAnswer={handleAnswer}
+          />
+          <StudyProgress
+            currentIndex={currentCardIndex}
+            totalCards={currentDeck.length}
+            mode={mode}
+            infiniteCycles={infiniteCycles}
+            perfectCycles={perfectCycles}
+          />
+        </>
       )}
     </div>
   );
