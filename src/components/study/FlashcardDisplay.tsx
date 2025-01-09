@@ -14,6 +14,7 @@ interface FlashcardDisplayProps {
   onAnswer: (answer: string) => void;
   onReviewMistakes: () => void;
   streak?: number;
+  mistakes?: { front: string; back: string }[];
 }
 
 export function FlashcardDisplay({ 
@@ -23,7 +24,8 @@ export function FlashcardDisplay({
   showAnswer, 
   onAnswer,
   onReviewMistakes,
-  streak = 0
+  streak = 0,
+  mistakes = []
 }: FlashcardDisplayProps) {
   const navigate = useNavigate();
 
@@ -42,15 +44,27 @@ export function FlashcardDisplay({
     const options = [currentCard.back];
     
     // Get all unique answers from the deck excluding the current card's answer
-    const allPossibleAnswers = [...new Set(deck
-      .filter(card => card.back !== currentCard.back)
-      .map(card => card.back))];
+    const allPossibleAnswers = [...new Set([
+      ...deck.filter(card => card.back !== currentCard.back).map(card => card.back),
+      ...mistakes.map(card => card.back)
+    ])];
     
     // Shuffle the possible answers
     const shuffledAnswers = allPossibleAnswers.sort(() => Math.random() - 0.5);
     
     // Take the first 3 unique wrong answers
     const wrongAnswers = shuffledAnswers.slice(0, 3);
+    
+    // If we don't have enough wrong answers, use some from mistakes
+    if (wrongAnswers.length < 3) {
+      const additionalAnswers = mistakes
+        .map(card => card.back)
+        .filter(answer => !wrongAnswers.includes(answer) && answer !== currentCard.back)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3 - wrongAnswers.length);
+      
+      wrongAnswers.push(...additionalAnswers);
+    }
     
     // Combine correct answer with wrong answers and shuffle
     const allAnswers = [...options, ...wrongAnswers];
