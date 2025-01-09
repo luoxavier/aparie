@@ -1,7 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
-import { AuthError } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase URL or API key. Make sure you have connected your project to Supabase.");
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface AuthContextType {
   user: any | null;
@@ -29,88 +37,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleAuthError = (error: AuthError) => {
-    console.error('Auth error:', error);
-    let message = 'An error occurred during authentication.';
-    
-    if (error.message.includes('Invalid API key')) {
-      message = 'Authentication service is temporarily unavailable. Please try again later.';
-      console.error('Supabase client configuration error:', error);
-    } else if (error.message.includes('User already registered')) {
-      message = 'This email is already registered.';
-    } else if (error.message.includes('Invalid login credentials')) {
-      message = 'Invalid email or password.';
-    }
-
-    toast({
-      title: "Error",
-      description: message,
-      variant: "destructive",
-    });
-    throw error;
-  };
-
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      handleAuthError(error);
-    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
   };
 
   const signUp = async (email: string, password: string, username: string) => {
-    try {
-      console.log('Checking username availability:', username);
-      // First check if username is already taken
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .single();
+    // First check if username is already taken
+    const { data: existingUser, error: checkError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .single();
 
-      console.log('Username check result:', { existingUser, checkError });
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking username:', checkError);
-        throw new Error('Error checking username availability');
-      }
-
-      if (existingUser) {
-        throw new Error('Username is already taken');
-      }
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-        },
-      });
-      
-      if (error) throw error;
-
-      toast({
-        title: "Success!",
-        description: "Please check your email to verify your account.",
-      });
-    } catch (error: any) {
-      handleAuthError(error);
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw new Error(checkError.message);
     }
+
+    if (existingUser) {
+      throw new Error('Username is already taken');
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+        },
+      },
+    });
+    
+    if (error) throw error;
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error: any) {
-      handleAuthError(error);
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   return (

@@ -4,18 +4,15 @@ import { Input } from "./ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
-import { cn } from "@/lib/utils";
 
 export const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
-  const [usernameError, setUsernameError] = useState(false);
   const { signIn, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUsernameError(false);
     try {
       if (isSignUp) {
         // For signup, we'll use email as username@domain.com to satisfy Supabase's email requirement
@@ -32,20 +29,11 @@ export const Login = () => {
         });
       }
     } catch (error: any) {
-      if (error.message.includes("Username is already taken")) {
-        setUsernameError(true);
-        toast({
-          title: "Username taken",
-          description: "This username is already taken. Please choose another one.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -72,13 +60,7 @@ export const Login = () => {
                 type="text"
                 placeholder="Enter your username"
                 value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setUsernameError(false);
-                }}
-                className={cn(
-                  usernameError && "border-red-500 focus-visible:ring-red-500"
-                )}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
