@@ -31,7 +31,6 @@ export default function StudyFolder() {
   const [score, setScore] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
-  const [needsReview, setNeedsReview] = useState<Set<number>>(new Set());
   
   const currentDeck = isReviewingMistakes ? mistakes : flashcards;
 
@@ -46,16 +45,10 @@ export default function StudyFolder() {
     
     if (isCorrect) {
       setScore(score + 1);
-      // Remove from review if it was there
-      const newNeedsReview = new Set(needsReview);
-      newNeedsReview.delete(currentCardIndex);
-      setNeedsReview(newNeedsReview);
     } else {
       if (!mistakes.find(card => card.id === currentDeck[currentCardIndex].id)) {
         setMistakes([...mistakes, currentDeck[currentCardIndex]]);
       }
-      // Add to review set
-      setNeedsReview(new Set(needsReview).add(currentCardIndex));
       setShowAnswer(true);
     }
     
@@ -78,14 +71,7 @@ export default function StudyFolder() {
             setInfiniteCycles(infiniteCycles + 1);
           }
         } else {
-          // For Study Mode, only complete if there are no cards that need review
-          if (needsReview.size === 0) {
-            setIsComplete(true);
-          } else {
-            // Reset to beginning to review mistakes
-            setCurrentCardIndex(0);
-            setScore(0);
-          }
+          setIsComplete(true);
         }
       }
     }, 1000);
@@ -96,7 +82,6 @@ export default function StudyFolder() {
     setCurrentCardIndex(0);
     setScore(0);
     setIsComplete(false);
-    setNeedsReview(new Set());
   };
 
   if (!mode) {
