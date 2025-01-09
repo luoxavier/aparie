@@ -16,6 +16,7 @@ export type Database = {
           creator_id: string
           front: string
           id: string
+          recipient_id: string | null
           updated_at: string
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           creator_id: string
           front: string
           id?: string
+          recipient_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -32,12 +34,20 @@ export type Database = {
           creator_id?: string
           front?: string
           id?: string
+          recipient_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "flashcards_creator_id_fkey"
             columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcards_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

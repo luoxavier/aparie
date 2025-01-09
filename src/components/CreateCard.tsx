@@ -7,7 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-export function CreateCard() {
+interface CreateCardProps {
+  recipientId?: string;
+  onSave?: (front: string, back: string) => void;
+}
+
+export function CreateCard({ recipientId, onSave }: CreateCardProps) {
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
   const { user } = useAuth();
@@ -32,7 +37,8 @@ export function CreateCard() {
           {
             front,
             back,
-            creator_id: user.id
+            creator_id: user.id,
+            recipient_id: recipientId || null
           }
         ]);
 
@@ -42,6 +48,11 @@ export function CreateCard() {
         title: "Success",
         description: "Flashcard created successfully",
       });
+
+      // Call onSave if provided
+      if (onSave) {
+        onSave(front, back);
+      }
 
       // Clear the form
       setFront("");
