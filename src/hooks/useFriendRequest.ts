@@ -17,19 +17,9 @@ export function useFriendRequest() {
           .from('profiles')
           .select('id')
           .eq('username', friendIdentifier)
-          .single();
+          .maybeSingle();
 
-        if (profileError) {
-          if (profileError.code === 'PGRST116') {
-            toast({
-              title: "User not found",
-              description: "No user found with that username.",
-              variant: "destructive",
-            });
-            return;
-          }
-          throw profileError;
-        }
+        if (profileError) throw profileError;
 
         if (!friendProfile) {
           toast({
