@@ -43,27 +43,37 @@ export function FlashcardDisplay({
     // Always include the correct answer
     const options = [currentCard.back];
     
-    // Get all unique answers from the deck excluding the current card's answer
-    const allPossibleAnswers = [...new Set([
-      ...deck.filter(card => card.back !== currentCard.back).map(card => card.back),
-      ...mistakes.map(card => card.back)
-    ])];
+    // Get all unique answers from the deck (the folder's overall selection)
+    const folderAnswers = [...new Set(deck.map(card => card.back))];
     
-    // Shuffle the possible answers
-    const shuffledAnswers = allPossibleAnswers.sort(() => Math.random() - 0.5);
+    // Remove the current card's answer from the pool
+    const availableAnswers = folderAnswers.filter(answer => answer !== currentCard.back);
     
-    // Take the first 3 unique wrong answers
-    const wrongAnswers = shuffledAnswers.slice(0, 3);
+    // Prioritize mistakes if they exist
+    const mistakeAnswers = mistakes
+      .map(card => card.back)
+      .filter(answer => answer !== currentCard.back);
     
-    // If we don't have enough wrong answers, use some from mistakes
-    if (wrongAnswers.length < 3) {
-      const additionalAnswers = mistakes
-        .map(card => card.back)
-        .filter(answer => !wrongAnswers.includes(answer) && answer !== currentCard.back)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3 - wrongAnswers.length);
-      
-      wrongAnswers.push(...additionalAnswers);
+    // Create a pool of wrong answers, prioritizing mistakes
+    let wrongAnswersPool = [
+      ...new Set([
+        ...mistakeAnswers, // Mistakes first
+        ...availableAnswers // Then other answers from the folder
+      ])
+    ];
+    
+    // Shuffle the wrong answers pool
+    wrongAnswersPool = wrongAnswersPool.sort(() => Math.random() - 0.5);
+    
+    // Take exactly 3 wrong answers
+    const wrongAnswers = wrongAnswersPool.slice(0, 3);
+    
+    // If we don't have enough wrong answers, add more from available answers
+    while (wrongAnswers.length < 3 && availableAnswers.length > 0) {
+      const randomAnswer = availableAnswers[Math.floor(Math.random() * availableAnswers.length)];
+      if (!wrongAnswers.includes(randomAnswer) && randomAnswer !== currentCard.back) {
+        wrongAnswers.push(randomAnswer);
+      }
     }
     
     // Combine correct answer with wrong answers and shuffle
