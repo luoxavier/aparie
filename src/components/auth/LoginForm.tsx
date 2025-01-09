@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 export function LoginForm() {
   const [identifier, setIdentifier] = useState("");
@@ -19,6 +20,11 @@ export function LoginForm() {
       navigate("/profile");
     } catch (error) {
       console.error("Error signing in:", error);
+      toast({
+        title: "Incorrect password",
+        description: "Do you need a flashcard to help you remember your password?",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

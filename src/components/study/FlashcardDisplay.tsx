@@ -13,6 +13,7 @@ interface FlashcardDisplayProps {
   showAnswer: boolean;
   onAnswer: (answer: string) => void;
   onReviewMistakes: () => void;
+  streak?: number;
 }
 
 export function FlashcardDisplay({ 
@@ -21,26 +22,24 @@ export function FlashcardDisplay({
   isCorrect, 
   showAnswer, 
   onAnswer,
-  onReviewMistakes
+  onReviewMistakes,
+  streak = 0
 }: FlashcardDisplayProps) {
   const navigate = useNavigate();
 
-  // Generate answer options including the correct answer
   const generateAnswerOptions = () => {
-    // Start with the correct answer
     const options = [currentCard.back];
-    
-    // Get wrong answers from the deck, excluding the current card
     const wrongAnswers = deck
       .filter(card => card.back !== currentCard.back)
       .map(card => card.back)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);
     
-    // Combine and shuffle all answers
     return [...options, ...wrongAnswers]
       .sort(() => Math.random() - 0.5);
   };
+
+  const glowIntensity = Math.min(streak * 0.2, 1);
 
   return (
     <div className="space-y-6">
@@ -51,9 +50,10 @@ export function FlashcardDisplay({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className={cn(
-            "bg-white rounded-lg p-8 min-h-[200px] flex flex-col items-center justify-center relative border border-gray-200",
-            isCorrect === true && "animate-[sparkle_1s_ease-in-out]",
-            isCorrect === false && "animate-[glow-red_1s_ease-in-out]"
+            "bg-white rounded-lg p-8 min-h-[200px] flex flex-col items-center justify-center relative border border-gray-200 cursor-pointer",
+            isCorrect === true && "animate-[sparkle_0.7s_ease-in-out]",
+            isCorrect === false && "animate-[glow-red_1s_ease-in-out]",
+            streak > 0 && `shadow-[0_0_${20 * glowIntensity}px_${10 * glowIntensity}px_rgba(155,135,245,${glowIntensity})]`
           )}
           onClick={() => {
             if (showAnswer) {
@@ -89,16 +89,18 @@ export function FlashcardDisplay({
         ))}
       </div>
 
-      <div className="flex flex-col gap-4 mt-8">
+      <div className="fixed bottom-4 left-0 right-0 px-4 space-y-2 max-w-md mx-auto">
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={onReviewMistakes}
+          className="w-full bg-secondary/90 hover:bg-secondary"
         >
           Review Mistakes
         </Button>
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => navigate("/profile")}
+          className="w-full"
         >
           Return Home
         </Button>

@@ -58,12 +58,12 @@ export function FlashcardFolder({ title, flashcards, onStudy, showCreator = fals
           </Button>
           {flashcards.map((flashcard) => (
             <Card key={flashcard.id}>
-              <CardContent className="p-4">
+              <CardContent className="p-4 grid grid-cols-2 gap-4">
                 {showCreator && (
-                  <p><strong>From:</strong> {flashcard.creator.display_name}</p>
+                  <p className="col-span-2"><strong>From:</strong> {flashcard.creator.display_name}</p>
                 )}
-                <p><strong>Front:</strong> {flashcard.front}</p>
-                <p><strong>Back:</strong> {flashcard.back}</p>
+                <p>{flashcard.front}</p>
+                <p>{flashcard.back}</p>
               </CardContent>
             </Card>
           ))}

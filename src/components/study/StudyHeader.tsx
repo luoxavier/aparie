@@ -10,8 +10,8 @@ export function StudyHeader({ userEmail, onSignOut, folderName }: StudyHeaderPro
   return (
     <>
       <div className="flex justify-between items-center mb-8">
-        <div className="text-lg font-medium">{userEmail}</div>
-        <Button variant="ghost" onClick={onSignOut}>
+        <div className="text-lg font-medium">{userEmail?.split('@')[0]}</div>
+        <Button variant="outline" onClick={onSignOut}>
           Sign out
         </Button>
       </div>
