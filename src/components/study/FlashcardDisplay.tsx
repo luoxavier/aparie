@@ -20,6 +20,22 @@ export function FlashcardDisplay({
   showAnswer, 
   onAnswer 
 }: FlashcardDisplayProps) {
+  // Get 3 random wrong answers from the deck
+  const getWrongAnswers = () => {
+    return deck
+      .filter(card => card.back !== currentCard.back) // Exclude correct answer
+      .sort(() => Math.random() - 0.5) // Shuffle
+      .slice(0, 3) // Take only 3 wrong answers
+      .map(card => card.back);
+  };
+
+  // Combine correct answer with wrong answers and shuffle
+  const getAllAnswers = () => {
+    const wrongAnswers = getWrongAnswers();
+    const allAnswers = [...wrongAnswers, currentCard.back];
+    return allAnswers.sort(() => Math.random() - 0.5);
+  };
+
   return (
     <div className="space-y-6">
       <AnimatePresence mode="wait">
@@ -55,16 +71,16 @@ export function FlashcardDisplay({
       </AnimatePresence>
 
       <div className="grid grid-cols-2 gap-4">
-        {!showAnswer && deck.map((card, index) => (
+        {!showAnswer && getAllAnswers().map((answer, index) => (
           <Button
             key={index}
             variant="outline"
             className="h-auto py-4 text-left"
-            onClick={() => onAnswer(card.back)}
+            onClick={() => onAnswer(answer)}
           >
-            {card.back}
+            {answer}
           </Button>
-        )).sort(() => Math.random() - 0.5).slice(0, 4)}
+        ))}
       </div>
     </div>
   );
