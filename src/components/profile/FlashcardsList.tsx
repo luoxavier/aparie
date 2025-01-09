@@ -6,7 +6,6 @@ import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
-import { CreateFlashcardButton } from "./CreateFlashcardButton";
 
 interface Creator {
   display_name: string;
@@ -95,8 +94,6 @@ export function FlashcardsList() {
 
   return (
     <div className="space-y-4">
-      <CreateFlashcardButton />
-      
       <Accordion type="single" collapsible className="space-y-4">
         <FlashcardFolder
           title="My Flashcards"
