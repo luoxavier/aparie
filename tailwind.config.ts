@@ -50,10 +50,22 @@ export default {
           "0%": { transform: "translateY(10px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
+        "sparkle": {
+          "0%": { boxShadow: "0 0 0 0 rgba(155, 135, 245, 0)" },
+          "50%": { boxShadow: "0 0 20px 10px rgba(155, 135, 245, 0.5)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(155, 135, 245, 0)" },
+        },
+        "glow-red": {
+          "0%": { boxShadow: "0 0 0 0 rgba(239, 68, 68, 0)" },
+          "50%": { boxShadow: "0 0 20px 10px rgba(239, 68, 68, 0.5)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(239, 68, 68, 0)" },
+        },
       },
       animation: {
         "card-flip": "card-flip 0.6s ease-in-out",
         "slide-up": "slide-up 0.3s ease-out",
+        "sparkle": "sparkle 1s ease-in-out",
+        "glow-red": "glow-red 1s ease-in-out",
       },
     },
   },
