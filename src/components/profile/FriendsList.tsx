@@ -7,6 +7,22 @@ import { CreateCard } from "@/components/CreateCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 
+type Profile = {
+  id: string;
+  display_name: string;
+  username: string | null;
+  avatar_url: string | null;
+};
+
+type FriendConnection = {
+  friend_id: string;
+  user_id: string;
+  profiles: {
+    friend_connections_friend_id_fkey: Profile;
+    friend_connections_user_id_fkey: Profile;
+  };
+};
+
 export function FriendsList() {
   const { user } = useAuth();
   const [selectedFriend, setSelectedFriend] = useState<{ id: string; display_name: string; username: string | null } | null>(null);
@@ -37,19 +53,19 @@ export function FriendsList() {
       
       if (error) throw error;
 
-      return connections.map(connection => {
+      return (connections as FriendConnection[]).map(connection => {
         // If the current user is the friend_id, we want to show the user_id's profile
         // If the current user is the user_id, we want to show the friend_id's profile
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend 
-          ? connection.profiles?.friend_connections_user_id_fkey 
-          : connection.profiles?.friend_connections_friend_id_fkey;
+          ? connection.profiles.friend_connections_user_id_fkey 
+          : connection.profiles.friend_connections_friend_id_fkey;
 
         return {
-          id: friendProfile?.id || '',
-          display_name: friendProfile?.display_name || '',
-          username: friendProfile?.username,
-          avatar_url: friendProfile?.avatar_url
+          id: friendProfile.id,
+          display_name: friendProfile.display_name,
+          username: friendProfile.username,
+          avatar_url: friendProfile.avatar_url
         };
       });
     },
