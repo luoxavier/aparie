@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { FriendRequestItem } from "./FriendRequestItem";
-import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { NotificationsList } from "./NotificationsList";
+import { FriendRequestsList } from "./FriendRequestsList";
 
 export function NotificationsDialog() {
   const { user } = useAuth();
@@ -93,45 +93,16 @@ export function NotificationsDialog() {
           <DialogTitle>Notifications</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {pendingRequests?.map((request) => (
-            <FriendRequestItem
-              key={request.user_id}
-              requesterId={request.user_id}
-              requesterDisplayName={request.profiles.display_name}
-              requesterAvatar={request.profiles.avatar_url}
-            />
-          ))}
+          {pendingRequests && pendingRequests.length > 0 && (
+            <FriendRequestsList requests={pendingRequests} />
+          )}
           
-          {notifications?.map((notification) => (
-            <Card key={notification.id} className="relative">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-4">
-                  {notification.sender.avatar_url && (
-                    <img
-                      src={notification.sender.avatar_url}
-                      alt={notification.sender.display_name}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-medium">{notification.sender.display_name}</p>
-                    {notification.type === 'new_flashcard' && (
-                      <p className="text-sm text-gray-600">
-                        Created a new flashcard for you
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    Mark as read
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {notifications && notifications.length > 0 && (
+            <NotificationsList 
+              notifications={notifications}
+              onMarkAsRead={markAsRead}
+            />
+          )}
 
           {totalNotifications === 0 && (
             <p className="text-center text-muted-foreground">No new notifications</p>
