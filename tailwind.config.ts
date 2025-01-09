@@ -97,7 +97,7 @@ export default {
         "glow-red": "glow-red 0.7s ease-in-out",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        sans: ["Quicksand", ...fontFamily.sans],
       },
     },
   },
