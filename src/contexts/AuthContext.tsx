@@ -44,32 +44,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, username: string) => {
-    // First check if username is already taken
-    const { data: existingUser, error: checkError } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .single();
+    try {
+      // First check if username is already taken
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw new Error(checkError.message);
-    }
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw new Error('Error checking username availability');
+      }
 
-    if (existingUser) {
-      throw new Error('Username is already taken');
-    }
+      if (existingUser) {
+        throw new Error('Username is already taken');
+      }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
         },
-      },
-    });
-    
-    if (error) throw error;
+      });
+      
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Please check your email to verify your account.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const signOut = async () => {
