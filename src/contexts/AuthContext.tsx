@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { AuthError } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: any | null;
@@ -28,12 +29,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  const handleAuthError = (error: AuthError) => {
+    console.error('Auth error:', error);
+    let message = 'An error occurred during authentication.';
+    
+    if (error.message.includes('Invalid API key')) {
+      message = 'Authentication service is temporarily unavailable. Please try again later.';
+    } else if (error.message.includes('User already registered')) {
+      message = 'This email is already registered.';
+    } else if (error.message.includes('Invalid login credentials')) {
+      message = 'Invalid email or password.';
+    }
+
+    toast({
+      title: "Error",
+      description: message,
+      variant: "destructive",
     });
-    if (error) throw error;
+    throw error;
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      handleAuthError(error);
+    }
   };
 
   const signUp = async (email: string, password: string, username: string) => {
@@ -46,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking username:', checkError);
         throw new Error('Error checking username availability');
       }
 
@@ -70,18 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Please check your email to verify your account.",
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
+      handleAuthError(error);
     }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      handleAuthError(error);
+    }
   };
 
   return (
