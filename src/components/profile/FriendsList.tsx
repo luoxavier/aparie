@@ -1,11 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { CreateCard } from "@/components/CreateCard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
+import { FriendCard } from "./FriendCard";
 
 type Profile = {
   id: string;
@@ -23,7 +19,6 @@ type FriendConnection = {
 
 export function FriendsList() {
   const { user } = useAuth();
-  const [selectedFriend, setSelectedFriend] = useState<{ id: string; display_name: string; username: string | null } | null>(null);
 
   const { data: friends } = useQuery({
     queryKey: ['friends', user?.id],
@@ -68,48 +63,7 @@ export function FriendsList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {friends?.map((friend) => (
-        <Card key={friend.id}>
-          <CardContent className="p-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button 
-                  onClick={() => setSelectedFriend(friend)}
-                  className="w-full justify-start"
-                  variant="ghost"
-                >
-                  <div className="flex items-center space-x-4">
-                    {friend.avatar_url && (
-                      <img
-                        src={friend.avatar_url}
-                        alt={friend.display_name}
-                        className="w-10 h-10 rounded-full"
-                      />
-                    )}
-                    <div>
-                      <h3 className="font-medium">
-                        {friend.display_name}
-                        {friend.username && (
-                          <span className="text-sm text-muted-foreground ml-1">
-                            @{friend.username}
-                          </span>
-                        )}
-                      </h3>
-                    </div>
-                  </div>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    Create Flashcard for {friend.display_name}
-                    {friend.username && ` (@${friend.username})`}
-                  </DialogTitle>
-                </DialogHeader>
-                <CreateCard recipientId={friend.id} />
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
+        <FriendCard key={friend.id} friend={friend} />
       ))}
     </div>
   );

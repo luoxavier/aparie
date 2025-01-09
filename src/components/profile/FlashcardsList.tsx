@@ -5,9 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { CreateCard } from "@/components/CreateCard";
+import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
+import { CreateFlashcardButton } from "./CreateFlashcardButton";
 
 interface Creator {
   display_name: string;
@@ -53,43 +52,15 @@ export function FlashcardsList() {
         `)
         .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
       
-      if (error) {
-        console.error('Error fetching flashcards:', error);
-        throw error;
-      }
-      
-      console.log('Fetched flashcards:', data);
+      if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
   });
 
-  if (isLoading) {
-    return <div className="text-center">Loading flashcards...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center text-red-500">Error loading flashcards</div>;
-  }
-
-  if (!flashcards?.length) {
-    return (
-      <div className="space-y-4">
-        <div className="text-center text-gray-500">No flashcards found</div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="w-full">Create a Flashcard</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create a New Flashcard</DialogTitle>
-            </DialogHeader>
-            <CreateCard />
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="text-center">Loading flashcards...</div>;
+  if (error) return <div className="text-center text-red-500">Error loading flashcards</div>;
+  if (!flashcards?.length) return <EmptyFlashcardsState />;
 
   const groupedFlashcards: GroupedFlashcards = {
     created: flashcards.filter(f => f.creator_id === user?.id),
@@ -124,17 +95,7 @@ export function FlashcardsList() {
 
   return (
     <div className="space-y-4">
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="w-full">Create a New Flashcard</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create a New Flashcard</DialogTitle>
-          </DialogHeader>
-          <CreateCard />
-        </DialogContent>
-      </Dialog>
+      <CreateFlashcardButton />
       
       <Accordion type="single" collapsible className="space-y-4">
         <FlashcardFolder
