@@ -34,6 +34,13 @@ const Index = () => {
     }
   };
 
+  // Get other answers from cards excluding the current card
+  const getOtherAnswers = (currentCard: Card) => {
+    return cards
+      .filter(card => card.id !== currentCard.id)
+      .map(card => card.back);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F7FF] p-4">
       <div className="max-w-md mx-auto">
@@ -68,6 +75,7 @@ const Index = () => {
               <Flashcard
                 front={cards[currentCardIndex].front}
                 back={cards[currentCardIndex].back}
+                otherAnswers={getOtherAnswers(cards[currentCardIndex])}
                 onResult={handleCardResult}
               />
             )}
