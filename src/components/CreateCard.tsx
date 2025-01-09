@@ -31,6 +31,7 @@ export function CreateCard({ recipientId, onSave }: CreateCardProps) {
     }
 
     try {
+      console.log('Creating flashcard with recipient_id:', recipientId); // Debug log
       const { error } = await supabase
         .from('flashcards')
         .insert([

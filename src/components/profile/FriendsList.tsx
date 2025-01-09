@@ -52,8 +52,6 @@ export function FriendsList() {
       if (error) throw error;
 
       return (connections as FriendConnection[]).map(connection => {
-        // If the current user is the friend_id, we want to show the user_id's profile
-        // If the current user is the user_id, we want to show the friend_id's profile
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend ? connection.user : connection.friend;
 
@@ -107,7 +105,7 @@ export function FriendsList() {
                     {friend.username && ` (@${friend.username})`}
                   </DialogTitle>
                 </DialogHeader>
-                <CreateCard />
+                <CreateCard recipientId={friend.id} />
               </DialogContent>
             </Dialog>
           </CardContent>
