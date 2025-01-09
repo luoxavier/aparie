@@ -42,14 +42,14 @@ export function FriendsList() {
         // If the current user is the user_id, we want to show the friend_id's profile
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend 
-          ? connection.profiles!friend_connections_user_id_fkey 
-          : connection.profiles!friend_connections_friend_id_fkey;
+          ? connection.profiles?.friend_connections_user_id_fkey 
+          : connection.profiles?.friend_connections_friend_id_fkey;
 
         return {
-          id: friendProfile.id,
-          display_name: friendProfile.display_name,
-          username: friendProfile.username,
-          avatar_url: friendProfile.avatar_url
+          id: friendProfile?.id || '',
+          display_name: friendProfile?.display_name || '',
+          username: friendProfile?.username,
+          avatar_url: friendProfile?.avatar_url
         };
       });
     },
