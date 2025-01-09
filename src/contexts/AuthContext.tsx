@@ -1,15 +1,23 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
 
 // Create the Supabase client with the required URL and API key
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase URL or API key. Make sure you have connected your project to Supabase.');
+  toast({
+    title: "Configuration Error",
+    description: "Missing Supabase configuration. Please ensure your project is connected to Supabase.",
+    variant: "destructive",
+  });
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  supabaseUrl || 'https://placeholder-url.supabase.co',
+  supabaseKey || 'placeholder-key'
+);
 
 interface AuthContextType {
   user: any | null;
