@@ -69,15 +69,18 @@ export default {
         },
         "sparkle": {
           "0%": { 
-            boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
+            boxShadow: "0 0 0 0 rgba(155, 135, 245, 0)",
+            color: "#9b87f5",
             opacity: "1"
           },
           "50%": { 
-            boxShadow: "0 0 20px 10px rgba(0, 0, 0, 0.5)",
+            boxShadow: "0 0 20px 10px rgba(155, 135, 245, 0.5)",
+            color: "#9b87f5",
             opacity: "0.5"
           },
           "100%": { 
-            boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
+            boxShadow: "0 0 0 0 rgba(155, 135, 245, 0)",
+            color: "#9b87f5",
             opacity: "0"
           },
         },
