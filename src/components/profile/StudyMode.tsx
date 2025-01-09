@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Flashcard } from "@/components/Flashcard";
+import { StudySession } from "@/components/study/StudySession";
+import { StudyControls } from "@/components/study/StudyControls";
+import { StudyProgress } from "@/components/study/StudyProgress";
 
 interface StudyModeProps {
   deck: FlashcardType[];
@@ -50,12 +52,10 @@ export function StudyMode({ deck, onExit }: StudyModeProps) {
         setCurrentCardIndex(currentCardIndex + 1);
       } else {
         if (currentReviewMistakes.length === 0) {
-          // All mistakes corrected
           setIsReviewingMistakes(false);
           setCurrentCardIndex(0);
           setMistakes([]);
         } else {
-          // Start new review cycle with remaining mistakes
           setCurrentCardIndex(0);
         }
       }
@@ -76,13 +76,6 @@ export function StudyMode({ deck, onExit }: StudyModeProps) {
   const currentCards = isReviewingMistakes ? currentReviewMistakes : deck;
   const currentCard = currentCards[currentCardIndex];
 
-  const getOtherAnswers = (currentCard: FlashcardType) => {
-    // Always use the full deck for answer options
-    return deck
-      .filter(card => card.id !== currentCard.id)
-      .map(card => card.back);
-  };
-
   return (
     <div className="space-y-4">
       <Button 
@@ -93,43 +86,26 @@ export function StudyMode({ deck, onExit }: StudyModeProps) {
         ← Back to Folders
       </Button>
       
-      {streak > 0 && (
-        <div className="text-center mb-4">
-          <span className="inline-block bg-primary text-white px-4 py-2 rounded-full">
-            🔥 Streak: {streak}
-          </span>
-        </div>
-      )}
-
-      <Flashcard
-        front={currentCard.front}
-        back={currentCard.back}
-        otherAnswers={getOtherAnswers(currentCard)}
+      <StudySession
+        currentCard={currentCard}
+        deck={deck}
         onResult={handleCardResult}
         onNext={handleNextCard}
+        streak={streak}
       />
 
-      <div className="text-center text-gray-600">
-        Card {currentCardIndex + 1} of {currentCards.length}
-      </div>
+      <StudyProgress
+        currentIndex={currentCardIndex}
+        totalCards={currentCards.length}
+        mode={null}
+      />
 
-      <div className="fixed bottom-4 left-0 right-0 px-4 space-y-2 max-w-md mx-auto">
-        <Button
-          variant="secondary"
-          onClick={handleReviewMistakes}
-          className="w-full bg-secondary hover:bg-secondary/90"
-          disabled={mistakes.length === 0 || isReviewingMistakes}
-        >
-          Review Mistakes
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onExit}
-          className="w-full"
-        >
-          Return Home
-        </Button>
-      </div>
+      <StudyControls
+        onExit={onExit}
+        onReviewMistakes={handleReviewMistakes}
+        mistakesCount={mistakes.length}
+        isReviewingMistakes={isReviewingMistakes}
+      />
     </div>
   );
 }
