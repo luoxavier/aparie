@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +50,24 @@ export function FlashcardFolder({
   const [isFavorited, setIsFavorited] = useState(false);
   const [showCards, setShowCards] = useState(false);
 
+  useEffect(() => {
+    const checkIfFavorited = async () => {
+      if (!user || !creatorId || !folderName) return;
+
+      const { data } = await supabase
+        .from('favorite_folders')
+        .select()
+        .eq('user_id', user.id)
+        .eq('creator_id', creatorId)
+        .eq('folder_name', folderName)
+        .single();
+
+      setIsFavorited(!!data);
+    };
+
+    checkIfFavorited();
+  }, [user, creatorId, folderName]);
+
   const handleStudy = () => {
     onStudy(flashcards);
     navigate('/study-folder', { state: { flashcards, folderName: title } });
@@ -59,25 +77,42 @@ export function FlashcardFolder({
     if (!user || !creatorId || !folderName) return;
 
     try {
-      const { error } = await supabase
-        .from('favorite_folders')
-        .insert({
-          user_id: user.id,
-          creator_id: creatorId,
-          folder_name: folderName
+      if (isFavorited) {
+        const { error } = await supabase
+          .from('favorite_folders')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('creator_id', creatorId)
+          .eq('folder_name', folderName);
+
+        if (error) throw error;
+
+        setIsFavorited(false);
+        toast({
+          title: "Success",
+          description: "Folder removed from favorites",
         });
+      } else {
+        const { error } = await supabase
+          .from('favorite_folders')
+          .insert({
+            user_id: user.id,
+            creator_id: creatorId,
+            folder_name: folderName
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setIsFavorited(true);
-      toast({
-        title: "Success",
-        description: "Folder added to favorites",
-      });
+        setIsFavorited(true);
+        toast({
+          title: "Success",
+          description: "Folder added to favorites",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to add folder to favorites",
+        description: "Failed to update favorites",
         variant: "destructive",
       });
     }
@@ -97,7 +132,7 @@ export function FlashcardFolder({
             </span>
           </span>
           <div className="flex items-center gap-2">
-            {isFromFriend && !isFavorited && (
+            {isFromFriend && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -107,7 +142,7 @@ export function FlashcardFolder({
                 }}
                 className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
               >
-                <Star className="h-4 w-4" />
+                <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
               </Button>
             )}
             <Button
