@@ -2,14 +2,17 @@ import { supabase } from "@/integrations/supabase/client";
 import type { FriendProfile, FriendRequestError } from "@/types/friend-request";
 
 export async function findUserByIdentifier(identifier: string): Promise<FriendProfile | null> {
-  // First try to find the user's profile using username or display name
-  const { data: profile, error: profileError } = await supabase
+  if (!identifier) return null;
+
+  // Search by username or display name
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('id')
     .or(`username.eq.${identifier},display_name.eq.${identifier}`)
     .maybeSingle();
 
-  if (profileError) {
+  if (error) {
+    console.error('Error finding user:', error);
     throw new Error('Failed to search for user');
   }
 
@@ -17,7 +20,14 @@ export async function findUserByIdentifier(identifier: string): Promise<FriendPr
 }
 
 export async function validateFriendRequest(userId: string, friendId: string): Promise<FriendRequestError | null> {
-  if (friendId === userId) {
+  if (!userId || !friendId) {
+    return {
+      type: 'not_found',
+      message: 'Invalid user information provided.'
+    };
+  }
+
+  if (userId === friendId) {
     return {
       type: 'self_request',
       message: 'You cannot send a friend request to yourself.'
@@ -28,9 +38,10 @@ export async function validateFriendRequest(userId: string, friendId: string): P
   const { data: existingConnections, error: connectionError } = await supabase
     .from('friend_connections')
     .select('status')
-    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+    .or(`user_id.eq.${userId},friend_id.eq.${friendId}`);
 
   if (connectionError) {
+    console.error('Error checking connections:', connectionError);
     throw new Error('Failed to check existing connections');
   }
 
@@ -45,6 +56,10 @@ export async function validateFriendRequest(userId: string, friendId: string): P
 }
 
 export async function createFriendRequest(userId: string, friendId: string) {
+  if (!userId || !friendId) {
+    throw new Error('Invalid user information provided');
+  }
+
   const { error: insertError } = await supabase
     .from('friend_connections')
     .insert([{
@@ -54,6 +69,7 @@ export async function createFriendRequest(userId: string, friendId: string) {
     }]);
 
   if (insertError) {
+    console.error('Error creating friend request:', insertError);
     throw new Error('Failed to send friend request');
   }
 
@@ -67,6 +83,6 @@ export async function createFriendRequest(userId: string, friendId: string) {
     }]);
 
   if (notificationError) {
-    console.error('Failed to create notification:', notificationError);
+    console.error('Error creating notification:', notificationError);
   }
 }
