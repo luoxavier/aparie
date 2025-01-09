@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
 interface FlashcardDisplayProps {
-  currentCard: {
+  currentCard?: {
     front: string;
     back: string;
   };
@@ -26,6 +26,16 @@ export function FlashcardDisplay({
   streak = 0
 }: FlashcardDisplayProps) {
   const navigate = useNavigate();
+
+  // If there's no current card, show a message
+  if (!currentCard) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] space-y-4">
+        <p className="text-lg text-gray-600">No flashcard available</p>
+        <Button onClick={() => navigate("/profile")}>Return Home</Button>
+      </div>
+    );
+  }
 
   const generateAnswerOptions = () => {
     // Always include the correct answer
@@ -53,7 +63,7 @@ export function FlashcardDisplay({
   const glowIntensity = Math.min(streak * 0.2, 1);
 
   return (
-    <div className="space-y-12"> {/* Increased spacing from 8 to 12 */}
+    <div className="space-y-12">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentCard.front}
@@ -89,7 +99,7 @@ export function FlashcardDisplay({
         </motion.div>
       </AnimatePresence>
 
-      <div className="grid grid-cols-2 gap-4 mb-12"> {/* Added mb-12 for extra spacing */}
+      <div className="grid grid-cols-2 gap-4 mb-12">
         {!showAnswer && generateAnswerOptions().map((answer, index) => (
           <Button
             key={index}
@@ -106,7 +116,7 @@ export function FlashcardDisplay({
         <Button
           variant="secondary"
           onClick={onReviewMistakes}
-          className="w-full bg-secondary hover:bg-secondary/90" // Using secondary color
+          className="w-full bg-secondary hover:bg-secondary/90"
         >
           Review Mistakes
         </Button>
