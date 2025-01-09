@@ -86,6 +86,21 @@ export type Database = {
           },
         ]
       }
+      login: {
+        Row: {
+          password: string | null
+          username: string | null
+        }
+        Insert: {
+          password?: string | null
+          username?: string | null
+        }
+        Update: {
+          password?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
