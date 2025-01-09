@@ -65,20 +65,18 @@ export function FlashcardDisplay({
     // Shuffle the wrong answers pool
     wrongAnswersPool = wrongAnswersPool.sort(() => Math.random() - 0.5);
     
+    // If we have less than 4 total possible answers (including the correct one),
+    // return all available unique answers
+    if (wrongAnswersPool.length < 3) {
+      const allUniqueAnswers = [...new Set([currentCard.back, ...wrongAnswersPool])];
+      return allUniqueAnswers.sort(() => Math.random() - 0.5);
+    }
+    
     // Take exactly 3 wrong answers
     const wrongAnswers = wrongAnswersPool.slice(0, 3);
     
-    // If we don't have enough wrong answers, add more from available answers
-    while (wrongAnswers.length < 3 && availableAnswers.length > 0) {
-      const randomAnswer = availableAnswers[Math.floor(Math.random() * availableAnswers.length)];
-      if (!wrongAnswers.includes(randomAnswer) && randomAnswer !== currentCard.back) {
-        wrongAnswers.push(randomAnswer);
-      }
-    }
-    
     // Combine correct answer with wrong answers and shuffle
-    const allAnswers = [...options, ...wrongAnswers];
-    return allAnswers.sort(() => Math.random() - 0.5);
+    return [...options, ...wrongAnswers].sort(() => Math.random() - 0.5);
   };
 
   const glowIntensity = Math.min(streak * 0.2, 1);
