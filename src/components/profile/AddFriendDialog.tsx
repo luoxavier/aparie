@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,12 +10,52 @@ export function AddFriendDialog() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [friendId, setFriendId] = useState("");
+  const [friendIdentifier, setFriendIdentifier] = useState("");
 
   const sendFriendRequest = useMutation({
-    mutationFn: async (friendId: string) => {
+    mutationFn: async (friendIdentifier: string) => {
       try {
-        // Check for existing friend connection in both directions
+        // First, get the friend's UUID from their username
+        const { data: friendProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', friendIdentifier)
+          .single();
+
+        if (profileError) {
+          if (profileError.code === 'PGRST116') {
+            toast({
+              title: "User not found",
+              description: "No user found with that username.",
+              variant: "destructive",
+            });
+            return;
+          }
+          throw profileError;
+        }
+
+        if (!friendProfile) {
+          toast({
+            title: "User not found",
+            description: "No user found with that username.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const friendId = friendProfile.id;
+
+        // Check if trying to add self
+        if (friendId === user?.id) {
+          toast({
+            title: "Invalid request",
+            description: "You cannot add yourself as a friend.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Check for existing friend connection
         const { data: existingConnection, error: checkError } = await supabase
           .from('friend_connections')
           .select('*')
@@ -41,6 +81,7 @@ export function AddFriendDialog() {
           return;
         }
 
+        // Send friend request
         const { error: insertError } = await supabase
           .from('friend_connections')
           .insert([
@@ -63,7 +104,7 @@ export function AddFriendDialog() {
           throw insertError;
         }
 
-        // Create a notification for the friend request
+        // Create notification
         const { error: notificationError } = await supabase
           .from('notifications')
           .insert([
@@ -83,11 +124,17 @@ export function AddFriendDialog() {
         });
       } catch (error: any) {
         console.error('Error in friend request process:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send friend request. Please try again.",
+          variant: "destructive",
+        });
         throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['friends'] });
+      setFriendIdentifier("");
     },
   });
 
@@ -99,19 +146,21 @@ export function AddFriendDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
+          <DialogDescription>
+            Enter your friend's username to send them a friend request.
+          </DialogDescription>
         </DialogHeader>
         <input
           type="text"
-          placeholder="Enter friend's ID"
-          value={friendId}
-          onChange={(e) => setFriendId(e.target.value)}
+          placeholder="Enter friend's username"
+          value={friendIdentifier}
+          onChange={(e) => setFriendIdentifier(e.target.value)}
           className="border p-2 rounded"
         />
         <Button
           onClick={() => {
-            if (friendId) {
-              sendFriendRequest.mutate(friendId);
-              setFriendId("");
+            if (friendIdentifier) {
+              sendFriendRequest.mutate(friendIdentifier);
             }
           }}
         >
