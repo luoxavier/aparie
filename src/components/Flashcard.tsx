@@ -1,28 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { shuffle } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface FlashcardProps {
   front: string;
   back: string;
   otherAnswers: string[];
   onResult: (correct: boolean) => void;
+  onNext: () => void;
 }
 
-export const Flashcard = ({ front, back, otherAnswers, onResult }: FlashcardProps) => {
+export const Flashcard = ({ front, back, otherAnswers, onResult, onNext }: FlashcardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [answers, setAnswers] = useState<string[]>([]);
 
-  // Initialize answers when component mounts or when otherAnswers change
-  useState(() => {
+  useEffect(() => {
     const allAnswers = [back, ...otherAnswers.slice(0, 3)];
     setAnswers(shuffle(allAnswers));
-  });
+  }, [back, otherAnswers]);
 
   const handleAnswer = (selectedAnswer: string) => {
     const isCorrect = selectedAnswer === back;
+    
+    if (isCorrect) {
+      toast({
+        title: "Correct! 🎉",
+        description: "Great job! Moving to next card...",
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Incorrect",
+        description: `The correct answer was: ${back}`,
+        variant: "destructive",
+      });
+    }
+    
     onResult(isCorrect);
+    
+    // Reset card state and move to next card
+    setTimeout(() => {
+      setIsFlipped(false);
+      onNext();
+    }, 1500);
   };
 
   return (
