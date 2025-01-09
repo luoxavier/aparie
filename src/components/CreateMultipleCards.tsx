@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+}
+
 interface CreateMultipleCardsProps {
   recipientId?: string;
   onSave?: () => void;
+  existingCards?: Flashcard[];
+  folderName?: string;
 }
 
 interface CardPair {
@@ -17,11 +26,20 @@ interface CardPair {
   back: string;
 }
 
-export function CreateMultipleCards({ recipientId, onSave }: CreateMultipleCardsProps) {
-  const [folderName, setFolderName] = useState("");
+export function CreateMultipleCards({ recipientId, onSave, existingCards, folderName: initialFolderName }: CreateMultipleCardsProps) {
+  const [folderName, setFolderName] = useState(initialFolderName || "");
   const [cards, setCards] = useState<CardPair[]>([{ front: "", back: "" }]);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (existingCards?.length) {
+      setCards(existingCards.map(card => ({
+        front: card.front,
+        back: card.back
+      })));
+    }
+  }, [existingCards]);
 
   const addCard = () => {
     setCards([...cards, { front: "", back: "" }]);
@@ -95,9 +113,11 @@ export function CreateMultipleCards({ recipientId, onSave }: CreateMultipleCards
         onSave();
       }
 
-      // Reset form
-      setFolderName("");
-      setCards([{ front: "", back: "" }]);
+      // Reset form if not editing existing cards
+      if (!existingCards) {
+        setFolderName("");
+        setCards([{ front: "", back: "" }]);
+      }
     } catch (error) {
       console.error('Error creating flashcards:', error);
       toast({
@@ -168,7 +188,7 @@ export function CreateMultipleCards({ recipientId, onSave }: CreateMultipleCards
             Add Another Card
           </Button>
           <Button type="submit" className="flex-1">
-            Create Flashcards
+            {existingCards ? 'Update Flashcards' : 'Create Flashcards'}
           </Button>
         </CardFooter>
       </Card>
