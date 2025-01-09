@@ -21,7 +21,7 @@ export function useFriendRequest() {
         if (!friendProfile) {
           toast({
             title: "User not found",
-            description: "No user found with that username.",
+            description: "No user found with that username, display name, or email.",
             variant: "destructive",
           });
           return;
