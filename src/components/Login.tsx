@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthError } from "@supabase/supabase-js";
 
 export const Login = () => {
   const [username, setUsername] = useState("");
@@ -38,6 +39,22 @@ export const Login = () => {
     setUsernameError(false); // Reset error state when user types
   };
 
+  const handleAuthError = (error: AuthError) => {
+    let errorMessage = "An error occurred during authentication.";
+    
+    if (error.message.includes("invalid_credentials")) {
+      errorMessage = isSignUp 
+        ? "Error creating account. Please try again."
+        : "Invalid username or password.";
+    }
+
+    toast({
+      title: "Authentication Error",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -60,6 +77,8 @@ export const Login = () => {
           title: "Account created!",
           description: "You can now sign in with your username and password.",
         });
+        // Switch to sign in mode after successful signup
+        setIsSignUp(false);
       } else {
         await signIn(`${username}@flashcards.local`, password);
         toast({
@@ -68,11 +87,7 @@ export const Login = () => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      handleAuthError(error);
     }
   };
 
@@ -115,6 +130,7 @@ export const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
           </div>
@@ -129,6 +145,8 @@ export const Login = () => {
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setUsernameError(false); // Reset error state when switching modes
+                setUsername(""); // Clear username
+                setPassword(""); // Clear password
               }}
               className="text-primary hover:underline"
             >
