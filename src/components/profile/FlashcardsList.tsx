@@ -55,7 +55,7 @@ export function FlashcardsList() {
         throw error;
       }
       
-      console.log('Fetched flashcards:', data); // Debug log
+      console.log('Fetched flashcards:', data);
       return data;
     },
     enabled: !!user?.id,
@@ -76,7 +76,7 @@ export function FlashcardsList() {
   const groupedFlashcards: GroupedFlashcards = {
     created: flashcards.filter(f => f.creator_id === user?.id),
     received: flashcards
-      .filter(f => f.recipient_id === user?.id)
+      .filter(f => f.recipient_id === user?.id && f.creator_id !== user?.id)
       .reduce((acc, flashcard) => {
         const creatorId = flashcard.creator_id;
         if (!acc[creatorId]) {
