@@ -37,18 +37,18 @@ export async function validateFriendRequest(userId: string, friendId: string): P
   const { data: existingConnections, error: connectionError } = await supabase
     .from('friend_connections')
     .select('status')
-    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
+    .maybeSingle();
 
-  if (connectionError) {
+  if (connectionError && connectionError.code !== 'PGRST116') {
     console.error('Error checking connections:', connectionError);
     throw new Error('Failed to check existing connections');
   }
 
-  if (existingConnections && existingConnections.length > 0) {
-    const connection = existingConnections[0];
+  if (existingConnections) {
     return {
-      type: connection.status === 'accepted' ? 'already_friends' : 'pending_request',
-      message: connection.status === 'accepted' 
+      type: existingConnections.status === 'accepted' ? 'already_friends' : 'pending_request',
+      message: existingConnections.status === 'accepted' 
         ? 'You are already friends with this user.'
         : 'A friend request is already pending.'
     };
@@ -63,19 +63,19 @@ export async function createFriendRequest(userId: string, friendId: string) {
   }
 
   // First check if there's an existing connection in either direction
-  const { data: existingConnections, error: checkError } = await supabase
+  const { data: existingConnection, error: checkError } = await supabase
     .from('friend_connections')
     .select('id, status')
-    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
+    .maybeSingle();
 
-  if (checkError) {
+  if (checkError && checkError.code !== 'PGRST116') {
     console.error('Error checking existing connections:', checkError);
     throw new Error('Failed to check existing connections');
   }
 
   // If there's an existing connection, handle it appropriately
-  if (existingConnections && existingConnections.length > 0) {
-    const existingConnection = existingConnections[0];
+  if (existingConnection) {
     if (existingConnection.status === 'accepted') {
       throw new Error('You are already friends with this user');
     } else {
