@@ -20,7 +20,13 @@ export async function findUserByIdentifier(identifier: string): Promise<FriendPr
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
-    .eq('id', (await supabase.auth.getUser(emailData)).data.user?.id)
+    .eq('id', (
+      await supabase
+        .from('auth')
+        .select('id')
+        .eq('email', emailData)
+        .single()
+    ).id)
     .maybeSingle();
 
   if (profileError) {
