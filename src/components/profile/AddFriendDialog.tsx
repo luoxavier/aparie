@@ -20,19 +20,42 @@ export function AddFriendDialog() {
   const { user } = useAuth();
 
   const searchUsers = async (username: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .ilike('username', `%${username}%`)
-      .neq('id', user?.id)
-      .limit(5);
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('username', `%${username}%`)
+        .neq('id', user?.id)
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+      if (profileError) throw profileError;
+      return profile;
+    } catch (error: any) {
+      console.error('Error searching users:', error);
+      throw error;
+    }
   };
 
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
+      // First check if a friend request already exists
+      const { data: existingRequest, error: checkError } = await supabase
+        .from('friend_connections')
+        .select('*')
+        .or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingRequest) {
+        toast({
+          title: "Friend request already exists",
+          description: "You already have a pending or accepted friend request with this user.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('friend_connections')
         .insert([
@@ -44,6 +67,7 @@ export function AddFriendDialog() {
         ]);
 
       if (error) {
+        console.error('Error sending friend request:', error);
         toast({
           title: "Error sending friend request",
           description: error.message,
@@ -59,6 +83,13 @@ export function AddFriendDialog() {
       });
       queryClient.invalidateQueries({ queryKey: ['friends'] });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Error sending friend request",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   return (
@@ -80,13 +111,21 @@ export function AddFriendDialog() {
             {searchUsername && (
               <Button
                 onClick={async () => {
-                  const users = await searchUsers(searchUsername);
-                  if (users && users.length > 0) {
-                    await sendFriendRequest.mutateAsync(users[0].id);
-                  } else {
+                  try {
+                    const user = await searchUsers(searchUsername);
+                    if (user) {
+                      await sendFriendRequest.mutateAsync(user.id);
+                    } else {
+                      toast({
+                        title: "User not found",
+                        description: "No user found with that username.",
+                        variant: "destructive",
+                      });
+                    }
+                  } catch (error: any) {
                     toast({
-                      title: "User not found",
-                      description: "No user found with that username.",
+                      title: "Error searching for user",
+                      description: error.message,
                       variant: "destructive",
                     });
                   }
