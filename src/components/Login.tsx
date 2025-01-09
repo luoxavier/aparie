@@ -3,9 +3,10 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { Label } from "./ui/label";
 
 export const Login = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -14,13 +15,14 @@ export const Login = () => {
     e.preventDefault();
     try {
       if (isSignUp) {
-        await signUp(email, password);
+        // For signup, we'll use email as username@domain.com to satisfy Supabase's email requirement
+        await signUp(`${username}@flashcards.local`, password, username);
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: "You can now sign in with your username and password.",
         });
       } else {
-        await signIn(email, password);
+        await signIn(`${username}@flashcards.local`, password);
         toast({
           title: "Welcome back!",
           description: "Successfully logged in.",
@@ -51,20 +53,28 @@ export const Login = () => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <Button type="submit" className="w-full">
