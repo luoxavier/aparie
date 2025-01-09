@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateCard } from "@/components/CreateCard";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 interface FriendCardProps {
   friend: {
@@ -43,14 +43,14 @@ export function FriendCard({ friend }: FriendCardProps) {
               </div>
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>
-                Create Flashcard for {friend.display_name}
+                Create Flashcards for {friend.display_name}
                 {friend.username && ` (@${friend.username})`}
               </DialogTitle>
             </DialogHeader>
-            <CreateCard recipientId={friend.id} />
+            <CreateMultipleCards recipientId={friend.id} />
           </DialogContent>
         </Dialog>
       </CardContent>

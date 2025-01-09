@@ -7,7 +7,12 @@ import {
 } from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateCard } from "@/components/CreateCard";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Star } from "lucide-react";
 
 interface Creator {
   display_name: string;
@@ -27,28 +32,81 @@ interface FlashcardFolderProps {
   flashcards: Flashcard[];
   onStudy: (cards: Flashcard[]) => void;
   showCreator?: boolean;
+  creatorId?: string;
+  folderName?: string;
 }
 
-export function FlashcardFolder({ title, flashcards, onStudy, showCreator = false }: FlashcardFolderProps) {
+export function FlashcardFolder({ 
+  title, 
+  flashcards, 
+  onStudy, 
+  showCreator = false,
+  creatorId,
+  folderName 
+}: FlashcardFolderProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [isFavorited, setIsFavorited] = useState(false);
 
   const handleStudy = () => {
     onStudy(flashcards);
     navigate('/study-folder', { state: { flashcards, folderName: title } });
   };
 
+  const handleFavorite = async () => {
+    if (!user || !creatorId || !folderName) return;
+
+    try {
+      const { error } = await supabase
+        .from('favorite_folders')
+        .insert({
+          user_id: user.id,
+          creator_id: creatorId,
+          folder_name: folderName
+        });
+
+      if (error) throw error;
+
+      setIsFavorited(true);
+      toast({
+        title: "Success",
+        description: "Folder added to favorites",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to add folder to favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
   const isMyFlashcards = title.toLowerCase().includes('my flashcards');
+  const isFromFriend = title.toLowerCase().includes('from');
 
   return (
     <AccordionItem value={title.toLowerCase().replace(/\s+/g, '-')}>
       <AccordionTrigger className="text-left">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between w-full pr-4">
           <span className="font-medium">
             {title}
             <span className="text-sm text-muted-foreground ml-2">
               ({flashcards.length} cards)
             </span>
           </span>
+          {isFromFriend && !isFavorited && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFavorite();
+              }}
+            >
+              <Star className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </AccordionTrigger>
       <AccordionContent>
@@ -60,11 +118,11 @@ export function FlashcardFolder({ title, flashcards, onStudy, showCreator = fals
                   Create New Flashcard
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                  <DialogTitle>Create a New Flashcard</DialogTitle>
+                  <DialogTitle>Create New Flashcards</DialogTitle>
                 </DialogHeader>
-                <CreateCard />
+                <CreateMultipleCards />
               </DialogContent>
             </Dialog>
           )}
@@ -75,6 +133,31 @@ export function FlashcardFolder({ title, flashcards, onStudy, showCreator = fals
           >
             Study These Cards
           </Button>
+          {isFromFriend && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full bg-secondary hover:bg-secondary/90">
+                  Modify Folder
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Modify Flashcards</DialogTitle>
+                </DialogHeader>
+                <CreateMultipleCards 
+                  recipientId={user?.id}
+                  existingCards={flashcards}
+                  folderName={folderName}
+                  onSave={() => {
+                    toast({
+                      title: "Success",
+                      description: "Flashcards updated successfully",
+                    });
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
           {flashcards.map((flashcard) => (
             <Card key={flashcard.id}>
               <CardContent className="p-4 grid grid-cols-2 gap-4">
