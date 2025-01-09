@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, username: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = async (email: string, password: string, username: string, displayName: string) => {
     // First check if username is taken using maybeSingle() instead of single()
     const { data: existingUser, error: queryError } = await supabase
       .from('profiles')
@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         data: {
           username,
+          display_name: displayName,
         },
       },
     });
