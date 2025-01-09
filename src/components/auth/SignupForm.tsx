@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { AuthError } from "@supabase/supabase-js";
+import { checkExistingUsername } from "@/utils/auth-utils";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -18,16 +19,28 @@ export function SignupForm() {
     e.preventDefault();
     setLoading(true);
     try {
+      // First check if username is taken
+      await checkExistingUsername(username);
+      // Then attempt signup
       await signUp(email, password, username, username);
       navigate("/profile");
     } catch (error) {
       const authError = error as AuthError;
       if (authError.status === 422) {
-        toast({
-          variant: "destructive",
-          title: "Account already exists",
-          description: "This email is already registered. Please try logging in instead.",
-        });
+        const errorBody = JSON.parse((authError as any).body);
+        if (errorBody.code === "user_already_exists") {
+          toast({
+            variant: "destructive",
+            title: "Account already exists",
+            description: "This email is already registered. Please try logging in instead.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error signing up",
+            description: errorBody.message || "An unexpected error occurred",
+          });
+        }
       } else {
         toast({
           variant: "destructive",
