@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FriendsList } from "@/components/profile/FriendsList";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
+import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 
 export default function Profile() {
   const { signOut } = useAuth();
@@ -12,7 +13,10 @@ export default function Profile() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Profile</h1>
-        <Button onClick={() => signOut()}>Sign Out</Button>
+        <div className="flex items-center space-x-4">
+          <NotificationsDialog />
+          <Button onClick={() => signOut()}>Sign Out</Button>
+        </div>
       </div>
 
       <Tabs defaultValue="flashcards" className="space-y-4">
