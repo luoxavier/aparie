@@ -16,7 +16,7 @@ export const Login = () => {
   const checkUsername = async (username: string) => {
     try {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("login")
         .select("username")
         .eq("username", username)
         .single();
