@@ -26,7 +26,7 @@ export function NotificationsDialog() {
         .select(`
           *,
           sender:profiles!notifications_sender_id_fkey (
-            username,
+            display_name,
             avatar_url
           )
         `)
@@ -47,7 +47,7 @@ export function NotificationsDialog() {
         .select(`
           user_id,
           profiles!friend_connections_user_id_fkey (
-            username,
+            display_name,
             avatar_url
           )
         `)
@@ -97,7 +97,7 @@ export function NotificationsDialog() {
             <FriendRequestItem
               key={request.user_id}
               requesterId={request.user_id}
-              requesterUsername={request.profiles.username}
+              requesterDisplayName={request.profiles.display_name}
               requesterAvatar={request.profiles.avatar_url}
             />
           ))}
@@ -109,12 +109,12 @@ export function NotificationsDialog() {
                   {notification.sender.avatar_url && (
                     <img
                       src={notification.sender.avatar_url}
-                      alt={notification.sender.username}
+                      alt={notification.sender.display_name}
                       className="w-10 h-10 rounded-full"
                     />
                   )}
                   <div className="flex-1">
-                    <p className="font-medium">{notification.sender.username}</p>
+                    <p className="font-medium">{notification.sender.display_name}</p>
                     {notification.type === 'new_flashcard' && (
                       <p className="text-sm text-gray-600">
                         Created a new flashcard for you
