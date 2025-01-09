@@ -6,11 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface FriendRequestItemProps {
   requesterId: string;
-  requesterUsername: string;
+  requesterDisplayName: string;
   requesterAvatar?: string;
 }
 
-export function FriendRequestItem({ requesterId, requesterUsername, requesterAvatar }: FriendRequestItemProps) {
+export function FriendRequestItem({ requesterId, requesterDisplayName, requesterAvatar }: FriendRequestItemProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -60,12 +60,12 @@ export function FriendRequestItem({ requesterId, requesterUsername, requesterAva
         {requesterAvatar && (
           <img
             src={requesterAvatar}
-            alt={requesterUsername}
+            alt={requesterDisplayName}
             className="w-10 h-10 rounded-full"
           />
         )}
         <div>
-          <p className="font-medium">{requesterUsername}</p>
+          <p className="font-medium">{requesterDisplayName}</p>
           <p className="text-sm text-muted-foreground">Sent you a friend request</p>
         </div>
       </div>

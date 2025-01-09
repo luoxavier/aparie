@@ -14,17 +14,17 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 export function AddFriendDialog() {
-  const [searchUsername, setSearchUsername] = useState("");
+  const [searchDisplayName, setSearchDisplayName] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const searchUsers = async (username: string) => {
+  const searchUsers = async (displayName: string) => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .ilike('username', `%${username}%`)
+        .ilike('display_name', `%${displayName}%`)
         .neq('id', user?.id)
         .maybeSingle();
 
@@ -39,7 +39,6 @@ export function AddFriendDialog() {
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
       try {
-        // First check if a friend request already exists
         const { data: existingRequest, error: checkError } = await supabase
           .from('friend_connections')
           .select('*')
@@ -57,7 +56,6 @@ export function AddFriendDialog() {
           return;
         }
 
-        // Ensure both users have profiles
         const { data: userProfile, error: userProfileError } = await supabase
           .from('profiles')
           .select('*')
@@ -68,7 +66,6 @@ export function AddFriendDialog() {
           throw new Error("Your profile is not set up properly. Please try logging out and back in.");
         }
 
-        // Insert the friend request
         const { error: insertError } = await supabase
           .from('friend_connections')
           .insert([
@@ -112,22 +109,22 @@ export function AddFriendDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            placeholder="Search username..."
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.target.value)}
+            placeholder="Search display name..."
+            value={searchDisplayName}
+            onChange={(e) => setSearchDisplayName(e.target.value)}
           />
           <div className="space-y-2">
-            {searchUsername && (
+            {searchDisplayName && (
               <Button
                 onClick={async () => {
                   try {
-                    const user = await searchUsers(searchUsername);
+                    const user = await searchUsers(searchDisplayName);
                     if (user) {
                       await sendFriendRequest.mutateAsync(user.id);
                     } else {
                       toast({
                         title: "User not found",
-                        description: "No user found with that username.",
+                        description: "No user found with that display name.",
                         variant: "destructive",
                       });
                     }

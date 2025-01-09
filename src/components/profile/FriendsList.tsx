@@ -10,12 +10,11 @@ import { toast } from "@/hooks/use-toast";
 
 export function FriendsList() {
   const { user } = useAuth();
-  const [selectedFriend, setSelectedFriend] = useState<{ id: string; username: string } | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<{ id: string; display_name: string } | null>(null);
 
   const { data: friends } = useQuery({
     queryKey: ['friends', user?.id],
     queryFn: async () => {
-      // Get friends where user is either user_id or friend_id
       const { data: connections, error } = await supabase
         .from('friend_connections')
         .select(`
@@ -23,7 +22,7 @@ export function FriendsList() {
           user_id,
           profiles!friend_connections_friend_id_fkey (
             id,
-            username,
+            display_name,
             avatar_url
           )
         `)
@@ -32,14 +31,13 @@ export function FriendsList() {
       
       if (error) throw error;
 
-      // Transform the data to get friend profiles regardless of which ID they are
       return connections.map(connection => {
         const isFriend = connection.friend_id === user?.id;
         return {
           id: isFriend ? connection.user_id : connection.friend_id,
-          username: isFriend ? 
-            connection.profiles.username : 
-            connection.profiles.username,
+          display_name: isFriend ? 
+            connection.profiles.display_name : 
+            connection.profiles.display_name,
           avatar_url: isFriend ? 
             connection.profiles.avatar_url : 
             connection.profiles.avatar_url
@@ -52,12 +50,11 @@ export function FriendsList() {
     if (!selectedFriend) return;
 
     try {
-      // Create the flashcard
       const { data: flashcard, error: flashcardError } = await supabase
         .from('flashcards')
         .insert([
           {
-            creator_id: user?.id,
+            creator_id: selectedFriend.id,
             front,
             back
           }
@@ -67,7 +64,6 @@ export function FriendsList() {
 
       if (flashcardError) throw flashcardError;
 
-      // Create notification for the friend
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert([
@@ -87,7 +83,7 @@ export function FriendsList() {
 
       toast({
         title: "Success",
-        description: `Flashcard sent to ${selectedFriend.username}!`,
+        description: `Flashcard sent to ${selectedFriend.display_name}!`,
       });
 
       setSelectedFriend(null);
@@ -116,19 +112,19 @@ export function FriendsList() {
                     {friend.avatar_url && (
                       <img
                         src={friend.avatar_url}
-                        alt={friend.username}
+                        alt={friend.display_name}
                         className="w-10 h-10 rounded-full"
                       />
                     )}
                     <div>
-                      <h3 className="font-medium">{friend.username}</h3>
+                      <h3 className="font-medium">{friend.display_name}</h3>
                     </div>
                   </div>
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Flashcard for {friend.username}</DialogTitle>
+                  <DialogTitle>Create Flashcard for {friend.display_name}</DialogTitle>
                 </DialogHeader>
                 <CreateCard onSave={handleSaveCard} />
               </DialogContent>
