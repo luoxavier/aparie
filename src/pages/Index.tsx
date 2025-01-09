@@ -4,6 +4,7 @@ import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
 import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Card {
   id: number;
@@ -12,6 +13,7 @@ interface Card {
 }
 
 const Index = () => {
+  const { user, signOut } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [isStudying, setIsStudying] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -94,10 +96,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-[#F8F7FF] p-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
-          Flashcards
-        </h1>
-        
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Flashcards</h1>
+          <Button
+            variant="outline"
+            onClick={() => signOut()}
+            className="text-sm"
+          >
+            Sign Out
+          </Button>
+        </div>
+
         {streak > 0 && (
           <div className="text-center mb-4 animate-slide-up">
             <span className="inline-block bg-primary text-white px-4 py-2 rounded-full">
@@ -109,7 +118,7 @@ const Index = () => {
         {!isStudying ? (
           <div className="space-y-8">
             <CreateCard onSave={handleSaveCard} />
-            
+
             {cards.length > 0 && (
               <div className="space-y-4">
                 <Button
@@ -118,7 +127,7 @@ const Index = () => {
                 >
                   Start Studying ({cards.length} cards)
                 </Button>
-                
+
                 {mistakes.length > 0 && (
                   <Button
                     onClick={startReviewingMistakes}
