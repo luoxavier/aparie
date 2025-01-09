@@ -33,7 +33,7 @@ export async function validateFriendRequest(userId: string, friendId: string): P
     };
   }
 
-  // Check for existing connections in both directions using proper query syntax
+  // Check for existing connections in both directions
   const { data: existingConnections, error: connectionError } = await supabase
     .from('friend_connections')
     .select('status')
@@ -62,12 +62,11 @@ export async function createFriendRequest(userId: string, friendId: string) {
     throw new Error('Invalid user information provided');
   }
 
-  // Double-check for existing connections before inserting using proper query syntax
+  // Check for existing connections with a more precise query
   const { data: existingConnections, error: checkError } = await supabase
     .from('friend_connections')
     .select('id')
-    .or(`user_id.eq.${userId},user_id.eq.${friendId}`)
-    .or(`friend_id.eq.${userId},friend_id.eq.${friendId}`);
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
 
   if (checkError) {
     console.error('Error checking existing connections:', checkError);
