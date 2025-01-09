@@ -35,24 +35,36 @@ export function NotificationItem({
           .from('friend_connections')
           .select('id, status')
           .or(`and(user_id.eq.${user?.id},friend_id.eq.${senderId}),and(user_id.eq.${senderId},friend_id.eq.${user?.id})`)
-          .single();
+          .maybeSingle();
 
-        if (checkError && checkError.code !== 'PGRST116') throw checkError;
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError;
+        }
 
         if (existingConnection?.status === 'accepted') {
           throw new Error('You are already friends with this user');
         }
 
-        // Create friend connection
-        const { error: connectionError } = await supabase
-          .from('friend_connections')
-          .insert([{
-            user_id: user?.id,
-            friend_id: senderId,
-            status: 'accepted'
-          }]);
+        // Create friend connection if none exists
+        if (!existingConnection) {
+          const { error: connectionError } = await supabase
+            .from('friend_connections')
+            .insert([{
+              user_id: user?.id,
+              friend_id: senderId,
+              status: 'accepted'
+            }]);
 
-        if (connectionError) throw connectionError;
+          if (connectionError) throw connectionError;
+        } else {
+          // Update existing connection to accepted
+          const { error: updateError } = await supabase
+            .from('friend_connections')
+            .update({ status: 'accepted' })
+            .eq('id', existingConnection.id);
+
+          if (updateError) throw updateError;
+        }
 
         // Mark notification as read
         onMarkAsRead(id);
