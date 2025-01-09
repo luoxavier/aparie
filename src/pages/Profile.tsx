@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FriendsList } from "@/components/profile/FriendsList";
+import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -43,11 +44,16 @@ export default function Profile() {
       <Tabs defaultValue="flashcards" className="space-y-4">
         <TabsList>
           <TabsTrigger value="flashcards">My Flashcards</TabsTrigger>
+          <TabsTrigger value="favorites">Favorites</TabsTrigger>
           <TabsTrigger value="friends">My Friends</TabsTrigger>
         </TabsList>
 
         <TabsContent value="flashcards">
           <FlashcardsList />
+        </TabsContent>
+
+        <TabsContent value="favorites">
+          <FavoriteFlashcards />
         </TabsContent>
 
         <TabsContent value="friends">

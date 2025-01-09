@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateCard } from "@/components/CreateCard";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 export function EmptyFlashcardsState() {
   return (
@@ -8,13 +8,13 @@ export function EmptyFlashcardsState() {
       <div className="text-center text-gray-500">No flashcards found</div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button className="w-full">Create a Flashcard</Button>
+          <Button className="w-full">Create Flashcards</Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Create a New Flashcard</DialogTitle>
+            <DialogTitle>Create New Flashcards</DialogTitle>
           </DialogHeader>
-          <CreateCard />
+          <CreateMultipleCards />
         </DialogContent>
       </Dialog>
     </div>

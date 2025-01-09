@@ -9,11 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      favorite_folders: {
+        Row: {
+          created_at: string
+          creator_id: string
+          folder_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          folder_name: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          folder_name?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_folders_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorite_folders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flashcards: {
         Row: {
           back: string
           created_at: string
           creator_id: string
+          folder_name: string | null
           front: string
           id: string
           recipient_id: string | null
@@ -23,6 +63,7 @@ export type Database = {
           back: string
           created_at?: string
           creator_id: string
+          folder_name?: string | null
           front: string
           id?: string
           recipient_id?: string | null
@@ -32,6 +73,7 @@ export type Database = {
           back?: string
           created_at?: string
           creator_id?: string
+          folder_name?: string | null
           front?: string
           id?: string
           recipient_id?: string | null
