@@ -17,10 +17,8 @@ type Profile = {
 type FriendConnection = {
   friend_id: string;
   user_id: string;
-  profiles: {
-    friend_connections_friend_id_fkey: Profile;
-    friend_connections_user_id_fkey: Profile;
-  };
+  friend: Profile;
+  user: Profile;
 };
 
 export function FriendsList() {
@@ -35,13 +33,13 @@ export function FriendsList() {
         .select(`
           friend_id,
           user_id,
-          profiles!friend_connections_friend_id_fkey (
+          friend:profiles!friend_connections_friend_id_fkey (
             id,
             display_name,
             username,
             avatar_url
           ),
-          profiles!friend_connections_user_id_fkey (
+          user:profiles!friend_connections_user_id_fkey (
             id,
             display_name,
             username,
@@ -57,9 +55,7 @@ export function FriendsList() {
         // If the current user is the friend_id, we want to show the user_id's profile
         // If the current user is the user_id, we want to show the friend_id's profile
         const isFriend = connection.friend_id === user?.id;
-        const friendProfile = isFriend 
-          ? connection.profiles.friend_connections_user_id_fkey 
-          : connection.profiles.friend_connections_friend_id_fkey;
+        const friendProfile = isFriend ? connection.user : connection.friend;
 
         return {
           id: friendProfile.id,
