@@ -41,23 +41,20 @@ export function FlashcardDisplay({
     // Always include the correct answer
     const options = [currentCard.back];
     
-    // Get all unique answers from the deck
-    const allAnswers = [...new Set(deck.map(card => card.back))];
+    // Get all unique answers from the deck excluding the current card's answer
+    const allPossibleAnswers = [...new Set(deck
+      .filter(card => card.back !== currentCard.back)
+      .map(card => card.back))];
     
-    // Filter out the current correct answer and shuffle remaining answers
-    const wrongAnswers = allAnswers
-      .filter(answer => answer !== currentCard.back)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
+    // Shuffle the possible answers
+    const shuffledAnswers = allPossibleAnswers.sort(() => Math.random() - 0.5);
     
-    // If we don't have enough wrong answers, duplicate some existing ones
-    while (wrongAnswers.length < 3) {
-      wrongAnswers.push(allAnswers[Math.floor(Math.random() * allAnswers.length)]);
-    }
+    // Take the first 3 unique wrong answers
+    const wrongAnswers = shuffledAnswers.slice(0, 3);
     
-    // Combine and shuffle all options
-    return [...options, ...wrongAnswers]
-      .sort(() => Math.random() - 0.5);
+    // Combine correct answer with wrong answers and shuffle
+    const allAnswers = [...options, ...wrongAnswers];
+    return allAnswers.sort(() => Math.random() - 0.5);
   };
 
   const glowIntensity = Math.min(streak * 0.2, 1);
