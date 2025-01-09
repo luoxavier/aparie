@@ -24,18 +24,19 @@ export async function validateFriendRequest(userId: string, friendId: string): P
     };
   }
 
-  const { data: existingConnection, error: connectionError } = await supabase
+  // Check for existing connections in both directions
+  const { data: existingConnections, error: connectionError } = await supabase
     .from('friend_connections')
     .select('status')
-    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
-    .maybeSingle();
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
 
   if (connectionError) {
     throw new Error('Failed to check existing connections');
   }
 
-  if (existingConnection) {
-    return existingConnection.status === 'accepted' 
+  if (existingConnections && existingConnections.length > 0) {
+    const connection = existingConnections[0];
+    return connection.status === 'accepted' 
       ? { type: 'already_friends', message: 'You are already friends with this user.' }
       : { type: 'pending_request', message: 'A friend request is already pending.' };
   }
