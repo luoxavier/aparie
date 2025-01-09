@@ -145,16 +145,18 @@ export function FlashcardFolder({
                 <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCards(!showCards);
-              }}
-            >
-              Show Cards
-            </Button>
+            {!isMyFlashcards && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCards(!showCards);
+                }}
+              >
+                Show Cards
+              </Button>
+            )}
             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
           </div>
         </div>
