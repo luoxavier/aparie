@@ -38,7 +38,7 @@ export async function validateFriendRequest(userId: string, friendId: string): P
   const { data: existingConnections, error: connectionError } = await supabase
     .from('friend_connections')
     .select('status')
-    .or(`user_id.eq.${userId},friend_id.eq.${friendId}`);
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
 
   if (connectionError) {
     console.error('Error checking connections:', connectionError);
@@ -47,9 +47,12 @@ export async function validateFriendRequest(userId: string, friendId: string): P
 
   if (existingConnections && existingConnections.length > 0) {
     const connection = existingConnections[0];
-    return connection.status === 'accepted' 
-      ? { type: 'already_friends', message: 'You are already friends with this user.' }
-      : { type: 'pending_request', message: 'A friend request is already pending.' };
+    return {
+      type: connection.status === 'accepted' ? 'already_friends' : 'pending_request',
+      message: connection.status === 'accepted' 
+        ? 'You are already friends with this user.'
+        : 'A friend request is already pending.'
+    };
   }
 
   return null;
@@ -58,6 +61,16 @@ export async function validateFriendRequest(userId: string, friendId: string): P
 export async function createFriendRequest(userId: string, friendId: string) {
   if (!userId || !friendId) {
     throw new Error('Invalid user information provided');
+  }
+
+  // Double-check for existing connections before inserting
+  const { data: existingConnections } = await supabase
+    .from('friend_connections')
+    .select('id')
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+
+  if (existingConnections && existingConnections.length > 0) {
+    throw new Error('Connection already exists');
   }
 
   const { error: insertError } = await supabase
