@@ -2,35 +2,15 @@ import { supabase } from "@/integrations/supabase/client";
 import type { FriendProfile, FriendRequestError } from "@/types/friend-request";
 
 export async function findUserByIdentifier(identifier: string): Promise<FriendProfile | null> {
-  // First try to find the user's email using the database function
-  const { data: emailData, error: emailError } = await supabase
-    .rpc('get_user_email_from_identifier', {
-      identifier: identifier
-    });
-
-  if (emailError) {
-    throw new Error('Failed to search for user');
-  }
-
-  if (!emailData) {
-    return null;
-  }
-
-  // Now get the profile using the email
+  // First try to find the user's profile using username or display name
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
-    .eq('id', (
-      await supabase
-        .from('auth')
-        .select('id')
-        .eq('email', emailData)
-        .single()
-    ).id)
+    .or(`username.eq.${identifier},display_name.eq.${identifier}`)
     .maybeSingle();
 
   if (profileError) {
-    throw new Error('Failed to fetch user profile');
+    throw new Error('Failed to search for user');
   }
 
   return profile;

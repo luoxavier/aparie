@@ -6,7 +6,11 @@ interface FriendSearchInputProps {
   placeholder?: string;
 }
 
-export function FriendSearchInput({ value, onChange, placeholder = "Enter friend's username" }: FriendSearchInputProps) {
+export function FriendSearchInput({ 
+  value, 
+  onChange, 
+  placeholder = "Enter friend's username or display name" 
+}: FriendSearchInputProps) {
   return (
     <Input
       type="text"
