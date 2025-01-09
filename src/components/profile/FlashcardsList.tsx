@@ -21,7 +21,12 @@ interface Flashcard {
 
 interface GroupedFlashcards {
   created: Flashcard[];
-  received: Flashcard[];
+  received: {
+    [creatorId: string]: {
+      creator: Creator;
+      flashcards: Flashcard[];
+    };
+  };
 }
 
 export function FlashcardsList() {
@@ -69,7 +74,19 @@ export function FlashcardsList() {
 
   const groupedFlashcards: GroupedFlashcards = {
     created: flashcards.filter(f => f.creator_id === user?.id),
-    received: flashcards.filter(f => f.recipient_id === user?.id)
+    received: flashcards
+      .filter(f => f.recipient_id === user?.id)
+      .reduce((acc, flashcard) => {
+        const creatorId = flashcard.creator_id;
+        if (!acc[creatorId]) {
+          acc[creatorId] = {
+            creator: flashcard.creator,
+            flashcards: [],
+          };
+        }
+        acc[creatorId].flashcards.push(flashcard);
+        return acc;
+      }, {} as GroupedFlashcards['received'])
   };
 
   const startStudying = (deck: Flashcard[]) => {
@@ -93,12 +110,15 @@ export function FlashcardsList() {
         flashcards={groupedFlashcards.created}
         onStudy={startStudying}
       />
-      <FlashcardFolder
-        title="Flashcards Received"
-        flashcards={groupedFlashcards.received}
-        onStudy={startStudying}
-        showCreator
-      />
+      {Object.entries(groupedFlashcards.received).map(([creatorId, { creator, flashcards }]) => (
+        <FlashcardFolder
+          key={creatorId}
+          title={`Flashcards from ${creator.display_name}`}
+          flashcards={flashcards}
+          onStudy={startStudying}
+          showCreator={false}
+        />
+      ))}
     </Accordion>
   );
 }
