@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,10 +21,29 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Ensure profile exists
+  const createProfileIfNeeded = async () => {
+    if (!user) return;
+    
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select()
+      .eq('id', user.id)
+      .single();
+    
+    if (!existingProfile) {
+      await supabase.from('profiles').insert({
+        id: user.id,
+        username: user.email?.split('@')[0] // Default username from email
+      });
+    }
+  };
+
   // Fetch user's flashcards
   const { data: flashcards } = useQuery({
     queryKey: ['flashcards', user?.id],
     queryFn: async () => {
+      await createProfileIfNeeded();
       const { data, error } = await supabase
         .from('flashcards')
         .select('*')
@@ -39,6 +58,7 @@ export default function Profile() {
   const { data: friends } = useQuery({
     queryKey: ['friends', user?.id],
     queryFn: async () => {
+      await createProfileIfNeeded();
       const { data, error } = await supabase
         .from('friend_connections')
         .select(`
@@ -72,6 +92,8 @@ export default function Profile() {
   // Send friend request
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
+      await createProfileIfNeeded(); // Ensure profile exists before sending request
+      
       const { error } = await supabase
         .from('friend_connections')
         .insert([
@@ -82,7 +104,14 @@ export default function Profile() {
           }
         ]);
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error sending friend request",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
