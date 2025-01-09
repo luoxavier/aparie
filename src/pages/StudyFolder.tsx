@@ -112,6 +112,7 @@ export default function StudyFolder() {
             isCorrect={isCorrect}
             showAnswer={showAnswer}
             onAnswer={handleAnswer}
+            onReviewMistakes={handleReviewMistakes}
           />
           <StudyProgress
             currentIndex={currentCardIndex}
