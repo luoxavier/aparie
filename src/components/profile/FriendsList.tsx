@@ -24,6 +24,12 @@ export function FriendsList() {
             display_name,
             username,
             avatar_url
+          ),
+          profiles!friend_connections_user_id_fkey (
+            id,
+            display_name,
+            username,
+            avatar_url
           )
         `)
         .or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)
@@ -32,12 +38,18 @@ export function FriendsList() {
       if (error) throw error;
 
       return connections.map(connection => {
+        // If the current user is the friend_id, we want to show the user_id's profile
+        // If the current user is the user_id, we want to show the friend_id's profile
         const isFriend = connection.friend_id === user?.id;
+        const friendProfile = isFriend 
+          ? connection.profiles!friend_connections_user_id_fkey 
+          : connection.profiles!friend_connections_friend_id_fkey;
+
         return {
-          id: isFriend ? connection.user_id : connection.friend_id,
-          display_name: connection.profiles.display_name,
-          username: connection.profiles.username,
-          avatar_url: connection.profiles.avatar_url
+          id: friendProfile.id,
+          display_name: friendProfile.display_name,
+          username: friendProfile.username,
+          avatar_url: friendProfile.avatar_url
         };
       });
     },
