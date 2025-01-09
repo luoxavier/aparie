@@ -26,6 +26,7 @@ export function NotificationsDialog() {
         .select(`
           *,
           sender:profiles!notifications_sender_id_fkey (
+            id,
             display_name,
             avatar_url
           )

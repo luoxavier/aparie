@@ -30,6 +30,19 @@ export function NotificationItem({
   const handleFriendRequest = useMutation({
     mutationFn: async (action: 'accept' | 'deny') => {
       if (action === 'accept') {
+        // First check if there's already a connection
+        const { data: existingConnection, error: checkError } = await supabase
+          .from('friend_connections')
+          .select('id, status')
+          .or(`and(user_id.eq.${user?.id},friend_id.eq.${senderId}),and(user_id.eq.${senderId},friend_id.eq.${user?.id})`)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') throw checkError;
+
+        if (existingConnection?.status === 'accepted') {
+          throw new Error('You are already friends with this user');
+        }
+
         // Create friend connection
         const { error: connectionError } = await supabase
           .from('friend_connections')
@@ -43,7 +56,6 @@ export function NotificationItem({
 
         // Mark notification as read
         onMarkAsRead(id);
-
       } else {
         // Just mark the notification as read for deny
         onMarkAsRead(id);
