@@ -55,6 +55,7 @@ export function FlashcardsList() {
         throw error;
       }
       
+      console.log('Fetched flashcards:', data); // Debug log
       return data;
     },
     enabled: !!user?.id,
