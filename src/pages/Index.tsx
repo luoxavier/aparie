@@ -3,6 +3,7 @@ import { CreateCard } from "@/components/CreateCard";
 import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
 import { shuffle } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface Card {
   id: number;
@@ -62,6 +63,13 @@ const Index = () => {
     if (currentCardIndex < currentDeck.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
     } else {
+      // Show completion message
+      toast({
+        title: "🎉 Congratulations!",
+        description: "You've completed all the flashcards! Starting over with a fresh shuffle.",
+        variant: "default",
+      });
+
       if (isReviewingMistakes) {
         // If we're done reviewing mistakes, go back to study mode
         startStudying();
@@ -138,7 +146,7 @@ const Index = () => {
               Card {currentCardIndex + 1} of {currentDeck.length}
               {isReviewingMistakes && " (Reviewing Mistakes)"}
             </div>
-            <div className="space-y-2">
+            <div className="fixed bottom-4 left-0 right-0 px-4 space-y-2 max-w-md mx-auto">
               <Button
                 onClick={() => {
                   setIsStudying(false);
