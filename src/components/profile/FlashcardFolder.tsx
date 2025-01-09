@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useNavigate } from "react-router-dom";
 
 interface Creator {
   display_name: string;
@@ -27,6 +28,13 @@ interface FlashcardFolderProps {
 }
 
 export function FlashcardFolder({ title, flashcards, onStudy, showCreator = false }: FlashcardFolderProps) {
+  const navigate = useNavigate();
+
+  const handleStudy = () => {
+    onStudy(flashcards);
+    navigate('/study');
+  };
+
   return (
     <AccordionItem value={title.toLowerCase().replace(/\s+/g, '-')}>
       <AccordionTrigger className="text-left">
@@ -42,7 +50,7 @@ export function FlashcardFolder({ title, flashcards, onStudy, showCreator = fals
       <AccordionContent>
         <div className="space-y-4 pt-4">
           <Button 
-            onClick={() => onStudy(flashcards)}
+            onClick={handleStudy}
             className="w-full"
             disabled={flashcards.length === 0}
           >
