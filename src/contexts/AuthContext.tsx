@@ -7,7 +7,7 @@ import { checkExistingUsername, handleSignUpError } from '@/utils/auth-utils';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (identifier: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -35,7 +35,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
+    // First, get the email using our database function
+    const { data: emailData, error: emailError } = await supabase
+      .rpc('get_user_email_from_identifier', { identifier });
+
+    if (emailError) {
+      toast({
+        variant: "destructive",
+        title: "Error signing in",
+        description: "Invalid credentials",
+      });
+      throw emailError;
+    }
+
+    const email = emailData as string;
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Error signing in",
+        description: "User not found",
+      });
+      throw new Error("User not found");
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
