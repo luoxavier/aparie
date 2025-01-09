@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Minus } from "lucide-react";
 
 interface Flashcard {
   id: string;
@@ -55,6 +56,18 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
     if (cards.length > 1) {
       const newCards = cards.filter((_, i) => i !== index);
       setCards(newCards);
+    }
+  };
+
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCard();
+      // Focus the front input of the new card after a short delay
+      setTimeout(() => {
+        const nextInput = document.getElementById(`front-${index + 1}`);
+        nextInput?.focus();
+      }, 0);
     }
   };
 
@@ -113,7 +126,6 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
         onSave();
       }
 
-      // Reset form if not editing existing cards
       if (!existingCards) {
         setFolderName("");
         setCards([{ front: "", back: "" }]);
@@ -143,52 +155,53 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
             />
           </div>
           
-          {cards.map((card, index) => (
-            <div key={index} className="space-y-4 p-4 border rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Card {index + 1}</span>
-                {cards.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removeCard(index)}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`front-${index}`}>Front</Label>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 px-4">
+              <Label>Front</Label>
+              <Label>Back</Label>
+            </div>
+            
+            {cards.map((card, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-4 flex-1">
                   <Input
                     id={`front-${index}`}
                     value={card.front}
                     onChange={(e) => updateCard(index, "front", e.target.value)}
+                    onKeyDown={(e) => handleKeyPress(e, index)}
                     placeholder="Front text"
                     required
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`back-${index}`}>Back</Label>
                   <Input
                     id={`back-${index}`}
                     value={card.back}
                     onChange={(e) => updateCard(index, "back", e.target.value)}
+                    onKeyDown={(e) => handleKeyPress(e, index)}
                     placeholder="Back text"
                     required
                   />
                 </div>
+                {cards.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeCard(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </CardContent>
         <CardFooter className="flex gap-4">
           <Button type="button" variant="outline" onClick={addCard} className="flex-1">
             Add Another Card
           </Button>
           <Button type="submit" className="flex-1">
-            {existingCards ? 'Update Flashcards' : 'Create Flashcards'}
+            {existingCards ? 'Update Folder' : 'Submit Folder'}
           </Button>
         </CardFooter>
       </Card>

@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Star } from "lucide-react";
+import { Star, ChevronDown } from "lucide-react";
 
 interface Creator {
   display_name: string;
@@ -48,6 +48,7 @@ export function FlashcardFolder({
   const { toast } = useToast();
   const { user } = useAuth();
   const [isFavorited, setIsFavorited] = useState(false);
+  const [showCards, setShowCards] = useState(false);
 
   const handleStudy = () => {
     onStudy(flashcards);
@@ -95,18 +96,32 @@ export function FlashcardFolder({
               ({flashcards.length} cards)
             </span>
           </span>
-          {isFromFriend && !isFavorited && (
+          <div className="flex items-center gap-2">
+            {isFromFriend && !isFavorited && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFavorite();
+                }}
+                className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
+              >
+                <Star className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                handleFavorite();
+                setShowCards(!showCards);
               }}
             >
-              <Star className="h-4 w-4" />
+              Show Cards
             </Button>
-          )}
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+          </div>
         </div>
       </AccordionTrigger>
       <AccordionContent>
@@ -158,7 +173,7 @@ export function FlashcardFolder({
               </DialogContent>
             </Dialog>
           )}
-          {flashcards.map((flashcard) => (
+          {showCards && flashcards.map((flashcard) => (
             <Card key={flashcard.id}>
               <CardContent className="p-4 grid grid-cols-2 gap-4">
                 {showCreator && (
