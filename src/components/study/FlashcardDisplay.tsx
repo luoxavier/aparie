@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface FlashcardDisplayProps {
   currentCard: {
@@ -11,6 +12,7 @@ interface FlashcardDisplayProps {
   isCorrect: boolean | null;
   showAnswer: boolean;
   onAnswer: (answer: string) => void;
+  onReviewMistakes: () => void;
 }
 
 export function FlashcardDisplay({ 
@@ -18,8 +20,28 @@ export function FlashcardDisplay({
   deck, 
   isCorrect, 
   showAnswer, 
-  onAnswer 
+  onAnswer,
+  onReviewMistakes
 }: FlashcardDisplayProps) {
+  const navigate = useNavigate();
+
+  // Generate answer options including the correct answer
+  const generateAnswerOptions = () => {
+    // Start with the correct answer
+    const options = [currentCard.back];
+    
+    // Get wrong answers from the deck, excluding the current card
+    const wrongAnswers = deck
+      .filter(card => card.back !== currentCard.back)
+      .map(card => card.back)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+    
+    // Combine and shuffle all answers
+    return [...options, ...wrongAnswers]
+      .sort(() => Math.random() - 0.5);
+  };
+
   return (
     <div className="space-y-6">
       <AnimatePresence mode="wait">
@@ -55,16 +77,33 @@ export function FlashcardDisplay({
       </AnimatePresence>
 
       <div className="grid grid-cols-2 gap-4">
-        {!showAnswer && deck.map((card, index) => (
+        {!showAnswer && generateAnswerOptions().map((answer, index) => (
           <Button
             key={index}
             variant="outline"
             className="h-auto py-4 text-left"
-            onClick={() => onAnswer(card.back)}
+            onClick={() => onAnswer(answer)}
           >
-            {card.back}
+            {answer}
           </Button>
-        )).sort(() => Math.random() - 0.5).slice(0, 4)}
+        ))}
+      </div>
+
+      <div className="flex gap-4 mt-8">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={onReviewMistakes}
+        >
+          Review Mistakes
+        </Button>
+        <Button
+          variant="secondary"
+          className="flex-1"
+          onClick={() => navigate("/profile")}
+        >
+          Back to Menu
+        </Button>
       </div>
     </div>
   );
