@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (error.message.includes('Invalid API key')) {
       message = 'Authentication service is temporarily unavailable. Please try again later.';
+      console.error('Supabase client configuration error:', error);
     } else if (error.message.includes('User already registered')) {
       message = 'This email is already registered.';
     } else if (error.message.includes('Invalid login credentials')) {
@@ -63,12 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
+      console.log('Checking username availability:', username);
       // First check if username is already taken
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', username)
         .single();
+
+      console.log('Username check result:', { existingUser, checkError });
 
       if (checkError && checkError.code !== 'PGRST116') {
         console.error('Error checking username:', checkError);
