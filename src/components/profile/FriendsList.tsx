@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { CreateCard } from "@/components/CreateCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
-import { toast } from "@/hooks/use-toast";
 
 export function FriendsList() {
   const { user } = useAuth();
@@ -43,56 +42,6 @@ export function FriendsList() {
       });
     },
   });
-
-  const handleSaveCard = async (front: string, back: string) => {
-    if (!selectedFriend) return;
-
-    try {
-      const { data: flashcard, error: flashcardError } = await supabase
-        .from('flashcards')
-        .insert([
-          {
-            creator_id: selectedFriend.id,
-            front,
-            back
-          }
-        ])
-        .select()
-        .single();
-
-      if (flashcardError) throw flashcardError;
-
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert([
-          {
-            recipient_id: selectedFriend.id,
-            sender_id: user?.id,
-            type: 'new_flashcard',
-            content: {
-              flashcard_id: flashcard.id,
-              front,
-              back
-            }
-          }
-        ]);
-
-      if (notificationError) throw notificationError;
-
-      toast({
-        title: "Success",
-        description: `Flashcard sent to ${selectedFriend.display_name}!`,
-      });
-
-      setSelectedFriend(null);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -134,7 +83,7 @@ export function FriendsList() {
                     {friend.username && ` (@${friend.username})`}
                   </DialogTitle>
                 </DialogHeader>
-                <CreateCard onSave={handleSaveCard} />
+                <CreateCard />
               </DialogContent>
             </Dialog>
           </CardContent>
