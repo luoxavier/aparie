@@ -38,41 +38,50 @@ export function AddFriendDialog() {
 
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
-      // First check if a friend request already exists
-      const { data: existingRequest, error: checkError } = await supabase
-        .from('friend_connections')
-        .select('*')
-        .or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
-        .maybeSingle();
+      try {
+        // First check if a friend request already exists
+        const { data: existingRequest, error: checkError } = await supabase
+          .from('friend_connections')
+          .select('*')
+          .or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
+          .maybeSingle();
 
-      if (checkError) throw checkError;
+        if (checkError) throw checkError;
 
-      if (existingRequest) {
-        toast({
-          title: "Friend request already exists",
-          description: "You already have a pending or accepted friend request with this user.",
-          variant: "destructive",
-        });
-        return;
-      }
+        if (existingRequest) {
+          toast({
+            title: "Friend request already exists",
+            description: "You already have a pending or accepted friend request with this user.",
+            variant: "destructive",
+          });
+          return;
+        }
 
-      const { error } = await supabase
-        .from('friend_connections')
-        .insert([
-          {
-            user_id: user?.id,
-            friend_id: friendId,
-            status: 'pending'
-          }
-        ]);
+        // Ensure both users have profiles
+        const { data: userProfile, error: userProfileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user?.id)
+          .single();
 
-      if (error) {
-        console.error('Error sending friend request:', error);
-        toast({
-          title: "Error sending friend request",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (userProfileError) {
+          throw new Error("Your profile is not set up properly. Please try logging out and back in.");
+        }
+
+        // Insert the friend request
+        const { error: insertError } = await supabase
+          .from('friend_connections')
+          .insert([
+            {
+              user_id: user?.id,
+              friend_id: friendId,
+              status: 'pending'
+            }
+          ]);
+
+        if (insertError) throw insertError;
+      } catch (error: any) {
+        console.error('Error in friend request process:', error);
         throw error;
       }
     },
