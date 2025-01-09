@@ -28,6 +28,11 @@ export function NotificationItem({ id, senderName, senderAvatar, type, onMarkAsR
                 Created a new flashcard for you
               </p>
             )}
+            {type === 'friend_request' && (
+              <p className="text-sm text-gray-600">
+                Sent you a friend request
+              </p>
+            )}
           </div>
           <Button
             variant="ghost"

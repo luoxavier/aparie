@@ -1,40 +1,16 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export function AddFriendDialog() {
-  const [searchUsername, setSearchUsername] = useState("");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-
-  const searchUsers = async (username: string) => {
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .ilike('username', `%${username}%`)
-        .neq('id', user?.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      return profile;
-    } catch (error: any) {
-      console.error('Error searching users:', error);
-      throw error;
-    }
-  };
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [friendId, setFriendId] = useState("");
 
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
@@ -86,71 +62,61 @@ export function AddFriendDialog() {
           }
           throw insertError;
         }
+
+        // Create a notification for the friend request
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert([
+            {
+              recipient_id: friendId,
+              sender_id: user?.id,
+              type: 'friend_request',
+              content: null
+            }
+          ]);
+
+        if (notificationError) throw notificationError;
+
+        toast({
+          title: "Success",
+          description: "Friend request sent successfully!",
+        });
       } catch (error: any) {
         console.error('Error in friend request process:', error);
         throw error;
       }
     },
     onSuccess: () => {
-      toast({
-        title: "Friend request sent",
-        description: "They will be notified of your request.",
-      });
       queryClient.invalidateQueries({ queryKey: ['friends'] });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error sending friend request",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   });
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Add Friend</Button>
+        <Button variant="outline">Add Friend</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <Input
-            placeholder="Search username..."
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.target.value)}
-          />
-          <div className="space-y-2">
-            {searchUsername && (
-              <Button
-                onClick={async () => {
-                  try {
-                    const user = await searchUsers(searchUsername);
-                    if (user) {
-                      await sendFriendRequest.mutateAsync(user.id);
-                    } else {
-                      toast({
-                        title: "User not found",
-                        description: "No user found with that username.",
-                        variant: "destructive",
-                      });
-                    }
-                  } catch (error: any) {
-                    toast({
-                      title: "Error searching for user",
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                Send Friend Request
-              </Button>
-            )}
-          </div>
-        </div>
+        <input
+          type="text"
+          placeholder="Enter friend's ID"
+          value={friendId}
+          onChange={(e) => setFriendId(e.target.value)}
+          className="border p-2 rounded"
+        />
+        <Button
+          onClick={() => {
+            if (friendId) {
+              sendFriendRequest.mutate(friendId);
+              setFriendId("");
+            }
+          }}
+        >
+          Send Friend Request
+        </Button>
       </DialogContent>
     </Dialog>
   );
