@@ -4,17 +4,56 @@ import { Input } from "./ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [usernameError, setUsernameError] = useState(false);
   const { signIn, signUp } = useAuth();
+
+  const checkUsername = async (username: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("username", username)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error checking username:", error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error("Error checking username:", error);
+      return false;
+    }
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    setUsernameError(false); // Reset error state when user types
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (isSignUp) {
+        // Check if username exists before attempting signup
+        const usernameTaken = await checkUsername(username);
+        if (usernameTaken) {
+          setUsernameError(true);
+          toast({
+            title: "Username taken",
+            description: "This username is already in use. Please choose another.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         // For signup, we'll use email as username@domain.com to satisfy Supabase's email requirement
         await signUp(`${username}@flashcards.local`, password, username);
         toast({
@@ -60,8 +99,11 @@ export const Login = () => {
                 type="text"
                 placeholder="Enter your username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={handleUsernameChange}
                 required
+                className={`${
+                  usernameError ? "border-red-500 focus-visible:ring-red-500" : ""
+                }`}
               />
             </div>
             <div className="space-y-2">
@@ -84,7 +126,10 @@ export const Login = () => {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setUsernameError(false); // Reset error state when switching modes
+              }}
               className="text-primary hover:underline"
             >
               {isSignUp
