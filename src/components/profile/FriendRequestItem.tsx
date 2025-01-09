@@ -18,21 +18,47 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
   const handleFriendRequest = useMutation({
     mutationFn: async (action: 'accept' | 'deny') => {
       if (action === 'accept') {
-        const { error } = await supabase
+        // Update the friend connection status
+        const { error: connectionError } = await supabase
           .from('friend_connections')
           .update({ status: 'accepted' })
           .eq('user_id', requesterId)
           .eq('friend_id', user?.id);
 
-        if (error) throw error;
+        if (connectionError) throw connectionError;
+
+        // Create a notification for the requester
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert([{
+            recipient_id: requesterId,
+            sender_id: user?.id,
+            type: 'friend_request_accepted',
+            content: { message: 'accepted your friend request' }
+          }]);
+
+        if (notificationError) throw notificationError;
       } else {
-        const { error } = await supabase
+        // Delete the friend connection
+        const { error: deleteError } = await supabase
           .from('friend_connections')
           .delete()
           .eq('user_id', requesterId)
           .eq('friend_id', user?.id);
 
-        if (error) throw error;
+        if (deleteError) throw deleteError;
+
+        // Create a notification for the requester
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert([{
+            recipient_id: requesterId,
+            sender_id: user?.id,
+            type: 'friend_request_denied',
+            content: { message: 'denied your friend request' }
+          }]);
+
+        if (notificationError) throw notificationError;
       }
     },
     onSuccess: (_, variables) => {
@@ -44,6 +70,7 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
       });
       queryClient.invalidateQueries({ queryKey: ['friend-requests'] });
       queryClient.invalidateQueries({ queryKey: ['friends'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
     onError: (error: any) => {
       toast({
