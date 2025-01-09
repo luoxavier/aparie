@@ -69,7 +69,7 @@ export function FlashcardsList() {
 
   const groupedFlashcards: GroupedFlashcards = {
     created: flashcards.filter(f => f.creator_id === user?.id),
-    received: flashcards.filter(f => f.creator_id !== user?.id)
+    received: flashcards.filter(f => f.recipient_id === user?.id)
   };
 
   const startStudying = (deck: Flashcard[]) => {
