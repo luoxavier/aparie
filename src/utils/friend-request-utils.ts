@@ -4,7 +4,6 @@ import type { FriendProfile, FriendRequestError } from "@/types/friend-request";
 export async function findUserByIdentifier(identifier: string): Promise<FriendProfile | null> {
   if (!identifier) return null;
 
-  // Search by username or display name
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('id')
@@ -64,10 +63,15 @@ export async function createFriendRequest(userId: string, friendId: string) {
   }
 
   // Double-check for existing connections before inserting
-  const { data: existingConnections } = await supabase
+  const { data: existingConnections, error: checkError } = await supabase
     .from('friend_connections')
     .select('id')
     .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+
+  if (checkError) {
+    console.error('Error checking existing connections:', checkError);
+    throw new Error('Failed to check existing connections');
+  }
 
   if (existingConnections && existingConnections.length > 0) {
     throw new Error('Connection already exists');
