@@ -59,15 +59,21 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>, index: number, field: keyof CardPair) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      addCard();
-      // Focus the front input of the new card after a short delay
-      setTimeout(() => {
-        const nextInput = document.getElementById(`front-${index + 1}`);
-        nextInput?.focus();
-      }, 0);
+      if (field === 'back') {
+        addCard();
+        // Focus the front input of the new card after a short delay
+        setTimeout(() => {
+          const nextInput = document.getElementById(`front-${index + 1}`);
+          nextInput?.focus();
+        }, 0);
+      } else {
+        // Focus the back input of the current card
+        const backInput = document.getElementById(`back-${index}`);
+        backInput?.focus();
+      }
     }
   };
 
@@ -168,7 +174,7 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
                     id={`front-${index}`}
                     value={card.front}
                     onChange={(e) => updateCard(index, "front", e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(e, index)}
+                    onKeyDown={(e) => handleKeyPress(e, index, "front")}
                     placeholder="Front text"
                     required
                   />
@@ -176,7 +182,7 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
                     id={`back-${index}`}
                     value={card.back}
                     onChange={(e) => updateCard(index, "back", e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(e, index)}
+                    onKeyDown={(e) => handleKeyPress(e, index, "back")}
                     placeholder="Back text"
                     required
                   />
