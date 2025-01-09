@@ -8,7 +8,6 @@ export function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -17,7 +16,8 @@ export function SignupForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password, username, displayName);
+      // Pass the username as both username and display name
+      await signUp(email, password, username, username);
       navigate("/profile");
     } catch (error) {
       console.error("Error signing up:", error);
@@ -42,14 +42,6 @@ export function SignupForm() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Input
-          placeholder="Display Name"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
           required
         />
       </div>
