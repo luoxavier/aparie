@@ -5,6 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { CreateCard } from "@/components/CreateCard";
 
 interface Creator {
   display_name: string;
@@ -70,7 +73,22 @@ export function FlashcardsList() {
   }
 
   if (!flashcards?.length) {
-    return <div className="text-center text-gray-500">No flashcards found</div>;
+    return (
+      <div className="space-y-4">
+        <div className="text-center text-gray-500">No flashcards found</div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="w-full">Create a Flashcard</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create a New Flashcard</DialogTitle>
+            </DialogHeader>
+            <CreateCard />
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 
   const groupedFlashcards: GroupedFlashcards = {
@@ -105,21 +123,35 @@ export function FlashcardsList() {
   }
 
   return (
-    <Accordion type="single" collapsible className="space-y-4">
-      <FlashcardFolder
-        title="Flashcards Created"
-        flashcards={groupedFlashcards.created}
-        onStudy={startStudying}
-      />
-      {Object.entries(groupedFlashcards.received).map(([creatorId, { creator, flashcards }]) => (
+    <div className="space-y-4">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button className="w-full">Create a New Flashcard</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create a New Flashcard</DialogTitle>
+          </DialogHeader>
+          <CreateCard />
+        </DialogContent>
+      </Dialog>
+      
+      <Accordion type="single" collapsible className="space-y-4">
         <FlashcardFolder
-          key={creatorId}
-          title={`Flashcards from ${creator.display_name}`}
-          flashcards={flashcards}
+          title="My Flashcards"
+          flashcards={groupedFlashcards.created}
           onStudy={startStudying}
-          showCreator={false}
         />
-      ))}
-    </Accordion>
+        {Object.entries(groupedFlashcards.received).map(([creatorId, { creator, flashcards }]) => (
+          <FlashcardFolder
+            key={creatorId}
+            title={`Flashcards from ${creator.display_name}`}
+            flashcards={flashcards}
+            onStudy={startStudying}
+            showCreator={false}
+          />
+        ))}
+      </Accordion>
+    </div>
   );
 }

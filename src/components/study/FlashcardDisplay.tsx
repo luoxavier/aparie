@@ -28,13 +28,19 @@ export function FlashcardDisplay({
   const navigate = useNavigate();
 
   const generateAnswerOptions = () => {
+    // Always include the correct answer
     const options = [currentCard.back];
-    const wrongAnswers = deck
-      .filter(card => card.back !== currentCard.back)
-      .map(card => card.back)
+    
+    // Get all unique answers from the deck
+    const allAnswers = [...new Set(deck.map(card => card.back))];
+    
+    // Filter out the current correct answer and shuffle remaining answers
+    const wrongAnswers = allAnswers
+      .filter(answer => answer !== currentCard.back)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);
     
+    // Combine and shuffle all options
     return [...options, ...wrongAnswers]
       .sort(() => Math.random() - 0.5);
   };
@@ -42,7 +48,7 @@ export function FlashcardDisplay({
   const glowIntensity = Math.min(streak * 0.2, 1);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8"> {/* Increased spacing from 6 to 8 */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentCard.front}
@@ -76,7 +82,7 @@ export function FlashcardDisplay({
         </motion.div>
       </AnimatePresence>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mb-8"> {/* Added mb-8 for extra spacing */}
         {!showAnswer && generateAnswerOptions().map((answer, index) => (
           <Button
             key={index}
@@ -93,7 +99,7 @@ export function FlashcardDisplay({
         <Button
           variant="secondary"
           onClick={onReviewMistakes}
-          className="w-full bg-secondary/90 hover:bg-secondary"
+          className="w-full bg-primary/90 hover:bg-primary" // Changed to use primary color
         >
           Review Mistakes
         </Button>
