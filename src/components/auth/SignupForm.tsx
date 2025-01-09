@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -16,10 +18,23 @@ export function SignupForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Pass the username as both username and display name
       await signUp(email, password, username, username);
       navigate("/profile");
     } catch (error) {
+      const authError = error as AuthError;
+      if (authError.status === 422) {
+        toast({
+          variant: "destructive",
+          title: "Account already exists",
+          description: "This email is already registered. Please try logging in instead.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: authError.message || "An unexpected error occurred",
+        });
+      }
       console.error("Error signing up:", error);
     } finally {
       setLoading(false);
