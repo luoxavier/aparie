@@ -13,7 +13,7 @@ interface Card {
 }
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [isStudying, setIsStudying] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -98,13 +98,6 @@ const Index = () => {
       <div className="max-w-md mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Flashcards</h1>
-          <Button
-            variant="outline"
-            onClick={() => signOut()}
-            className="text-sm"
-          >
-            Sign Out
-          </Button>
         </div>
 
         {streak > 0 && (
