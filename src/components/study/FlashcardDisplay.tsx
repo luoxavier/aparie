@@ -40,6 +40,11 @@ export function FlashcardDisplay({
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);
     
+    // If we don't have enough wrong answers, duplicate some existing ones
+    while (wrongAnswers.length < 3) {
+      wrongAnswers.push(allAnswers[Math.floor(Math.random() * allAnswers.length)]);
+    }
+    
     // Combine and shuffle all options
     return [...options, ...wrongAnswers]
       .sort(() => Math.random() - 0.5);
@@ -48,7 +53,7 @@ export function FlashcardDisplay({
   const glowIntensity = Math.min(streak * 0.2, 1);
 
   return (
-    <div className="space-y-8"> {/* Increased spacing from 6 to 8 */}
+    <div className="space-y-12"> {/* Increased spacing from 8 to 12 */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentCard.front}
@@ -74,7 +79,9 @@ export function FlashcardDisplay({
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-lg text-red-500 mt-4"
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.7 }}
+              className="text-lg text-primary mt-4"
             >
               Answer: {currentCard.back}
             </motion.p>
@@ -82,7 +89,7 @@ export function FlashcardDisplay({
         </motion.div>
       </AnimatePresence>
 
-      <div className="grid grid-cols-2 gap-4 mb-8"> {/* Added mb-8 for extra spacing */}
+      <div className="grid grid-cols-2 gap-4 mb-12"> {/* Added mb-12 for extra spacing */}
         {!showAnswer && generateAnswerOptions().map((answer, index) => (
           <Button
             key={index}
@@ -99,7 +106,7 @@ export function FlashcardDisplay({
         <Button
           variant="secondary"
           onClick={onReviewMistakes}
-          className="w-full bg-primary/90 hover:bg-primary" // Changed to use primary color
+          className="w-full bg-secondary hover:bg-secondary/90" // Using secondary color
         >
           Review Mistakes
         </Button>

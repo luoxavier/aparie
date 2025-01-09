@@ -6,6 +6,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateCard } from "@/components/CreateCard";
 
 interface Creator {
   display_name: string;
@@ -35,6 +37,8 @@ export function FlashcardFolder({ title, flashcards, onStudy, showCreator = fals
     navigate('/study-folder', { state: { flashcards, folderName: title } });
   };
 
+  const isMyFlashcards = title.toLowerCase().includes('my flashcards');
+
   return (
     <AccordionItem value={title.toLowerCase().replace(/\s+/g, '-')}>
       <AccordionTrigger className="text-left">
@@ -49,6 +53,21 @@ export function FlashcardFolder({ title, flashcards, onStudy, showCreator = fals
       </AccordionTrigger>
       <AccordionContent>
         <div className="space-y-4 pt-4">
+          {isMyFlashcards && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full bg-secondary hover:bg-secondary/90 mb-4">
+                  Create New Flashcard
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create a New Flashcard</DialogTitle>
+                </DialogHeader>
+                <CreateCard />
+              </DialogContent>
+            </Dialog>
+          )}
           <Button 
             onClick={handleStudy}
             className="w-full"
