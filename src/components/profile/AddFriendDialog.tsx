@@ -14,17 +14,17 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 export function AddFriendDialog() {
-  const [searchDisplayName, setSearchDisplayName] = useState("");
+  const [searchUsername, setSearchUsername] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const searchUsers = async (displayName: string) => {
+  const searchUsers = async (username: string) => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .ilike('display_name', `%${displayName}%`)
+        .ilike('username', `%${username}%`)
         .neq('id', user?.id)
         .maybeSingle();
 
@@ -39,7 +39,8 @@ export function AddFriendDialog() {
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
       try {
-        const { data: existingRequest, error: checkError } = await supabase
+        // Check for existing friend connection in both directions
+        const { data: existingConnection, error: checkError } = await supabase
           .from('friend_connections')
           .select('*')
           .or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
@@ -47,23 +48,21 @@ export function AddFriendDialog() {
 
         if (checkError) throw checkError;
 
-        if (existingRequest) {
-          toast({
-            title: "Friend request already exists",
-            description: "You already have a pending or accepted friend request with this user.",
-            variant: "destructive",
-          });
+        if (existingConnection) {
+          if (existingConnection.status === 'accepted') {
+            toast({
+              title: "Already friends",
+              description: "You are already friends with this user.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Friend request pending",
+              description: "There is already a pending friend request between you and this user.",
+              variant: "destructive",
+            });
+          }
           return;
-        }
-
-        const { data: userProfile, error: userProfileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user?.id)
-          .single();
-
-        if (userProfileError) {
-          throw new Error("Your profile is not set up properly. Please try logging out and back in.");
         }
 
         const { error: insertError } = await supabase
@@ -76,7 +75,17 @@ export function AddFriendDialog() {
             }
           ]);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          if (insertError.code === '23505') {
+            toast({
+              title: "Friend request already exists",
+              description: "You already have a pending or accepted friend request with this user.",
+              variant: "destructive",
+            });
+            return;
+          }
+          throw insertError;
+        }
       } catch (error: any) {
         console.error('Error in friend request process:', error);
         throw error;
@@ -109,22 +118,22 @@ export function AddFriendDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <Input
-            placeholder="Search display name..."
-            value={searchDisplayName}
-            onChange={(e) => setSearchDisplayName(e.target.value)}
+            placeholder="Search username..."
+            value={searchUsername}
+            onChange={(e) => setSearchUsername(e.target.value)}
           />
           <div className="space-y-2">
-            {searchDisplayName && (
+            {searchUsername && (
               <Button
                 onClick={async () => {
                   try {
-                    const user = await searchUsers(searchDisplayName);
+                    const user = await searchUsers(searchUsername);
                     if (user) {
                       await sendFriendRequest.mutateAsync(user.id);
                     } else {
                       toast({
                         title: "User not found",
-                        description: "No user found with that display name.",
+                        description: "No user found with that username.",
                         variant: "destructive",
                       });
                     }
