@@ -4,7 +4,6 @@ import { Flashcard } from "@/components/Flashcard";
 import { Button } from "@/components/ui/button";
 import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface Card {
   id: number;
@@ -13,7 +12,6 @@ interface Card {
 }
 
 const Index = () => {
-  const { user } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [isStudying, setIsStudying] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -65,7 +63,6 @@ const Index = () => {
     if (currentCardIndex < currentDeck.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
     } else {
-      // Show completion message
       toast({
         title: "🎉 Congratulations!",
         description: "You've completed all the flashcards! Starting over with a fresh shuffle.",
@@ -73,20 +70,16 @@ const Index = () => {
       });
 
       if (isReviewingMistakes) {
-        // If we're done reviewing mistakes, go back to study mode
         startStudying();
       } else if (mistakes.length > 0) {
-        // If we have mistakes, start reviewing them
         startReviewingMistakes();
       } else {
-        // If no mistakes, restart with shuffled deck
         setCurrentDeck(shuffle([...cards]));
         setCurrentCardIndex(0);
       }
     }
   };
 
-  // Get other answers from cards excluding the current card
   const getOtherAnswers = (currentCard: Card) => {
     return cards
       .filter(card => card.id !== currentCard.id)
