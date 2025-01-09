@@ -4,6 +4,7 @@ interface Notification {
   id: string;
   type: string;
   sender: {
+    id: string;
     display_name: string;
     avatar_url?: string;
   };
@@ -24,6 +25,7 @@ export function NotificationsList({ notifications, onMarkAsRead }: Notifications
           senderName={notification.sender.display_name}
           senderAvatar={notification.sender.avatar_url}
           type={notification.type}
+          senderId={notification.sender.id}
           onMarkAsRead={onMarkAsRead}
         />
       ))}
