@@ -1,57 +1,92 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-interface CreateCardProps {
-  onSave: (front: string, back: string) => void;
-}
-
-export const CreateCard = ({ onSave }: CreateCardProps) => {
+export function CreateCard() {
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!front || !back) {
+    
+    if (!user) {
       toast({
         title: "Error",
-        description: "Please fill in both sides of the card",
+        description: "You must be logged in to create flashcards",
         variant: "destructive",
       });
       return;
     }
-    onSave(front, back);
-    setFront("");
-    setBack("");
-    toast({
-      title: "Success",
-      description: "Card created successfully!",
-    });
+
+    try {
+      const { error } = await supabase
+        .from('flashcards')
+        .insert([
+          {
+            front,
+            back,
+            creator_id: user.id
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Flashcard created successfully",
+      });
+
+      // Clear the form
+      setFront("");
+      setBack("");
+    } catch (error) {
+      console.error('Error creating flashcard:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create flashcard",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm mx-auto">
-      <div>
-        <Input
-          placeholder="Front of card"
-          value={front}
-          onChange={(e) => setFront(e.target.value)}
-          className="w-full"
-        />
-      </div>
-      <div>
-        <Input
-          placeholder="Back of card"
-          value={back}
-          onChange={(e) => setBack(e.target.value)}
-          className="w-full"
-        />
-      </div>
-      <Button type="submit" className="w-full bg-primary hover:bg-secondary">
-        Create Card
-      </Button>
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardContent className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="front">Front</Label>
+            <Input
+              id="front"
+              value={front}
+              onChange={(e) => setFront(e.target.value)}
+              placeholder="Enter the front text"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="back">Back</Label>
+            <Input
+              id="back"
+              value={back}
+              onChange={(e) => setBack(e.target.value)}
+              placeholder="Enter the back text"
+              required
+            />
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" className="w-full">
+            Create Flashcard
+          </Button>
+        </CardFooter>
+      </Card>
     </form>
   );
-};
+}
