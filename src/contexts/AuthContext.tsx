@@ -1,13 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-
-// Get environment variables with fallback values for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://bigybgdgpvbokmghhawr.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpZ3liZ2RncHZib2ttZ2hoYXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NTc2NzgsImV4cCI6MjAyMzUzMzY3OH0.Wd_7e_DKJbEJDxGzCGxgUPH_R8c7Za8MkS8-KfAaG8Y';
-
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface AuthContextType {
   user: any | null;
