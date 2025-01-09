@@ -46,7 +46,7 @@ export function FlashcardsList() {
             username
           )
         `)
-        .eq('creator_id', user.id);
+        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
       
       if (error) {
         console.error('Error fetching flashcards:', error);
