@@ -17,11 +17,11 @@ import { Profile } from "@/types/database";
 import { useFriendsList } from "./profile/FriendSelector";
 
 interface Flashcard {
-  id: string;
+  id?: string;
   front: string;
   back: string;
-  creator_id: string;
-  creator: {
+  creator_id?: string;
+  creator?: {
     display_name: string;
     username: string | null;
   };
@@ -34,6 +34,7 @@ interface CreateMultipleCardsProps {
   recipientId?: string;
   existingCards?: Flashcard[];
   folderName?: string;
+  isModifying?: boolean;
 }
 
 export function CreateMultipleCards({ 
@@ -42,12 +43,14 @@ export function CreateMultipleCards({
   onSave,
   recipientId: initialRecipientId,
   existingCards,
-  folderName: initialFolderName 
+  folderName: initialFolderName,
+  isModifying = false
 }: CreateMultipleCardsProps) {
   const { user } = useAuth();
   const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "self");
   const [folderName, setFolderName] = useState(initialFolderName || "");
-  const [cards, setCards] = useState(existingCards?.map(card => ({
+  const [cards, setCards] = useState<Flashcard[]>(existingCards?.map(card => ({
+    id: card.id,
     front: card.front,
     back: card.back
   })) || [{ front: "", back: "" }]);
@@ -58,31 +61,54 @@ export function CreateMultipleCards({
     if (!user) return;
 
     try {
-      const { error } = await supabase.from("flashcards").insert(
-        cards.map((card) => ({
-          creator_id: user.id,
-          recipient_id: recipientId === "self" ? null : recipientId,
-          folder_name: folderName,
-          front: card.front,
-          back: card.back,
-        }))
-      );
+      // Handle deletions first if we're modifying
+      if (isModifying && existingCards) {
+        const deletedCards = existingCards.filter(existingCard => 
+          !cards.some(card => card.id === existingCard.id)
+        );
+        
+        if (deletedCards.length > 0) {
+          const { error: deleteError } = await supabase
+            .from("flashcards")
+            .delete()
+            .in('id', deletedCards.map(card => card.id));
+
+          if (deleteError) throw deleteError;
+        }
+      }
+
+      // Handle updates and new cards
+      const cardsToUpsert = cards.map(card => ({
+        id: card.id, // Will be undefined for new cards
+        creator_id: user.id,
+        recipient_id: recipientId === "self" ? null : recipientId,
+        folder_name: folderName,
+        front: card.front,
+        back: card.back,
+      }));
+
+      const { error } = await supabase
+        .from("flashcards")
+        .upsert(cardsToUpsert, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Flashcards created successfully!",
+        description: isModifying ? "Folder updated successfully!" : "Flashcards created successfully!",
       });
 
       onComplete?.();
       onSave?.();
     } catch (error) {
-      console.error("Error creating flashcards:", error);
+      console.error("Error managing flashcards:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create flashcards. Please try again.",
+        description: `Failed to ${isModifying ? 'update' : 'create'} flashcards. Please try again.`,
       });
     }
   };
@@ -98,10 +124,8 @@ export function CreateMultipleCards({
   };
 
   const removeCard = (index: number) => {
-    if (cards.length > 1) {
-      const newCards = cards.filter((_, i) => i !== index);
-      setCards(newCards);
-    }
+    const newCards = cards.filter((_, i) => i !== index);
+    setCards(newCards);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, index: number, field: "front" | "back") => {
@@ -149,7 +173,7 @@ export function CreateMultipleCards({
 
       <div className="space-y-2">
         {cards.map((card, index) => (
-          <div key={index} className="flex items-center gap-2">
+          <div key={card.id || index} className="flex items-center gap-2">
             <div className="grid grid-cols-2 gap-4 flex-1">
               <Input
                 id={`front-${index}`}
@@ -168,17 +192,15 @@ export function CreateMultipleCards({
                 required
               />
             </div>
-            {cards.length > 1 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeCard(index)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => removeCard(index)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
           </div>
         ))}
       </div>
@@ -188,7 +210,7 @@ export function CreateMultipleCards({
       </Button>
 
       <Button type="submit" className="w-full">
-        Create Flashcards
+        {isModifying ? "Update Folder" : "Create Flashcards"}
       </Button>
     </form>
   );
