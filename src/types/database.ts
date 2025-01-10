@@ -17,3 +17,14 @@ export interface Flashcard {
   created_at: string;
   updated_at: string;
 }
+
+export interface FriendConnection {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  friend: Profile;
+  user: Profile;
+}

@@ -3,18 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useToast } from "@/hooks/use-toast";
+import { Profile, Flashcard } from "@/types/database";
 
 interface Creator {
   display_name: string;
   username: string | null;
-}
-
-interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  creator_id: string;
-  creator: Creator;
 }
 
 interface FolderActionsProps {
@@ -54,7 +47,10 @@ export function FolderActions({
                 Add new flashcards to your collection.
               </DialogDescription>
             </DialogHeader>
-            <CreateMultipleCards onSave={() => setIsCreateOpen(false)} />
+            <CreateMultipleCards 
+              onComplete={() => setIsCreateOpen(false)} 
+              onSave={() => setIsCreateOpen(false)} 
+            />
           </DialogContent>
         </Dialog>
       )}
