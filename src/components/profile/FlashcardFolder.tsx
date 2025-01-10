@@ -135,7 +135,7 @@ export function FlashcardFolder({
 
   return (
     <Card 
-      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
       onClick={handleFolderClick}
     >
       <div className="flex items-center justify-between">
@@ -149,17 +149,19 @@ export function FlashcardFolder({
             <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
           </Button>
           <div className="space-y-1">
-            <h3 className="text-lg font-medium">
-              {title}
-              <span className="text-sm text-muted-foreground ml-2">
-                ({flashcards.length} cards)
-              </span>
-            </h3>
-            {subtitle && (
-              <span className="text-sm text-muted-foreground">
-                {subtitle}
-              </span>
-            )}
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-lg font-medium">
+                {title}
+                <span className="text-sm text-muted-foreground ml-2">
+                  ({flashcards.length} cards)
+                </span>
+              </h3>
+              {subtitle && (
+                <span className="text-xs text-muted-foreground">
+                  {subtitle}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -203,11 +205,13 @@ export function FlashcardFolder({
         </div>
       </div>
 
-      <FolderContent
-        flashcards={flashcards}
-        showCards={showCards}
-        showCreator={showCreator}
-      />
+      <div className="mt-4">
+        <FolderContent
+          flashcards={flashcards}
+          showCards={showCards}
+          showCreator={showCreator}
+        />
+      </div>
     </Card>
   );
 }

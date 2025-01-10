@@ -23,18 +23,18 @@ export function FolderContent({ flashcards, showCards, showCreator }: FolderCont
   if (!showCards) return null;
 
   return (
-    <>
+    <div className="space-y-2">
       {flashcards.map((flashcard) => (
-        <Card key={flashcard.id}>
+        <Card key={flashcard.id} className="mt-2">
           <CardContent className="p-4 grid grid-cols-2 gap-4">
             {showCreator && (
-              <p className="col-span-2"><strong>From:</strong> {flashcard.creator.display_name}</p>
+              <p className="col-span-2 text-sm"><strong>From:</strong> {flashcard.creator.display_name}</p>
             )}
-            <p>{flashcard.front}</p>
-            <p>{flashcard.back}</p>
+            <p className="text-sm md:text-base">{flashcard.front}</p>
+            <p className="text-sm md:text-base">{flashcard.back}</p>
           </CardContent>
         </Card>
       ))}
-    </>
+    </div>
   );
 }

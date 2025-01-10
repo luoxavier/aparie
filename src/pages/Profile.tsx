@@ -8,6 +8,9 @@ import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
+import { Plus } from "lucide-react";
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -35,7 +38,21 @@ export default function Profile() {
             <span className="text-muted-foreground">(@{profile.username})</span>
           )}
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Cards
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Create New Flashcards</DialogTitle>
+              </DialogHeader>
+              <CreateMultipleCards />
+            </DialogContent>
+          </Dialog>
           <NotificationsDialog />
           <Button onClick={() => signOut()}>Sign Out</Button>
         </div>
