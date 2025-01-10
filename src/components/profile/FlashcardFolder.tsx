@@ -107,7 +107,7 @@ export function FlashcardFolder({
     }
   };
 
-  // Check favorite status on mount
+  // Check favorite status on mount and when dependencies change
   useEffect(() => {
     checkFavoriteStatus();
   }, [user?.id, creatorId, folderName]);
