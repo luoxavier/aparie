@@ -33,7 +33,7 @@ export function CreateMultipleCards({
   folderName: initialFolderName = "",
 }: CreateMultipleCardsProps) {
   const { user } = useAuth();
-  const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "");
+  const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "self");
   const [folderName, setFolderName] = useState(initialFolderName);
   const [cards, setCards] = useState(
     existingCards.length > 0 
@@ -50,7 +50,7 @@ export function CreateMultipleCards({
       const { error } = await supabase.from("flashcards").insert(
         cards.map((card) => ({
           creator_id: user.id,
-          recipient_id: recipientId || null,
+          recipient_id: recipientId === "self" ? null : recipientId,
           folder_name: folderName,
           front: card.front,
           back: card.back,
@@ -95,7 +95,7 @@ export function CreateMultipleCards({
             <SelectValue placeholder="Select recipient" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Myself</SelectItem>
+            <SelectItem value="self">Myself</SelectItem>
             {friends.map((friend) => (
               <SelectItem key={friend.id} value={friend.id}>
                 {friend.display_name || friend.username}
