@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FolderHeader } from "./folder/FolderHeader";
 import { FolderContent } from "./folder/FolderContent";
+import { FolderHeader } from "./folder/FolderHeader";
 import { FolderActions } from "./folder/FolderActions";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Creator {
   display_name: string;
@@ -24,7 +23,7 @@ interface Flashcard {
 interface FlashcardFolderProps {
   title: string;
   flashcards: Flashcard[];
-  onStudy: (cards: Flashcard[]) => void;
+  onStudy: (flashcards: Flashcard[]) => void;
   showCreator?: boolean;
   creatorId?: string;
   folderName?: string;
@@ -33,42 +32,39 @@ interface FlashcardFolderProps {
 export function FlashcardFolder({ 
   title, 
   flashcards, 
-  onStudy, 
-  showCreator = false,
+  onStudy,
+  showCreator = true,
   creatorId,
-  folderName 
+  folderName
 }: FlashcardFolderProps) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [isFavorited, setIsFavorited] = useState(false);
+  const { toast } = useToast();
   const [showCards, setShowCards] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
 
-  useEffect(() => {
-    const checkIfFavorited = async () => {
-      if (!user || !creatorId || !folderName) return;
+  // Check if folder is favorited
+  const checkFavoriteStatus = async () => {
+    if (!user?.id || !creatorId || !folderName) return;
 
-      const { data } = await supabase
+    try {
+      const { data, error } = await supabase
         .from('favorite_folders')
-        .select()
+        .select('*')
         .eq('user_id', user.id)
         .eq('creator_id', creatorId)
         .eq('folder_name', folderName)
-        .single();
+        .maybeSingle();
 
+      if (error) throw error;
       setIsFavorited(!!data);
-    };
-
-    checkIfFavorited();
-  }, [user, creatorId, folderName]);
-
-  const handleStudy = () => {
-    onStudy(flashcards);
-    navigate('/study-folder', { state: { flashcards, folderName: title } });
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
   };
 
-  const handleFavorite = async () => {
-    if (!user || !creatorId || !folderName) return;
+  // Toggle favorite status
+  const toggleFavorite = async () => {
+    if (!user?.id || !creatorId || !folderName) return;
 
     try {
       if (isFavorited) {
@@ -80,11 +76,10 @@ export function FlashcardFolder({
           .eq('folder_name', folderName);
 
         if (error) throw error;
-
         setIsFavorited(false);
         toast({
-          title: "Success",
-          description: "Folder removed from favorites",
+          title: "Folder removed from favorites",
+          description: "The folder has been removed from your favorites.",
         });
       } else {
         const { error } = await supabase
@@ -92,32 +87,37 @@ export function FlashcardFolder({
           .insert({
             user_id: user.id,
             creator_id: creatorId,
-            folder_name: folderName
+            folder_name: folderName,
           });
 
         if (error) throw error;
-
         setIsFavorited(true);
         toast({
-          title: "Success",
-          description: "Folder added to favorites",
+          title: "Folder added to favorites",
+          description: "The folder has been added to your favorites.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
       toast({
         title: "Error",
-        description: "Failed to update favorites",
+        description: "There was an error updating your favorites.",
         variant: "destructive",
       });
     }
   };
 
-  const isMyFlashcards = title.toLowerCase().includes('my flashcards');
-  const isFromFriend = title.toLowerCase().includes('from');
+  // Check favorite status on mount
+  useState(() => {
+    checkFavoriteStatus();
+  });
+
+  const isMyFlashcards = creatorId === user?.id;
+  const isFromFriend = !isMyFlashcards && creatorId && folderName;
 
   return (
-    <AccordionItem value={title.toLowerCase().replace(/\s+/g, '-')}>
-      <AccordionTrigger className="text-left">
+    <AccordionItem value={title} className="border rounded-lg">
+      <AccordionTrigger className="px-4 hover:no-underline [&[data-state=open]>div>div>svg]:rotate-180">
         <FolderHeader
           title={title}
           flashcardsCount={flashcards.length}
@@ -126,25 +126,23 @@ export function FlashcardFolder({
           isFavorited={isFavorited}
           showCards={showCards}
           onToggleCards={() => setShowCards(!showCards)}
-          onFavorite={handleFavorite}
+          onFavorite={toggleFavorite}
         />
       </AccordionTrigger>
-      <AccordionContent>
-        <div className="space-y-4 pt-4">
-          <FolderActions
-            isMyFlashcards={isMyFlashcards}
-            isFromFriend={isFromFriend}
-            flashcards={flashcards}
-            userId={user?.id}
-            folderName={folderName}
-            onStudy={handleStudy}
-          />
-          <FolderContent
-            flashcards={flashcards}
-            showCards={showCards}
-            showCreator={showCreator}
-          />
-        </div>
+      <AccordionContent className="space-y-4 px-4 pb-4">
+        <FolderContent
+          flashcards={flashcards}
+          showCards={showCards}
+          showCreator={showCreator}
+        />
+        <FolderActions
+          isMyFlashcards={isMyFlashcards}
+          isFromFriend={isFromFriend}
+          flashcards={flashcards}
+          userId={user?.id}
+          folderName={folderName}
+          onStudy={() => onStudy(flashcards)}
+        />
       </AccordionContent>
     </AccordionItem>
   );
