@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card } from "@/components/ui/card";
 import { FolderContent } from "./folder/FolderContent";
-import { FolderHeader } from "./folder/FolderHeader";
 import { FolderActions } from "./folder/FolderActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Star, Eye } from "lucide-react";
 
 interface Creator {
   display_name: string;
@@ -22,27 +23,30 @@ interface Flashcard {
 
 interface FlashcardFolderProps {
   title: string;
+  subtitle?: string;
   flashcards: Flashcard[];
   onStudy: (flashcards: Flashcard[]) => void;
   showCreator?: boolean;
   creatorId?: string;
   folderName?: string;
+  expanded?: boolean;
 }
 
 export function FlashcardFolder({ 
   title, 
+  subtitle,
   flashcards, 
   onStudy,
   showCreator = true,
   creatorId,
-  folderName
+  folderName,
+  expanded = false
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
-  // Check if folder is favorited
   const checkFavoriteStatus = async () => {
     if (!user?.id || !creatorId || !folderName) return;
 
@@ -62,7 +66,6 @@ export function FlashcardFolder({
     }
   };
 
-  // Toggle favorite status
   const toggleFavorite = async () => {
     if (!user?.id || !creatorId || !folderName) return;
 
@@ -107,7 +110,6 @@ export function FlashcardFolder({
     }
   };
 
-  // Check favorite status on mount and when dependencies change
   useEffect(() => {
     checkFavoriteStatus();
   }, [user?.id, creatorId, folderName]);
@@ -116,25 +118,60 @@ export function FlashcardFolder({
   const isFromFriend = !isMyFlashcards && creatorId && folderName;
 
   return (
-    <AccordionItem value={title} className="border rounded-lg">
-      <AccordionTrigger className="px-4 hover:no-underline [&[data-state=open]>div>div>svg]:rotate-180">
-        <FolderHeader
-          title={title}
-          flashcardsCount={flashcards.length}
-          isMyFlashcards={isMyFlashcards}
-          isFromFriend={isFromFriend}
-          isFavorited={isFavorited}
-          showCards={showCards}
-          onToggleCards={() => setShowCards(!showCards)}
-          onFavorite={toggleFavorite}
-        />
-      </AccordionTrigger>
-      <AccordionContent className="space-y-4 px-4 pb-4">
-        <FolderContent
-          flashcards={flashcards}
-          showCards={showCards}
-          showCreator={showCreator}
-        />
+    <Card className="p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium">
+              {title}
+              <span className="text-sm text-muted-foreground ml-2">
+                ({flashcards.length} cards)
+              </span>
+            </h3>
+            {subtitle && (
+              <span className="text-sm text-muted-foreground">
+                by {subtitle}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => onStudy(flashcards)}
+            disabled={flashcards.length === 0}
+          >
+            Study
+          </Button>
+          {isFromFriend && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleFavorite}
+              className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
+            >
+              <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowCards(!showCards)}
+          >
+            <Eye className="h-4 w-4" />
+            Show Cards
+          </Button>
+        </div>
+      </div>
+
+      <FolderContent
+        flashcards={flashcards}
+        showCards={showCards}
+        showCreator={showCreator}
+      />
+      
+      {expanded && (
         <FolderActions
           isMyFlashcards={isMyFlashcards}
           isFromFriend={isFromFriend}
@@ -143,7 +180,7 @@ export function FlashcardFolder({
           folderName={folderName}
           onStudy={() => onStudy(flashcards)}
         />
-      </AccordionContent>
-    </AccordionItem>
+      )}
+    </Card>
   );
 }

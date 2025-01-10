@@ -64,17 +64,19 @@ export function FavoriteFlashcards() {
 
   return (
     <div className="space-y-4">
-      <Accordion type="single" collapsible className="space-y-4">
-        {favorites.map((favorite) => (
-          <FlashcardFolder
-            key={`${favorite.creator_id}-${favorite.folder_name}`}
-            title={`${favorite.folder_name} (from ${favorite.creator.display_name})`}
-            flashcards={favorite.flashcards}
-            onStudy={() => {}}
-            showCreator={false}
-          />
-        ))}
-      </Accordion>
+      {favorites.map((favorite) => (
+        <FlashcardFolder
+          key={`${favorite.creator_id}-${favorite.folder_name}`}
+          title={favorite.folder_name}
+          subtitle={favorite.creator.display_name}
+          flashcards={favorite.flashcards}
+          onStudy={() => {}}
+          showCreator={false}
+          creatorId={favorite.creator_id}
+          folderName={favorite.folder_name}
+          expanded={true}
+        />
+      ))}
     </div>
   );
 }

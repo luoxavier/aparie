@@ -1,4 +1,3 @@
-import { Accordion } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -97,29 +96,28 @@ export function FlashcardsList() {
   }
 
   return (
-    <div className="space-y-4">
-      <Accordion type="single" collapsible className="space-y-4">
-        {Object.entries(groupedFlashcards).map(([creatorId, { creator, folders }]) => (
-          <div key={creatorId} className="space-y-2">
-            <h3 className="text-lg font-semibold">
-              {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
-            </h3>
-            <div className="pl-4 space-y-2">
-              {Object.entries(folders).map(([folderName, cards]) => (
-                <FlashcardFolder
-                  key={`${creatorId}-${folderName}`}
-                  title={folderName}
-                  flashcards={cards}
-                  onStudy={startStudying}
-                  showCreator={false}
-                  creatorId={creatorId}
-                  folderName={folderName}
-                />
-              ))}
-            </div>
+    <div className="space-y-8">
+      {Object.entries(groupedFlashcards).map(([creatorId, { creator, folders }]) => (
+        <div key={creatorId} className="space-y-4">
+          <h3 className="text-xl font-semibold">
+            {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
+          </h3>
+          <div className="space-y-4">
+            {Object.entries(folders).map(([folderName, cards]) => (
+              <FlashcardFolder
+                key={`${creatorId}-${folderName}`}
+                title={folderName}
+                flashcards={cards}
+                onStudy={startStudying}
+                showCreator={false}
+                creatorId={creatorId}
+                folderName={folderName}
+                expanded={true}
+              />
+            ))}
           </div>
-        ))}
-      </Accordion>
+        </div>
+      ))}
     </div>
   );
 }
