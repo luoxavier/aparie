@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Star, ChevronDown } from "lucide-react";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { FolderHeader } from "./folder/FolderHeader";
+import { FolderContent } from "./folder/FolderContent";
+import { FolderActions } from "./folder/FolderActions";
 
 interface Creator {
   display_name: string;
@@ -124,103 +118,32 @@ export function FlashcardFolder({
   return (
     <AccordionItem value={title.toLowerCase().replace(/\s+/g, '-')}>
       <AccordionTrigger className="text-left">
-        <div className="flex items-center justify-between w-full pr-4">
-          <span className="font-medium">
-            {title}
-            <span className="text-sm text-muted-foreground ml-2">
-              ({flashcards.length} cards)
-            </span>
-          </span>
-          <div className="flex items-center gap-2">
-            {isFromFriend && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleFavorite();
-                }}
-                className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
-              >
-                <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-              </Button>
-            )}
-            {!isMyFlashcards && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCards(!showCards);
-                }}
-              >
-                Show Cards
-              </Button>
-            )}
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-          </div>
-        </div>
+        <FolderHeader
+          title={title}
+          flashcardsCount={flashcards.length}
+          isMyFlashcards={isMyFlashcards}
+          isFromFriend={isFromFriend}
+          isFavorited={isFavorited}
+          showCards={showCards}
+          onToggleCards={() => setShowCards(!showCards)}
+          onFavorite={handleFavorite}
+        />
       </AccordionTrigger>
       <AccordionContent>
         <div className="space-y-4 pt-4">
-          {isMyFlashcards && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-secondary hover:bg-secondary/90 mb-4">
-                  Create New Flashcard
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Create New Flashcards</DialogTitle>
-                </DialogHeader>
-                <CreateMultipleCards />
-              </DialogContent>
-            </Dialog>
-          )}
-          <Button 
-            onClick={handleStudy}
-            className="w-full"
-            disabled={flashcards.length === 0}
-          >
-            Study These Cards
-          </Button>
-          {isFromFriend && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-secondary hover:bg-secondary/90">
-                  Modify Folder
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Modify Flashcards</DialogTitle>
-                </DialogHeader>
-                <CreateMultipleCards 
-                  recipientId={user?.id}
-                  existingCards={flashcards}
-                  folderName={folderName}
-                  onSave={() => {
-                    toast({
-                      title: "Success",
-                      description: "Flashcards updated successfully",
-                    });
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-          )}
-          {showCards && flashcards.map((flashcard) => (
-            <Card key={flashcard.id}>
-              <CardContent className="p-4 grid grid-cols-2 gap-4">
-                {showCreator && (
-                  <p className="col-span-2"><strong>From:</strong> {flashcard.creator.display_name}</p>
-                )}
-                <p>{flashcard.front}</p>
-                <p>{flashcard.back}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <FolderActions
+            isMyFlashcards={isMyFlashcards}
+            isFromFriend={isFromFriend}
+            flashcards={flashcards}
+            userId={user?.id}
+            folderName={folderName}
+            onStudy={handleStudy}
+          />
+          <FolderContent
+            flashcards={flashcards}
+            showCards={showCards}
+            showCreator={showCreator}
+          />
         </div>
       </AccordionContent>
     </AccordionItem>
