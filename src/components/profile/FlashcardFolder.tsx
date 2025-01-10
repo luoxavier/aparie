@@ -4,11 +4,11 @@ import { FolderContent } from "./folder/FolderContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Star, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateMultipleCards } from "@/components/CreateMultipleCards";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { FolderHeader } from "./folder/FolderHeader";
+import { FolderModifyDialog } from "./folder/FolderModifyDialog";
 
 interface Creator {
   display_name: string;
@@ -47,6 +47,22 @@ export function FlashcardFolder({
   const navigate = useNavigate();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isModifyDialogOpen, setIsModifyDialogOpen] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({
+    id: `${creatorId}-${folderName}`,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const checkFavoriteStatus = async () => {
     if (!user?.id || !creatorId || !folderName) return;
@@ -127,89 +143,47 @@ export function FlashcardFolder({
     });
   };
 
-  const handleFolderClick = () => {
-    setShowCards(!showCards);
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsModifyDialogOpen(true);
   };
 
   return (
-    <Card 
-      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
-      onClick={handleFolderClick}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleFavorite}
-            className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} p-0`}
-          >
-            <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-          </Button>
-          <div>
-            <div className="flex items-baseline gap-1">
-              <h3 className="text-base font-medium">
-                {title}
-                <span className="text-sm text-muted-foreground ml-2">
-                  ({flashcards.length} cards)
-                </span>
-              </h3>
-              {subtitle && (
-                <span className="text-xs text-muted-foreground">
-                  {subtitle}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleStudy}
-            disabled={flashcards.length === 0}
-            className="h-8"
-          >
-            Study
-          </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => e.stopPropagation()}
-                className="h-8"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Modify Flashcards</DialogTitle>
-              </DialogHeader>
-              <CreateMultipleCards 
-                recipientId={user?.id}
-                existingCards={flashcards}
-                folderName={folderName}
-                onSave={() => {
-                  toast({
-                    title: "Success",
-                    description: "Flashcards updated successfully",
-                  });
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <FolderContent
-          flashcards={flashcards}
-          showCards={showCards}
-          showCreator={showCreator}
+    <>
+      <Card 
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="p-3 hover:bg-accent/50 transition-colors cursor-pointer mb-2"
+        onClick={() => setShowCards(!showCards)}
+      >
+        <FolderHeader
+          title={title}
+          subtitle={subtitle}
+          isFavorited={isFavorited}
+          onFavorite={toggleFavorite}
+          onStudy={handleStudy}
+          onEdit={handleEdit}
+          cardCount={flashcards.length}
         />
-      </div>
-    </Card>
+
+        <div className="mt-3">
+          <FolderContent
+            flashcards={flashcards}
+            showCards={showCards}
+            showCreator={showCreator}
+          />
+        </div>
+      </Card>
+
+      <FolderModifyDialog
+        isOpen={isModifyDialogOpen}
+        onClose={() => setIsModifyDialogOpen(false)}
+        flashcards={flashcards}
+        userId={user?.id}
+        folderName={folderName}
+      />
+    </>
   );
 }
