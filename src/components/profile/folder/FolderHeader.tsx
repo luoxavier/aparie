@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Star, ChevronDown } from "lucide-react";
 
-interface FolderHeaderProps {
+export interface FolderHeaderProps {
   title: string;
   flashcardsCount: number;
   isMyFlashcards: boolean;
@@ -10,6 +10,9 @@ interface FolderHeaderProps {
   showCards: boolean;
   onToggleCards: () => void;
   onFavorite: () => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  folderName: string;
 }
 
 export function FolderHeader({
@@ -21,6 +24,9 @@ export function FolderHeader({
   showCards,
   onToggleCards,
   onFavorite,
+  isExpanded,
+  onToggleExpand,
+  folderName,
 }: FolderHeaderProps) {
   return (
     <div className="flex items-center justify-between w-full pr-4">
@@ -56,7 +62,10 @@ export function FolderHeader({
             Show Cards
           </Button>
         )}
-        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+        <ChevronDown 
+          className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+          onClick={onToggleExpand}
+        />
       </div>
     </div>
   );

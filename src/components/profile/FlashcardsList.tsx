@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Flashcard, GroupedFlashcards } from "@/types/flashcard";
-import FlashcardFolder from "./FlashcardFolder";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import CreateCard from "@/components/CreateCard";
+import { CreateCard } from "@/components/CreateCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,7 +11,7 @@ interface FlashcardsListProps {
   onFlashcardsChange: (flashcards: Flashcard[]) => void;
 }
 
-export default function FlashcardsList({ flashcards, onFlashcardsChange }: FlashcardsListProps) {
+export function FlashcardsList({ flashcards, onFlashcardsChange }: FlashcardsListProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { toast } = useToast();
 
@@ -23,7 +22,6 @@ export default function FlashcardsList({ flashcards, onFlashcardsChange }: Flash
       const creatorId = flashcard.creator_id;
       const folderName = flashcard.folder_name || "Uncategorized";
 
-      // Initialize creator group if it doesn't exist
       if (!groupedFlashcards[creatorId]) {
         groupedFlashcards[creatorId] = {
           creator: flashcard.creator,
@@ -31,19 +29,27 @@ export default function FlashcardsList({ flashcards, onFlashcardsChange }: Flash
         };
       }
 
-      // Initialize folder if it doesn't exist
       if (!groupedFlashcards[creatorId].folders[folderName]) {
         groupedFlashcards[creatorId].folders[folderName] = [];
       }
 
-      // Add flashcard to appropriate folder
       groupedFlashcards[creatorId].folders[folderName].push(flashcard);
     });
 
     return groupedFlashcards;
   };
 
-  const handleSaveNewCard = async (newCard: Flashcard) => {
+  const handleSaveNewCard = async (front: string, back: string) => {
+    const newCard = {
+      front,
+      back,
+      creator_id: "", // Set the creator_id appropriately
+      recipient_id: null, // Set the recipient_id appropriately
+      folder_name: null, // Set the folder_name appropriately
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     onFlashcardsChange([...flashcards, newCard]);
     setIsCreateModalOpen(false);
     toast({
