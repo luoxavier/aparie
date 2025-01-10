@@ -1,62 +1,64 @@
 import { Button } from "@/components/ui/button";
-import { Star, ChevronDown } from "lucide-react";
+import { Star } from "lucide-react";
 
 interface FolderHeaderProps {
   title: string;
-  flashcardsCount: number;
-  isMyFlashcards: boolean;
-  isFromFriend: boolean;
+  subtitle?: string;
   isFavorited: boolean;
-  showCards: boolean;
-  onToggleCards: () => void;
-  onFavorite: () => void;
+  onFavorite: (e: React.MouseEvent) => void;
+  onStudy: (e: React.MouseEvent) => void;
+  onEdit: (e: React.MouseEvent) => void;
 }
 
 export function FolderHeader({
   title,
-  flashcardsCount,
-  isMyFlashcards,
-  isFromFriend,
+  subtitle,
   isFavorited,
-  showCards,
-  onToggleCards,
   onFavorite,
+  onStudy,
+  onEdit
 }: FolderHeaderProps) {
   return (
-    <div className="flex items-center justify-between w-full pr-4">
-      <span className="font-medium">
-        {title}
-        <span className="text-sm text-muted-foreground ml-2">
-          ({flashcardsCount} cards)
-        </span>
-      </span>
+    <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        {isFromFriend && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onFavorite();
-            }}
-            className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
-          >
-            <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-          </Button>
-        )}
-        {!isMyFlashcards && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCards();
-            }}
-          >
-            Show Cards
-          </Button>
-        )}
-        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onFavorite}
+          className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} p-0`}
+        >
+          <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+        </Button>
+        <div>
+          <div className="flex items-baseline gap-1">
+            <h3 className="text-base font-medium">
+              {title}
+            </h3>
+            {subtitle && (
+              <span className="text-xs text-muted-foreground">
+                {subtitle}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="default"
+          size="sm"
+          onClick={onStudy}
+          className="h-7"
+        >
+          Study
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onEdit}
+          className="h-7"
+        >
+          Edit
+        </Button>
       </div>
     </div>
   );
