@@ -62,7 +62,7 @@ export function FavoriteFlashcards() {
   if (!favorites?.length) return <div className="text-center text-gray-500">No favorite folders found</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {favorites.map((favorite) => (
         <FlashcardFolder
           key={`${favorite.creator_id}-${favorite.folder_name}`}

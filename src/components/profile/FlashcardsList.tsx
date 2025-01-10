@@ -5,6 +5,10 @@ import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 interface Creator {
   display_name: string;
@@ -98,10 +102,28 @@ export function FlashcardsList() {
     <div className="space-y-8">
       {Object.entries(groupedFlashcards).map(([creatorId, { creator, folders }]) => (
         <div key={creatorId} className="space-y-4">
-          <h3 className="text-xl font-semibold">
-            {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
-          </h3>
-          <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold">
+              {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
+            </h3>
+            {creatorId === user?.id && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create Cards
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Flashcards</DialogTitle>
+                  </DialogHeader>
+                  <CreateMultipleCards />
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+          <div className="space-y-3">
             {Object.entries(folders).map(([folderName, cards]) => (
               <FlashcardFolder
                 key={`${creatorId}-${folderName}`}

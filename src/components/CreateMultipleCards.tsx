@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Minus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface Flashcard {
   id: string;
@@ -27,11 +29,39 @@ interface CardPair {
   back: string;
 }
 
-export function CreateMultipleCards({ recipientId, onSave, existingCards, folderName: initialFolderName }: CreateMultipleCardsProps) {
+interface Friend {
+  id: string;
+  display_name: string;
+}
+
+export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, existingCards, folderName: initialFolderName }: CreateMultipleCardsProps) {
   const [folderName, setFolderName] = useState(initialFolderName || "");
   const [cards, setCards] = useState<CardPair[]>([{ front: "", back: "" }]);
+  const [selectedRecipient, setSelectedRecipient] = useState(initialRecipientId || "myself");
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const { data: friends } = useQuery({
+    queryKey: ['friends', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('friend_connections')
+        .select(`
+          friend:profiles!friend_connections_friend_id_fkey (
+            id,
+            display_name
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'accepted');
+      
+      if (error) throw error;
+      return data.map(d => d.friend) as Friend[];
+    },
+    enabled: !!user?.id,
+  });
 
   useEffect(() => {
     if (existingCards?.length) {
@@ -109,6 +139,8 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
     }
 
     try {
+      const finalRecipientId = selectedRecipient === "myself" ? null : selectedRecipient;
+
       const { error: cardsError } = await supabase
         .from('flashcards')
         .insert(
@@ -116,7 +148,7 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
             front: card.front.trim(),
             back: card.back.trim(),
             creator_id: user.id,
-            recipient_id: recipientId || null,
+            recipient_id: finalRecipientId,
             folder_name: folderName.trim()
           }))
         );
@@ -124,11 +156,11 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
       if (cardsError) throw cardsError;
 
       // Send notification if creating cards for a friend
-      if (recipientId) {
+      if (finalRecipientId) {
         const { error: notificationError } = await supabase
           .from('notifications')
           .insert({
-            recipient_id: recipientId,
+            recipient_id: finalRecipientId,
             sender_id: user.id,
             type: 'new_flashcard',
             content: { folder_name: folderName.trim() }
@@ -164,15 +196,38 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
     <form onSubmit={handleSubmit}>
       <Card>
         <CardContent className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="folderName">Folder Name</Label>
-            <Input
-              id="folderName"
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
-              placeholder="Enter folder name"
-              required
-            />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="folderName">Folder Name</Label>
+              <Input
+                id="folderName"
+                value={folderName}
+                onChange={(e) => setFolderName(e.target.value)}
+                placeholder="Enter folder name"
+                required
+              />
+            </div>
+            {!initialRecipientId && (
+              <div className="space-y-2">
+                <Label htmlFor="recipient">Create For</Label>
+                <Select
+                  value={selectedRecipient}
+                  onValueChange={setSelectedRecipient}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select recipient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="myself">Myself</SelectItem>
+                    {friends?.map((friend) => (
+                      <SelectItem key={friend.id} value={friend.id}>
+                        {friend.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           <div className="space-y-4">
@@ -181,39 +236,41 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
               <Label>Back</Label>
             </div>
             
-            {cards.map((card, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="grid grid-cols-2 gap-4 flex-1">
-                  <Input
-                    id={`front-${index}`}
-                    value={card.front}
-                    onChange={(e) => updateCard(index, "front", e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(e, index, "front")}
-                    placeholder="Front text"
-                    required
-                  />
-                  <Input
-                    id={`back-${index}`}
-                    value={card.back}
-                    onChange={(e) => updateCard(index, "back", e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(e, index, "back")}
-                    placeholder="Back text"
-                    required
-                  />
+            <div className="space-y-2">
+              {cards.map((card, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="grid grid-cols-2 gap-4 flex-1">
+                    <Input
+                      id={`front-${index}`}
+                      value={card.front}
+                      onChange={(e) => updateCard(index, "front", e.target.value)}
+                      onKeyDown={(e) => handleKeyPress(e, index, "front")}
+                      placeholder="Front text"
+                      required
+                    />
+                    <Input
+                      id={`back-${index}`}
+                      value={card.back}
+                      onChange={(e) => updateCard(index, "back", e.target.value)}
+                      onKeyDown={(e) => handleKeyPress(e, index, "back")}
+                      placeholder="Back text"
+                      required
+                    />
+                  </div>
+                  {cards.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeCard(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                {cards.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeCard(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex gap-4">
