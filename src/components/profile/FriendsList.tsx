@@ -2,13 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FriendCard } from "./FriendCard";
-
-type Profile = {
-  id: string;
-  display_name: string;
-  username: string | null;
-  avatar_url: string | null;
-};
+import { Profile } from "@/types/database";
 
 type FriendConnection = {
   friend_id: string;
@@ -32,13 +26,17 @@ export function FriendsList() {
             id,
             display_name,
             username,
-            avatar_url
+            avatar_url,
+            created_at,
+            updated_at
           ),
           user:profiles!friend_connections_user_id_fkey (
             id,
             display_name,
             username,
-            avatar_url
+            avatar_url,
+            created_at,
+            updated_at
           )
         `)
         .or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)
@@ -50,12 +48,7 @@ export function FriendsList() {
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend ? connection.user : connection.friend;
 
-        return {
-          id: friendProfile.id,
-          display_name: friendProfile.display_name,
-          username: friendProfile.username,
-          avatar_url: friendProfile.avatar_url
-        };
+        return friendProfile;
       });
     },
   });
