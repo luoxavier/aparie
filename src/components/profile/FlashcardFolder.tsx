@@ -78,7 +78,7 @@ export default function FlashcardFolder({
             userId={creatorId}
             folderName={folderName}
             onStudy={onStudy}
-            onModifyFolder={handleModifyFolder}
+            onModifyClick={handleModifyFolder}
           />
         </>
       )}
