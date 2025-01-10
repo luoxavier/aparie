@@ -39,9 +39,21 @@ export default function Profile() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          <NotificationsDialog />
+          <Button onClick={() => signOut()}>Sign Out</Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="flashcards" className="space-y-4">
+        <div className="flex justify-between items-center">
+          <TabsList>
+            <TabsTrigger value="flashcards">My Flashcards</TabsTrigger>
+            <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="friends">My Friends</TabsTrigger>
+          </TabsList>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 ml-4">
                 <Plus className="h-4 w-4" />
                 Create Cards
               </Button>
@@ -53,17 +65,7 @@ export default function Profile() {
               <CreateMultipleCards />
             </DialogContent>
           </Dialog>
-          <NotificationsDialog />
-          <Button onClick={() => signOut()}>Sign Out</Button>
         </div>
-      </div>
-
-      <Tabs defaultValue="flashcards" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="flashcards">My Flashcards</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites</TabsTrigger>
-          <TabsTrigger value="friends">My Friends</TabsTrigger>
-        </TabsList>
 
         <TabsContent value="flashcards">
           <FlashcardsList />

@@ -122,7 +122,7 @@ export function FlashcardFolder({
       state: { 
         flashcards, 
         folderName: title,
-        creatorName: subtitle
+        creatorName: subtitle || user?.email
       } 
     });
   };
@@ -131,11 +131,9 @@ export function FlashcardFolder({
     setShowCards(!showCards);
   };
 
-  const isMyFlashcards = creatorId === user?.id;
-
   return (
     <Card 
-      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
+      className="p-6 hover:bg-accent/50 transition-colors cursor-pointer mb-4"
       onClick={handleFolderClick}
     >
       <div className="flex items-center justify-between">
@@ -148,8 +146,8 @@ export function FlashcardFolder({
           >
             <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
           </Button>
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
+          <div>
+            <div className="flex items-baseline gap-1">
               <h3 className="text-lg font-medium">
                 {title}
                 <span className="text-sm text-muted-foreground ml-2">
@@ -173,39 +171,37 @@ export function FlashcardFolder({
           >
             Study
           </Button>
-          {!isMyFlashcards && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Modify Flashcards</DialogTitle>
-                </DialogHeader>
-                <CreateMultipleCards 
-                  recipientId={user?.id}
-                  existingCards={flashcards}
-                  folderName={folderName}
-                  onSave={() => {
-                    toast({
-                      title: "Success",
-                      description: "Flashcards updated successfully",
-                    });
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-          )}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Modify Flashcards</DialogTitle>
+              </DialogHeader>
+              <CreateMultipleCards 
+                recipientId={user?.id}
+                existingCards={flashcards}
+                folderName={folderName}
+                onSave={() => {
+                  toast({
+                    title: "Success",
+                    description: "Flashcards updated successfully",
+                  });
+                }}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-6">
         <FolderContent
           flashcards={flashcards}
           showCards={showCards}
