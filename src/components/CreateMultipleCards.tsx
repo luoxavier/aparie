@@ -12,19 +12,34 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Profile } from "@/types/database";
+import { Profile, Flashcard } from "@/types/database";
 import { useFriendsList } from "./profile/FriendSelector";
 
 interface CreateMultipleCardsProps {
   preselectedFriend?: Profile;
   onComplete?: () => void;
+  onSave?: () => void;
+  recipientId?: string;
+  existingCards?: Flashcard[];
+  folderName?: string;
 }
 
-export function CreateMultipleCards({ preselectedFriend, onComplete }: CreateMultipleCardsProps) {
+export function CreateMultipleCards({ 
+  preselectedFriend,
+  onComplete,
+  onSave,
+  recipientId: initialRecipientId,
+  existingCards = [],
+  folderName: initialFolderName = "",
+}: CreateMultipleCardsProps) {
   const { user } = useAuth();
-  const [recipientId, setRecipientId] = useState<string>(preselectedFriend?.id || "");
-  const [folderName, setFolderName] = useState("");
-  const [cards, setCards] = useState([{ front: "", back: "" }]);
+  const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "");
+  const [folderName, setFolderName] = useState(initialFolderName);
+  const [cards, setCards] = useState(
+    existingCards.length > 0 
+      ? existingCards.map(card => ({ front: card.front, back: card.back }))
+      : [{ front: "", back: "" }]
+  );
   const { data: friends = [] } = useFriendsList();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,6 +65,7 @@ export function CreateMultipleCards({ preselectedFriend, onComplete }: CreateMul
       });
 
       onComplete?.();
+      onSave?.();
     } catch (error) {
       console.error("Error creating flashcards:", error);
       toast({
