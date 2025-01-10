@@ -96,6 +96,27 @@ export function CreateMultipleCards({
     setCards(newCards);
   };
 
+  const removeCard = (index: number) => {
+    if (cards.length > 1) {
+      const newCards = cards.filter((_, i) => i !== index);
+      setCards(newCards);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, index: number, field: "front" | "back") => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (field === "front") {
+        document.getElementById(`back-${index}`)?.focus();
+      } else if (index === cards.length - 1) {
+        addCard();
+        setTimeout(() => document.getElementById(`front-${index + 1}`)?.focus(), 0);
+      } else {
+        document.getElementById(`front-${index + 1}`)?.focus();
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -125,28 +146,41 @@ export function CreateMultipleCards({
         />
       </div>
 
-      {cards.map((card, index) => (
-        <div key={index} className="space-y-2 p-4 border rounded">
-          <div className="space-y-2">
-            <Label>Front</Label>
-            <Input
-              value={card.front}
-              onChange={(e) => updateCard(index, "front", e.target.value)}
-              placeholder="Front of card"
-              required
-            />
+      <div className="space-y-2">
+        {cards.map((card, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-4 flex-1">
+              <Input
+                id={`front-${index}`}
+                value={card.front}
+                onChange={(e) => updateCard(index, "front", e.target.value)}
+                onKeyDown={(e) => handleKeyPress(e, index, "front")}
+                placeholder="Front of card"
+                required
+              />
+              <Input
+                id={`back-${index}`}
+                value={card.back}
+                onChange={(e) => updateCard(index, "back", e.target.value)}
+                onKeyDown={(e) => handleKeyPress(e, index, "back")}
+                placeholder="Back of card"
+                required
+              />
+            </div>
+            {cards.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeCard(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label>Back</Label>
-            <Input
-              value={card.back}
-              onChange={(e) => updateCard(index, "back", e.target.value)}
-              placeholder="Back of card"
-              required
-            />
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       <Button type="button" variant="outline" onClick={addCard}>
         Add Another Card
