@@ -77,24 +77,40 @@ export function CreateMultipleCards({
         }
       }
 
-      // Handle updates and new cards
-      const cardsToUpsert = cards.map(card => ({
-        id: card.id, // Will be undefined for new cards
-        creator_id: user.id,
-        recipient_id: recipientId === "self" ? null : recipientId,
-        folder_name: folderName,
-        front: card.front,
-        back: card.back,
-      }));
+      // Split cards into new and existing
+      const newCards = cards.filter(card => !card.id);
+      const existingCardsToUpdate = cards.filter(card => card.id);
 
-      const { error } = await supabase
-        .from("flashcards")
-        .upsert(cardsToUpsert, { 
-          onConflict: 'id',
-          ignoreDuplicates: false 
-        });
+      // Insert new cards
+      if (newCards.length > 0) {
+        const { error: insertError } = await supabase
+          .from("flashcards")
+          .insert(newCards.map(card => ({
+            creator_id: user.id,
+            recipient_id: recipientId === "self" ? null : recipientId,
+            folder_name: folderName,
+            front: card.front,
+            back: card.back,
+          })));
 
-      if (error) throw error;
+        if (insertError) throw insertError;
+      }
+
+      // Update existing cards
+      if (existingCardsToUpdate.length > 0) {
+        const { error: updateError } = await supabase
+          .from("flashcards")
+          .upsert(existingCardsToUpdate.map(card => ({
+            id: card.id,
+            creator_id: user.id,
+            recipient_id: recipientId === "self" ? null : recipientId,
+            folder_name: folderName,
+            front: card.front,
+            back: card.back,
+          })));
+
+        if (updateError) throw updateError;
+      }
 
       toast({
         title: "Success",
