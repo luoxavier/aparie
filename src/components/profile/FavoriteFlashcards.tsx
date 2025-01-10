@@ -27,7 +27,17 @@ export function FavoriteFlashcards() {
       
       const { data: favoriteData, error: favoriteError } = await supabase
         .from('favorite_folders')
-        .select('*, creator:profiles!favorite_folders_creator_id_fkey(display_name, username)')
+        .select(`
+          *,
+          creator:profiles!favorite_folders_creator_id_fkey(
+            id,
+            display_name,
+            username,
+            avatar_url,
+            created_at,
+            updated_at
+          )
+        `)
         .eq('user_id', user.id);
 
       if (favoriteError) throw favoriteError;
@@ -38,8 +48,12 @@ export function FavoriteFlashcards() {
           .select(`
             *,
             creator:profiles!flashcards_creator_id_fkey (
+              id,
               display_name,
-              username
+              username,
+              avatar_url,
+              created_at,
+              updated_at
             )
           `)
           .eq('creator_id', favorite.creator_id)
