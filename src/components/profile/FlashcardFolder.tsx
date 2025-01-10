@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { FolderContent } from "./folder/FolderContent";
-import { FolderActions } from "./folder/FolderActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Star, Eye } from "lucide-react";
+import { Star, Eye, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Creator {
   display_name: string;
@@ -44,6 +44,7 @@ export function FlashcardFolder({
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
@@ -117,8 +118,18 @@ export function FlashcardFolder({
   const isMyFlashcards = creatorId === user?.id;
   const isFromFriend = !isMyFlashcards && creatorId && folderName;
 
+  const handleStudy = () => {
+    navigate('/study-folder', { 
+      state: { 
+        flashcards, 
+        folderName: title,
+        creatorName: subtitle
+      } 
+    });
+  };
+
   return (
-    <Card className="p-4 space-y-4">
+    <Card className="p-4">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -130,7 +141,7 @@ export function FlashcardFolder({
             </h3>
             {subtitle && (
               <span className="text-sm text-muted-foreground">
-                by {subtitle}
+                {subtitle}
               </span>
             )}
           </div>
@@ -139,7 +150,7 @@ export function FlashcardFolder({
           <Button
             variant="default"
             size="sm"
-            onClick={() => onStudy(flashcards)}
+            onClick={handleStudy}
             disabled={flashcards.length === 0}
           >
             Study
@@ -162,6 +173,15 @@ export function FlashcardFolder({
             <Eye className="h-4 w-4" />
             Show Cards
           </Button>
+          {isMyFlashcards && (
+            <Button
+              variant="ghost"
+              size="sm"
+            >
+              <Edit className="h-4 w-4" />
+              Modify
+            </Button>
+          )}
         </div>
       </div>
 
@@ -170,17 +190,6 @@ export function FlashcardFolder({
         showCards={showCards}
         showCreator={showCreator}
       />
-      
-      {expanded && (
-        <FolderActions
-          isMyFlashcards={isMyFlashcards}
-          isFromFriend={isFromFriend}
-          flashcards={flashcards}
-          userId={user?.id}
-          folderName={folderName}
-          onStudy={() => onStudy(flashcards)}
-        />
-      )}
     </Card>
   );
 }

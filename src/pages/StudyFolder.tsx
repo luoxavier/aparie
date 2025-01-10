@@ -19,7 +19,11 @@ export default function StudyFolder() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { flashcards, folderName } = location.state || { flashcards: [], folderName: "Untitled" };
+  const { flashcards, folderName, creatorName } = location.state || { 
+    flashcards: [], 
+    folderName: "Untitled",
+    creatorName: ""
+  };
   
   const [mode, setMode] = useState<StudyMode | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -84,19 +88,24 @@ export default function StudyFolder() {
     setIsComplete(false);
   };
 
-  if (!mode) {
-    return <StudyModeSelector onModeSelect={setMode} folderName={folderName} />;
-  }
-
   return (
     <div className="container max-w-md mx-auto py-8 px-4">
+      <div className="mb-8 space-y-2">
+        <h1 className="text-2xl font-bold">{folderName}</h1>
+        {creatorName && (
+          <p className="text-sm text-muted-foreground">Created by {creatorName}</p>
+        )}
+      </div>
+
       <StudyHeader 
         userEmail={user?.email} 
         onSignOut={handleSignOut}
         folderName={folderName}
       />
 
-      {isComplete ? (
+      {!mode ? (
+        <StudyModeSelector onModeSelect={setMode} folderName={folderName} />
+      ) : isComplete ? (
         <ScoreDisplay
           score={score}
           totalCards={currentDeck.length}
