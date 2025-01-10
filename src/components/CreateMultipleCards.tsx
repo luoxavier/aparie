@@ -117,6 +117,7 @@ export function CreateMultipleCards({
         description: isModifying ? "Folder updated successfully!" : "Flashcards created successfully!",
       });
 
+      // Close the interface after successful operation
       onComplete?.();
       onSave?.();
     } catch (error) {
