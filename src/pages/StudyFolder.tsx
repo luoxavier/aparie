@@ -1,8 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { StudyModeSelector } from "@/components/study/StudyModeSelector";
-import { StudyHeader } from "@/components/study/StudyHeader";
 import { ScoreDisplay } from "@/components/study/ScoreDisplay";
 import { FlashcardDisplay } from "@/components/study/FlashcardDisplay";
 import { StudyProgress } from "@/components/study/StudyProgress";
