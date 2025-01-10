@@ -1,6 +1,4 @@
 import { AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { generateAnswerOptions } from "@/utils/flashcard-utils";
 import { FlashcardContent } from "./FlashcardContent";
 import { AnswerOptions } from "./AnswerOptions";
@@ -29,8 +27,6 @@ export function FlashcardDisplay({
   streak = 0,
   mistakes = []
 }: FlashcardDisplayProps) {
-  const navigate = useNavigate();
-
   if (!currentCard) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px] space-y-4">
@@ -59,23 +55,6 @@ export function FlashcardDisplay({
       </AnimatePresence>
 
       {!showAnswer && <AnswerOptions options={answerOptions} onAnswer={onAnswer} />}
-
-      <div className="fixed bottom-4 left-0 right-0 px-4 space-y-2 max-w-md mx-auto">
-        <Button
-          variant="secondary"
-          onClick={onReviewMistakes}
-          className="w-full bg-secondary hover:bg-secondary/90"
-        >
-          Review Mistakes
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/profile")}
-          className="w-full"
-        >
-          Return Home
-        </Button>
-      </div>
     </div>
   );
 }

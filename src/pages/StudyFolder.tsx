@@ -5,6 +5,7 @@ import { ScoreDisplay } from "@/components/study/ScoreDisplay";
 import { FlashcardDisplay } from "@/components/study/FlashcardDisplay";
 import { StudyProgress } from "@/components/study/StudyProgress";
 import { Button } from "@/components/ui/button";
+import { StudyControls } from "@/components/study/StudyControls";
 
 interface Flashcard {
   id: string;
@@ -91,7 +92,7 @@ export default function StudyFolder() {
     <div className="container max-w-md mx-auto py-8 px-4">
       {/* Top bar with user info and sign out */}
       <div className="flex justify-between items-center mb-8">
-        <div className="text-lg font-medium">{user?.email?.split('@')[0]}</div>
+        <div className="text-lg font-medium">{user?.user_metadata?.username || user?.user_metadata?.display_name || user?.email?.split('@')[0]}</div>
         <Button variant="outline" onClick={handleSignOut}>
           Sign out
         </Button>
@@ -138,6 +139,8 @@ export default function StudyFolder() {
             showAnswer={showAnswer}
             onAnswer={handleAnswer}
             onReviewMistakes={handleReviewMistakes}
+            streak={0}
+            mistakes={mistakes}
           />
           <StudyProgress
             currentIndex={currentCardIndex}
@@ -146,19 +149,14 @@ export default function StudyFolder() {
             infiniteCycles={infiniteCycles}
             perfectCycles={perfectCycles}
           />
+          <StudyControls
+            onExit={() => navigate("/profile")}
+            onReviewMistakes={handleReviewMistakes}
+            mistakesCount={mistakes.length}
+            isReviewingMistakes={isReviewingMistakes}
+          />
         </>
       )}
-
-      {/* Return home button at the bottom */}
-      <div className="mt-8">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => navigate("/profile")}
-        >
-          Return Home
-        </Button>
-      </div>
     </div>
   );
 }
