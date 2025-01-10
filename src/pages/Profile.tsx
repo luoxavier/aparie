@@ -47,24 +47,27 @@ export default function Profile() {
       <Tabs defaultValue="flashcards" className="space-y-4">
         <div className="flex justify-between items-center">
           <TabsList>
-            <TabsTrigger value="flashcards">My Flashcards</TabsTrigger>
+            <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
             <TabsTrigger value="friends">My Friends</TabsTrigger>
           </TabsList>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="gap-2 ml-4">
-                <Plus className="h-4 w-4" />
-                Create Cards
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Create New Flashcards</DialogTitle>
-              </DialogHeader>
-              <CreateMultipleCards />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <AddFriendDialog />
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create Cards
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Create New Flashcards</DialogTitle>
+                </DialogHeader>
+                <CreateMultipleCards />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <TabsContent value="flashcards">
@@ -76,7 +79,6 @@ export default function Profile() {
         </TabsContent>
 
         <TabsContent value="friends">
-          <AddFriendDialog />
           <div className="mt-4">
             <FriendsList />
           </div>

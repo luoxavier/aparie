@@ -34,6 +34,7 @@ export function NotificationsDialog() {
         `)
         .eq('recipient_id', user?.id)
         .eq('read', false)
+        .neq('sender_id', user?.id) // Filter out self-notifications
         .order('created_at', { ascending: false });
       
       if (error) throw error;

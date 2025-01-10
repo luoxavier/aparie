@@ -133,7 +133,7 @@ export function FlashcardFolder({
 
   return (
     <Card 
-      className="p-6 hover:bg-accent/50 transition-colors cursor-pointer mb-4"
+      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
       onClick={handleFolderClick}
     >
       <div className="flex items-center justify-between">
@@ -148,7 +148,7 @@ export function FlashcardFolder({
           </Button>
           <div>
             <div className="flex items-baseline gap-1">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-base font-medium">
                 {title}
                 <span className="text-sm text-muted-foreground ml-2">
                   ({flashcards.length} cards)
@@ -168,6 +168,7 @@ export function FlashcardFolder({
             size="sm"
             onClick={handleStudy}
             disabled={flashcards.length === 0}
+            className="h-8"
           >
             Study
           </Button>
@@ -177,6 +178,7 @@ export function FlashcardFolder({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => e.stopPropagation()}
+                className="h-8"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -201,7 +203,7 @@ export function FlashcardFolder({
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <FolderContent
           flashcards={flashcards}
           showCards={showCards}
