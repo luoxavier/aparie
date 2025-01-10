@@ -15,7 +15,7 @@ export function FolderActions({ isFavorited, onFavoriteClick, onStudyClick, onEd
         variant="ghost"
         size="sm"
         onClick={onFavoriteClick}
-        className={`transition-colors ${isFavorited ? 'text-primary' : 'text-gray-400 hover:text-primary'} p-0`}
+        className={`transition-colors ${isFavorited ? 'text-primary' : 'text-gray-400'} p-0`}
       >
         <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
       </Button>
