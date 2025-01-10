@@ -109,7 +109,7 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
     }
 
     try {
-      const { error } = await supabase
+      const { error: cardsError } = await supabase
         .from('flashcards')
         .insert(
           validCards.map(card => ({
@@ -121,7 +121,21 @@ export function CreateMultipleCards({ recipientId, onSave, existingCards, folder
           }))
         );
 
-      if (error) throw error;
+      if (cardsError) throw cardsError;
+
+      // Send notification if creating cards for a friend
+      if (recipientId) {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: recipientId,
+            sender_id: user.id,
+            type: 'new_flashcard',
+            content: { folder_name: folderName.trim() }
+          });
+
+        if (notificationError) throw notificationError;
+      }
 
       toast({
         title: "Success",

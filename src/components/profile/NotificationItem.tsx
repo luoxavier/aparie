@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface NotificationItemProps {
   id: string;
@@ -26,6 +27,7 @@ export function NotificationItem({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isExiting, setIsExiting] = useState(false);
 
   const handleFriendRequest = useMutation({
     mutationFn: async (action: 'accept' | 'deny') => {
@@ -74,14 +76,17 @@ export function NotificationItem({
       }
     },
     onSuccess: (_, variables) => {
-      toast({
-        title: variables === 'accept' ? "Friend request accepted" : "Friend request denied",
-        description: variables === 'accept' 
-          ? `You are now friends with ${senderName}!` 
-          : `Friend request from ${senderName} has been denied.`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['friends'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      setIsExiting(true);
+      setTimeout(() => {
+        toast({
+          title: variables === 'accept' ? "Friend request accepted" : "Friend request denied",
+          description: variables === 'accept' 
+            ? `You are now friends with ${senderName}!` 
+            : `Friend request from ${senderName} has been denied.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ['friends'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      }, 300); // Wait for animation to complete
     },
     onError: (error: any) => {
       toast({
@@ -92,8 +97,15 @@ export function NotificationItem({
     }
   });
 
+  const handleMarkAsRead = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onMarkAsRead(id);
+    }, 300); // Wait for animation to complete
+  };
+
   return (
-    <Card className="relative">
+    <Card className={`relative transition-all ${isExiting ? 'notification-exit' : ''}`}>
       <CardContent className="p-4">
         <div className="flex items-center space-x-4">
           {senderAvatar && (
@@ -107,7 +119,7 @@ export function NotificationItem({
             <p className="font-medium">{senderName}</p>
             {type === 'new_flashcard' && (
               <p className="text-sm text-gray-600">
-                Created a new flashcard for you
+                Created a new flashcard folder for you
               </p>
             )}
             {type === 'friend_request' && (
@@ -139,7 +151,7 @@ export function NotificationItem({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onMarkAsRead(id)}
+              onClick={handleMarkAsRead}
             >
               Mark as read
             </Button>
