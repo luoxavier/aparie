@@ -6,9 +6,9 @@ import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 interface Creator {
   display_name: string;
@@ -37,8 +37,6 @@ export function FlashcardsList() {
   const { user } = useAuth();
   const [isStudying, setIsStudying] = useState(false);
   const [currentDeck, setCurrentDeck] = useState<Flashcard[]>([]);
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
-  const [creatorOrder, setCreatorOrder] = useState<string[]>([]);
 
   const { data: flashcards, isLoading, error } = useQuery({
     queryKey: ['flashcards', user?.id],
@@ -91,22 +89,6 @@ export function FlashcardsList() {
     setIsStudying(true);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = creatorOrder.indexOf(active.id.toString());
-    const newIndex = creatorOrder.indexOf(over.id.toString());
-    setCreatorOrder(arrayMove(creatorOrder, oldIndex, newIndex));
-  };
-
-  const toggleSection = (creatorId: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [creatorId]: !prev[creatorId]
-    }));
-  };
-
   if (isStudying && currentDeck.length > 0) {
     return (
       <StudyMode 
@@ -116,55 +98,46 @@ export function FlashcardsList() {
     );
   }
 
-  // Ensure user's flashcards appear first
-  const sortedCreators = Object.entries(groupedFlashcards).sort((a, b) => {
-    if (a[0] === user?.id) return -1;
-    if (b[0] === user?.id) return 1;
-    return 0;
-  });
-
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-8">
-        {sortedCreators.map(([creatorId, { creator, folders }]) => (
-          <div key={creatorId} className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold flex items-center gap-2">
-                {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleSection(creatorId)}
-                  className="ml-2"
-                >
-                  {expandedSections[creatorId] ? (
-                    <Minus className="h-4 w-4" />
-                  ) : (
+    <div className="space-y-8">
+      {Object.entries(groupedFlashcards).map(([creatorId, { creator, folders }]) => (
+        <div key={creatorId} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold">
+              {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
+            </h3>
+            {creatorId === user?.id && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-2">
                     <Plus className="h-4 w-4" />
-                  )}
-                </Button>
-              </h3>
-            </div>
-            {expandedSections[creatorId] && (
-              <SortableContext items={Object.keys(folders)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-3">
-                  {Object.entries(folders).map(([folderName, cards]) => (
-                    <FlashcardFolder
-                      key={`${creatorId}-${folderName}`}
-                      title={folderName}
-                      flashcards={cards}
-                      onStudy={startStudying}
-                      showCreator={false}
-                      creatorId={creatorId}
-                      folderName={folderName}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
+                    Create Cards
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Flashcards</DialogTitle>
+                  </DialogHeader>
+                  <CreateMultipleCards />
+                </DialogContent>
+              </Dialog>
             )}
           </div>
-        ))}
-      </div>
-    </DndContext>
+          <div className="space-y-3">
+            {Object.entries(folders).map(([folderName, cards]) => (
+              <FlashcardFolder
+                key={`${creatorId}-${folderName}`}
+                title={folderName}
+                flashcards={cards}
+                onStudy={startStudying}
+                showCreator={false}
+                creatorId={creatorId}
+                folderName={folderName}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
