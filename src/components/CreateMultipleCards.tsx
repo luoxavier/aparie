@@ -55,7 +55,7 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
         .eq('status', 'accepted');
       
       if (error) throw error;
-      return data.map(d => d.friend);
+      return data?.map(d => d.friend) || [];
     },
     enabled: !!user?.id,
   });
