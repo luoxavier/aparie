@@ -165,6 +165,7 @@ export function FlashcardFolder({
           onFavorite={toggleFavorite}
           onStudy={handleStudy}
           onEdit={handleEdit}
+          cardCount={flashcards.length}
         />
 
         <div className="mt-3">
