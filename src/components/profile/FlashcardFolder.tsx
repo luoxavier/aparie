@@ -29,7 +29,6 @@ interface FlashcardFolderProps {
   showCreator?: boolean;
   creatorId?: string;
   folderName?: string;
-  expanded?: boolean;
 }
 
 export function FlashcardFolder({ 
@@ -40,7 +39,6 @@ export function FlashcardFolder({
   showCreator = true,
   creatorId,
   folderName,
-  expanded = false
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -131,8 +129,18 @@ export function FlashcardFolder({
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {isFromFriend && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleFavorite}
+              className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} p-0`}
+            >
+              <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+            </Button>
+          )}
+          <div className="space-y-1">
             <h3 className="text-lg font-medium">
               {title}
               <span className="text-sm text-muted-foreground ml-2">
@@ -155,23 +163,12 @@ export function FlashcardFolder({
           >
             Study
           </Button>
-          {isFromFriend && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleFavorite}
-              className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
-            >
-              <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-            </Button>
-          )}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowCards(!showCards)}
           >
             <Eye className="h-4 w-4" />
-            Show Cards
           </Button>
           {isMyFlashcards && (
             <Button
@@ -179,7 +176,6 @@ export function FlashcardFolder({
               size="sm"
             >
               <Edit className="h-4 w-4" />
-              Modify
             </Button>
           )}
         </div>
