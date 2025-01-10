@@ -9,6 +9,8 @@ import { Star, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Creator {
   display_name: string;
@@ -47,6 +49,21 @@ export function FlashcardFolder({
   const navigate = useNavigate();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({
+    id: `${creatorId}-${folderName}`,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const checkFavoriteStatus = async () => {
     if (!user?.id || !creatorId || !folderName) return;
@@ -133,7 +150,11 @@ export function FlashcardFolder({
 
   return (
     <Card 
-      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="p-3 hover:bg-accent/50 transition-colors cursor-pointer mb-2"
       onClick={handleFolderClick}
     >
       <div className="flex items-center justify-between">
@@ -168,7 +189,7 @@ export function FlashcardFolder({
             size="sm"
             onClick={handleStudy}
             disabled={flashcards.length === 0}
-            className="h-8"
+            className="h-7"
           >
             Study
           </Button>
@@ -178,7 +199,7 @@ export function FlashcardFolder({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => e.stopPropagation()}
-                className="h-8"
+                className="h-7"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -203,7 +224,7 @@ export function FlashcardFolder({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <FolderContent
           flashcards={flashcards}
           showCards={showCards}
