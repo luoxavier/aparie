@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useToast } from "@/hooks/use-toast";
 
@@ -34,6 +35,7 @@ export function FolderActions({
   onStudy 
 }: FolderActionsProps) {
   const { toast } = useToast();
+  const [isModifyOpen, setIsModifyOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -47,6 +49,9 @@ export function FolderActions({
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>Create New Flashcards</DialogTitle>
+              <DialogDescription>
+                Add new flashcards to your collection.
+              </DialogDescription>
             </DialogHeader>
             <CreateMultipleCards />
           </DialogContent>
@@ -62,7 +67,7 @@ export function FolderActions({
       </Button>
 
       {isFromFriend && (
-        <Dialog>
+        <Dialog open={isModifyOpen} onOpenChange={setIsModifyOpen}>
           <DialogTrigger asChild>
             <Button className="w-full bg-secondary hover:bg-secondary/90">
               Modify Folder
@@ -71,12 +76,16 @@ export function FolderActions({
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>Modify Flashcards</DialogTitle>
+              <DialogDescription>
+                Update or remove flashcards in this folder.
+              </DialogDescription>
             </DialogHeader>
             <CreateMultipleCards 
               recipientId={userId}
               existingCards={flashcards}
               folderName={folderName}
               onSave={() => {
+                setIsModifyOpen(false);
                 toast({
                   title: "Success",
                   description: "Flashcards updated successfully",

@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 interface FriendCardProps {
@@ -13,10 +14,12 @@ interface FriendCardProps {
 }
 
 export function FriendCard({ friend }: FriendCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <Card>
       <CardContent className="p-4">
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button 
               className="w-full justify-start"
@@ -49,8 +52,14 @@ export function FriendCard({ friend }: FriendCardProps) {
                 Create Flashcards for {friend.display_name}
                 {friend.username && ` (@${friend.username})`}
               </DialogTitle>
+              <DialogDescription>
+                Create flashcards that will be shared with your friend.
+              </DialogDescription>
             </DialogHeader>
-            <CreateMultipleCards recipientId={friend.id} />
+            <CreateMultipleCards 
+              recipientId={friend.id} 
+              onSave={() => setIsOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </CardContent>
