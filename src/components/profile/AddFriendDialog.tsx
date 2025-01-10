@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { FriendSearchInput } from "./FriendSearchInput";
 import { useFriendRequest } from "@/hooks/useFriendRequest";
+import { UserPlus } from "lucide-react";
 
 export function AddFriendDialog() {
   const { friendIdentifier, setFriendIdentifier, sendFriendRequest } = useFriendRequest();
@@ -16,7 +17,10 @@ export function AddFriendDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Add Friend</Button>
+        <Button size="default" className="gap-2">
+          <UserPlus className="h-4 w-4" />
+          Add Friend
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

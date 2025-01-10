@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -55,7 +55,7 @@ export default function Profile() {
             <AddFriendDialog />
             <Dialog>
               <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
+                <Button size="default" className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Cards
                 </Button>

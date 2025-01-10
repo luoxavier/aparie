@@ -43,8 +43,7 @@ export function FavoriteFlashcards() {
             )
           `)
           .eq('creator_id', favorite.creator_id)
-          .eq('folder_name', favorite.folder_name)
-          .eq('recipient_id', user.id);
+          .eq('folder_name', favorite.folder_name);
 
         if (flashcardsError) throw flashcardsError;
         return {
