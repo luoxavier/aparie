@@ -18,9 +18,7 @@ export function useFriendsList() {
             id,
             username,
             display_name,
-            avatar_url,
-            created_at,
-            updated_at
+            avatar_url
           )
         `)
         .eq('user_id', user.id)

@@ -3,7 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useToast } from "@/hooks/use-toast";
-import { Flashcard } from "@/types/flashcard";
+
+interface Creator {
+  display_name: string;
+  username: string | null;
+}
+
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  creator: Creator;
+}
 
 interface FolderActionsProps {
   isMyFlashcards: boolean;
@@ -12,7 +24,6 @@ interface FolderActionsProps {
   userId?: string;
   folderName?: string;
   onStudy: () => void;
-  onModifyClick?: () => void;
 }
 
 export function FolderActions({ 
@@ -21,8 +32,7 @@ export function FolderActions({
   flashcards,
   userId,
   folderName,
-  onStudy,
-  onModifyClick 
+  onStudy 
 }: FolderActionsProps) {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -44,10 +54,7 @@ export function FolderActions({
                 Add new flashcards to your collection.
               </DialogDescription>
             </DialogHeader>
-            <CreateMultipleCards 
-              onComplete={() => setIsCreateOpen(false)} 
-              onSave={() => setIsCreateOpen(false)} 
-            />
+            <CreateMultipleCards onSave={() => setIsCreateOpen(false)} />
           </DialogContent>
         </Dialog>
       )}
@@ -63,10 +70,7 @@ export function FolderActions({
       {isFromFriend && (
         <Dialog open={isModifyOpen} onOpenChange={setIsModifyOpen}>
           <DialogTrigger asChild>
-            <Button 
-              className="w-full bg-secondary hover:bg-secondary/90"
-              onClick={onModifyClick}
-            >
+            <Button className="w-full bg-secondary hover:bg-secondary/90">
               Modify Folder
             </Button>
           </DialogTrigger>

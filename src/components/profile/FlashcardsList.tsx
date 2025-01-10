@@ -1,110 +1,123 @@
-import { useState } from "react";
-import { Flashcard, GroupedFlashcards } from "@/types/flashcard";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { CreateCard } from "@/components/CreateCard";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import FlashcardFolder from "./FlashcardFolder";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { FlashcardFolder } from "./FlashcardFolder";
+import { StudyMode } from "./StudyMode";
+import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
-interface FlashcardsListProps {
-  flashcards: Flashcard[];
-  onFlashcardsChange: (flashcards: Flashcard[]) => void;
+interface Creator {
+  display_name: string;
+  username: string | null;
 }
 
-export function FlashcardsList({ flashcards, onFlashcardsChange }: FlashcardsListProps) {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  creator: Creator;
+  folder_name: string | null;
+}
 
-  const groupFlashcardsByCreatorAndFolder = (flashcards: Flashcard[]): GroupedFlashcards => {
-    const groupedFlashcards: GroupedFlashcards = {};
-
-    flashcards.forEach((flashcard) => {
-      const creatorId = flashcard.creator_id;
-      const folderName = flashcard.folder_name || "Uncategorized";
-
-      if (!groupedFlashcards[creatorId]) {
-        groupedFlashcards[creatorId] = {
-          creator: flashcard.creator,
-          folders: {}
-        };
-      }
-
-      if (!groupedFlashcards[creatorId].folders[folderName]) {
-        groupedFlashcards[creatorId].folders[folderName] = [];
-      }
-
-      groupedFlashcards[creatorId].folders[folderName].push(flashcard);
-    });
-
-    return groupedFlashcards;
-  };
-
-  const handleSaveNewCard = async (front: string, back: string) => {
-    if (!user) return;
-
-    const newCard: Flashcard = {
-      id: crypto.randomUUID(),
-      front,
-      back,
-      creator_id: user.id,
-      recipient_id: null,
-      folder_name: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      creator: {
-        id: user.id,
-        username: null,
-        display_name: user.email || 'Anonymous',
-        avatar_url: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+interface GroupedFlashcards {
+  [creatorId: string]: {
+    creator: Creator;
+    folders: {
+      [folderName: string]: Flashcard[];
     };
+  };
+}
 
-    onFlashcardsChange([...flashcards, newCard]);
-    setIsCreateModalOpen(false);
-    toast({
-      title: "Success",
-      description: "Flashcard created successfully!",
-    });
+export function FlashcardsList() {
+  const { user } = useAuth();
+  const [isStudying, setIsStudying] = useState(false);
+  const [currentDeck, setCurrentDeck] = useState<Flashcard[]>([]);
+
+  const { data: flashcards, isLoading, error } = useQuery({
+    queryKey: ['flashcards', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('flashcards')
+        .select(`
+          *,
+          creator:profiles!flashcards_creator_id_fkey (
+            display_name,
+            username
+          )
+        `)
+        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  if (isLoading) return <div className="text-center">Loading flashcards...</div>;
+  if (error) return <div className="text-center text-red-500">Error loading flashcards</div>;
+  if (!flashcards?.length) return <EmptyFlashcardsState />;
+
+  const groupedFlashcards: GroupedFlashcards = {};
+
+  flashcards.forEach(flashcard => {
+    const creatorId = flashcard.creator_id;
+    const folderName = flashcard.folder_name || 'Uncategorized';
+    
+    if (!groupedFlashcards[creatorId]) {
+      groupedFlashcards[creatorId] = {
+        creator: flashcard.creator,
+        folders: {}
+      };
+    }
+    
+    if (!groupedFlashcards[creatorId].folders[folderName]) {
+      groupedFlashcards[creatorId].folders[folderName] = [];
+    }
+    
+    groupedFlashcards[creatorId].folders[folderName].push(flashcard);
+  });
+
+  const startStudying = (deck: Flashcard[]) => {
+    setCurrentDeck([...deck]);
+    setIsStudying(true);
   };
 
-  const groupedFlashcards = groupFlashcardsByCreatorAndFolder(flashcards);
+  if (isStudying && currentDeck.length > 0) {
+    return (
+      <StudyMode 
+        deck={currentDeck}
+        onExit={() => setIsStudying(false)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Flashcard
-        </Button>
-      </div>
-
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent>
-          <CreateCard onSave={handleSaveNewCard} />
-        </DialogContent>
-      </Dialog>
-
       {Object.entries(groupedFlashcards).map(([creatorId, { creator, folders }]) => (
         <div key={creatorId} className="space-y-4">
-          <h2 className="text-2xl font-bold">
-            {creator.display_name}'s Flashcards
-          </h2>
-          {Object.entries(folders).map(([folderName, folderFlashcards]) => (
-            <FlashcardFolder
-              key={`${creatorId}-${folderName}`}
-              folderName={folderName}
-              flashcards={folderFlashcards}
-              onFlashcardsChange={onFlashcardsChange}
-              isMyFlashcards={user?.id === creatorId}
-              isFromFriend={user?.id !== creatorId}
-              showCreator={false}
-            />
-          ))}
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold">
+              {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {Object.entries(folders).map(([folderName, cards]) => (
+              <FlashcardFolder
+                key={`${creatorId}-${folderName}`}
+                title={folderName}
+                flashcards={cards}
+                onStudy={startStudying}
+                showCreator={false}
+                creatorId={creatorId}
+                folderName={folderName}
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>

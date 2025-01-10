@@ -1,96 +1,119 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Flashcard } from "@/types/flashcard";
-import { FolderActions } from "./folder/FolderActions";
-import { FolderHeader } from "./folder/FolderHeader";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { FolderActions } from "../flashcard/FolderActions";
 import { FolderContent } from "./folder/FolderContent";
+import { FolderInfo } from "./folder/FolderInfo";
+import { FolderFavoriteButton } from "./folder/FolderFavoriteButton";
 import { ModifyFolderDialog } from "./folder/ModifyFolderDialog";
+import { useFavoriteFolder } from "@/hooks/useFavoriteFolder";
+import { useStudyFolder } from "@/hooks/useStudyFolder";
+import { useToast } from "@/hooks/use-toast";
 
-interface FlashcardFolderProps {
-  folderName: string;
-  subtitle?: string;
-  flashcards: Flashcard[];
-  onFlashcardsChange: (flashcards: Flashcard[]) => void;
-  isMyFlashcards?: boolean;
-  isFromFriend?: boolean;
-  showCreator?: boolean;
-  creatorId?: string;
-  onStudy?: () => void;
+interface Creator {
+  display_name: string;
+  username: string | null;
 }
 
-export default function FlashcardFolder({
-  folderName,
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  creator: Creator;
+}
+
+interface FlashcardFolderProps {
+  title: string;
+  subtitle?: string;
+  flashcards: Flashcard[];
+  onStudy: (flashcards: Flashcard[]) => void;
+  showCreator?: boolean;
+  creatorId?: string;
+  folderName?: string;
+}
+
+export function FlashcardFolder({ 
+  title, 
   subtitle,
-  flashcards,
-  onFlashcardsChange,
-  isMyFlashcards = false,
-  isFromFriend = false,
+  flashcards, 
   showCreator = true,
   creatorId,
-  onStudy,
+  folderName,
 }: FlashcardFolderProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, folderName);
+  const { handleStudy } = useStudyFolder();
 
-  const handleDeleteFlashcard = (flashcardId: string) => {
-    const updatedFlashcards = flashcards.filter((f) => f.id !== flashcardId);
-    onFlashcardsChange(updatedFlashcards);
+  const handleFolderClick = () => {
+    setShowCards(!showCards);
   };
 
-  const handleModifyFolder = () => {
-    setIsModifyModalOpen(true);
+  const handleEditSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+    setIsDialogOpen(false);
+    toast({
+      title: "Success",
+      description: "Flashcards updated successfully",
+    });
   };
 
-  const handleSaveModifications = () => {
-    setIsModifyModalOpen(false);
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDialogOpen(true);
+  };
+
+  const handleStudyClick = (e: React.MouseEvent) => {
+    handleStudy(e, flashcards, title, subtitle || user?.email);
   };
 
   return (
-    <Card className="p-4">
-      <FolderHeader
-        title={folderName}
-        subtitle={subtitle}
-        flashcardsCount={flashcards.length}
-        isMyFlashcards={isMyFlashcards}
-        isFromFriend={isFromFriend}
-        isFavorited={false}
-        showCards={showCards}
-        onToggleCards={() => setShowCards(!showCards)}
-        onFavorite={() => {}}
-        isExpanded={isExpanded}
-        onToggleExpand={() => setIsExpanded(!isExpanded)}
-      />
+    <Card 
+      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
+      onClick={handleFolderClick}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-1">
+          <FolderFavoriteButton
+            isFavorited={isFavorited}
+            onFavoriteClick={toggleFavorite}
+          />
+          <FolderInfo
+            title={title}
+            subtitle={subtitle}
+            cardsCount={flashcards.length}
+          />
+        </div>
 
-      {isExpanded && (
-        <>
-          <FolderContent
-            flashcards={flashcards}
-            showCards={showCards}
-            showCreator={showCreator}
-            onDeleteFlashcard={handleDeleteFlashcard}
-          />
-          <FolderActions
-            isMyFlashcards={isMyFlashcards}
-            isFromFriend={isFromFriend}
-            flashcards={flashcards}
-            userId={creatorId}
-            folderName={folderName}
-            onStudy={onStudy}
-            onModifyClick={handleModifyFolder}
-          />
-        </>
-      )}
+        <FolderActions
+          isFavorited={isFavorited}
+          onFavoriteClick={toggleFavorite}
+          onStudyClick={handleStudyClick}
+          onEditClick={handleEditClick}
+        />
+      </div>
 
       <ModifyFolderDialog
-        isOpen={isModifyModalOpen}
-        onOpenChange={setIsModifyModalOpen}
-        userId={creatorId}
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        userId={user?.id}
         flashcards={flashcards}
         folderName={folderName}
-        onSave={handleSaveModifications}
+        onSave={handleEditSuccess}
       />
+
+      <div className="mt-4">
+        <FolderContent
+          flashcards={flashcards}
+          showCards={showCards}
+          showCreator={showCreator}
+        />
+      </div>
     </Card>
   );
 }

@@ -1,19 +1,25 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Flashcard } from "@/types/flashcard";
 
-export interface FolderContentProps {
+interface Creator {
+  display_name: string;
+  username: string | null;
+}
+
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  creator: Creator;
+}
+
+interface FolderContentProps {
   flashcards: Flashcard[];
   showCards: boolean;
   showCreator: boolean;
-  onDeleteFlashcard: (flashcardId: string) => void;
 }
 
-export function FolderContent({ 
-  flashcards, 
-  showCards, 
-  showCreator,
-  onDeleteFlashcard 
-}: FolderContentProps) {
+export function FolderContent({ flashcards, showCards, showCreator }: FolderContentProps) {
   if (!showCards) return null;
 
   return (

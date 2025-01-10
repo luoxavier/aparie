@@ -1,6 +1,18 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Flashcard } from "@/types/flashcard";
+
+interface Creator {
+  display_name: string;
+  username: string | null;
+}
+
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  creator: Creator;
+}
 
 interface ModifyFolderDialogProps {
   isOpen: boolean;

@@ -1,8 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import FlashcardFolder from "./FlashcardFolder";
-import { Flashcard } from "@/types/flashcard";
+import { FlashcardFolder } from "./FlashcardFolder";
+
+interface Creator {
+  display_name: string;
+  username: string | null;
+}
+
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  creator: Creator;
+  folder_name: string;
+}
 
 export function FavoriteFlashcards() {
   const { user } = useAuth();
@@ -14,17 +27,7 @@ export function FavoriteFlashcards() {
       
       const { data: favoriteData, error: favoriteError } = await supabase
         .from('favorite_folders')
-        .select(`
-          *,
-          creator:profiles!favorite_folders_creator_id_fkey(
-            id,
-            display_name,
-            username,
-            avatar_url,
-            created_at,
-            updated_at
-          )
-        `)
+        .select('*, creator:profiles!favorite_folders_creator_id_fkey(display_name, username)')
         .eq('user_id', user.id);
 
       if (favoriteError) throw favoriteError;
@@ -35,12 +38,8 @@ export function FavoriteFlashcards() {
           .select(`
             *,
             creator:profiles!flashcards_creator_id_fkey (
-              id,
               display_name,
-              username,
-              avatar_url,
-              created_at,
-              updated_at
+              username
             )
           `)
           .eq('creator_id', favorite.creator_id)
@@ -66,13 +65,13 @@ export function FavoriteFlashcards() {
       {favorites.map((favorite) => (
         <FlashcardFolder
           key={`${favorite.creator_id}-${favorite.folder_name}`}
-          folderName={favorite.folder_name}
+          title={favorite.folder_name}
           subtitle={favorite.creator.display_name}
           flashcards={favorite.flashcards}
-          onFlashcardsChange={() => {}} // Add empty handler since we don't modify favorites
           onStudy={() => {}}
           showCreator={false}
           creatorId={favorite.creator_id}
+          folderName={favorite.folder_name}
         />
       ))}
     </div>

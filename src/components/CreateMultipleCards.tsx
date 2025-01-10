@@ -12,34 +12,19 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Profile, Flashcard } from "@/types/database";
+import { Profile } from "@/types/database";
 import { useFriendsList } from "./profile/FriendSelector";
 
 interface CreateMultipleCardsProps {
   preselectedFriend?: Profile;
   onComplete?: () => void;
-  onSave?: () => void;
-  recipientId?: string;
-  existingCards?: Flashcard[];
-  folderName?: string;
 }
 
-export function CreateMultipleCards({ 
-  preselectedFriend,
-  onComplete,
-  onSave,
-  recipientId: initialRecipientId,
-  existingCards = [],
-  folderName: initialFolderName = "",
-}: CreateMultipleCardsProps) {
+export function CreateMultipleCards({ preselectedFriend, onComplete }: CreateMultipleCardsProps) {
   const { user } = useAuth();
-  const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "self");
-  const [folderName, setFolderName] = useState(initialFolderName);
-  const [cards, setCards] = useState(
-    existingCards.length > 0 
-      ? existingCards.map(card => ({ front: card.front, back: card.back }))
-      : [{ front: "", back: "" }]
-  );
+  const [recipientId, setRecipientId] = useState<string>(preselectedFriend?.id || "");
+  const [folderName, setFolderName] = useState("");
+  const [cards, setCards] = useState([{ front: "", back: "" }]);
   const { data: friends = [] } = useFriendsList();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +35,7 @@ export function CreateMultipleCards({
       const { error } = await supabase.from("flashcards").insert(
         cards.map((card) => ({
           creator_id: user.id,
-          recipient_id: recipientId === "self" ? null : recipientId,
+          recipient_id: recipientId || null,
           folder_name: folderName,
           front: card.front,
           back: card.back,
@@ -65,7 +50,6 @@ export function CreateMultipleCards({
       });
 
       onComplete?.();
-      onSave?.();
     } catch (error) {
       console.error("Error creating flashcards:", error);
       toast({
@@ -95,7 +79,7 @@ export function CreateMultipleCards({
             <SelectValue placeholder="Select recipient" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="self">Myself</SelectItem>
+            <SelectItem value="">Myself</SelectItem>
             {friends.map((friend) => (
               <SelectItem key={friend.id} value={friend.id}>
                 {friend.display_name || friend.username}
