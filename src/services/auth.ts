@@ -84,7 +84,7 @@ export async function signUpWithEmail(
 
 export async function signOut() {
   try {
-    // First get the current session
+    // First check if we have a session
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -101,7 +101,7 @@ export async function signOut() {
     const { error } = await supabase.auth.signOut();
     
     if (error) {
-      // If there's an error but it's related to session not found, we can ignore it
+      // If it's a session_not_found error, we can ignore it and just clear the local state
       if (error.message.includes('session_not_found')) {
         await supabase.auth.setSession(null);
         toast({
@@ -111,22 +111,30 @@ export async function signOut() {
         return;
       }
       
+      // For other errors, show a toast but still try to clear the local session
+      console.error('Error during signout:', error);
       toast({
         variant: "destructive",
         title: "Error signing out",
-        description: error.message,
+        description: "There was an issue signing out, but your local session has been cleared",
       });
-      throw error;
+      await supabase.auth.setSession(null);
+      return;
     }
 
-    // Show success message
+    // If everything went well, show success message
     toast({
       title: "Signed out successfully",
       description: "You have been signed out of your account",
     });
   } catch (error) {
     console.error('Error signing out:', error);
-    // Even if there's an error, we want to make sure the local session is cleared
+    // Even if there's an error, make sure to clear the local session
     await supabase.auth.setSession(null);
+    toast({
+      variant: "destructive",
+      title: "Error signing out",
+      description: "There was an issue signing out, but your local session has been cleared",
+    });
   }
 }
