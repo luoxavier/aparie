@@ -61,8 +61,8 @@ export function CreateMultipleCards({
     if (!user) return;
 
     try {
-      // Handle deletions first if we're modifying
       if (isModifying && existingCards) {
+        // Handle deletions
         const deletedCards = existingCards.filter(existingCard => 
           !cards.some(card => card.id === existingCard.id)
         );
@@ -75,17 +75,49 @@ export function CreateMultipleCards({
 
           if (deleteError) throw deleteError;
         }
-      }
 
-      // Split cards into new and existing
-      const newCards = cards.filter(card => !card.id);
-      const existingCardsToUpdate = cards.filter(card => card.id);
+        // Handle updates for existing cards
+        const cardsToUpdate = cards.filter(card => card.id);
+        if (cardsToUpdate.length > 0) {
+          const { error: updateError } = await supabase
+            .from("flashcards")
+            .upsert(cardsToUpdate.map(card => ({
+              id: card.id,
+              creator_id: user.id,
+              recipient_id: recipientId === "self" ? null : recipientId,
+              folder_name: folderName,
+              front: card.front,
+              back: card.back,
+            })));
 
-      // Insert new cards
-      if (newCards.length > 0) {
+          if (updateError) throw updateError;
+        }
+
+        // Handle new cards
+        const newCards = cards.filter(card => !card.id);
+        if (newCards.length > 0) {
+          const { error: insertError } = await supabase
+            .from("flashcards")
+            .insert(newCards.map(card => ({
+              creator_id: user.id,
+              recipient_id: recipientId === "self" ? null : recipientId,
+              folder_name: folderName,
+              front: card.front,
+              back: card.back,
+            })));
+
+          if (insertError) throw insertError;
+        }
+
+        toast({
+          title: "Success",
+          description: "Folder updated successfully!",
+        });
+      } else {
+        // Handle new folder creation
         const { error: insertError } = await supabase
           .from("flashcards")
-          .insert(newCards.map(card => ({
+          .insert(cards.map(card => ({
             creator_id: user.id,
             recipient_id: recipientId === "self" ? null : recipientId,
             folder_name: folderName,
@@ -94,28 +126,12 @@ export function CreateMultipleCards({
           })));
 
         if (insertError) throw insertError;
+
+        toast({
+          title: "Success",
+          description: "Flashcards created successfully!",
+        });
       }
-
-      // Update existing cards
-      if (existingCardsToUpdate.length > 0) {
-        const { error: updateError } = await supabase
-          .from("flashcards")
-          .upsert(existingCardsToUpdate.map(card => ({
-            id: card.id,
-            creator_id: user.id,
-            recipient_id: recipientId === "self" ? null : recipientId,
-            folder_name: folderName,
-            front: card.front,
-            back: card.back,
-          })));
-
-        if (updateError) throw updateError;
-      }
-
-      toast({
-        title: "Success",
-        description: isModifying ? "Folder updated successfully!" : "Flashcards created successfully!",
-      });
 
       // Close the interface after successful operation
       onComplete?.();
