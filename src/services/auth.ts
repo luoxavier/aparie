@@ -84,16 +84,30 @@ export async function signUpWithEmail(
 
 export async function signOut() {
   try {
-    // First clear the session
-    await supabase.auth.setSession(null);
+    // First get the current session
+    const { data: { session } } = await supabase.auth.getSession();
     
-    // Then sign out
+    if (!session) {
+      // If there's no session, just clear the local state
+      await supabase.auth.setSession(null);
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
+      });
+      return;
+    }
+
+    // If we have a session, try to sign out properly
     const { error } = await supabase.auth.signOut();
     
     if (error) {
       // If there's an error but it's related to session not found, we can ignore it
-      // as we've already cleared the session
       if (error.message.includes('session_not_found')) {
+        await supabase.auth.setSession(null);
+        toast({
+          title: "Signed out successfully",
+          description: "You have been signed out of your account",
+        });
         return;
       }
       
