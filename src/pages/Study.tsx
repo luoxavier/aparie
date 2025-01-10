@@ -87,29 +87,29 @@ const Study = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F7FF] p-4">
+    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
       <div className="max-w-md mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Flashcards</h1>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground">Flashcards</h1>
         </div>
 
         {streak > 0 && (
           <div className="text-center mb-4 animate-slide-up">
-            <span className="inline-block bg-primary text-white px-4 py-2 rounded-full">
+            <span className="inline-block bg-primary text-white px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-full">
               🔥 Streak: {streak}
             </span>
           </div>
         )}
 
         {!isStudying ? (
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             <CreateCard onSave={handleSaveCard} />
 
             {cards.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 <Button
                   onClick={startStudying}
-                  className="w-full bg-accent hover:bg-accent/90"
+                  className="w-full bg-accent hover:bg-accent/90 text-sm md:text-base py-2 md:py-3"
                 >
                   Start Studying ({cards.length} cards)
                 </Button>
@@ -118,7 +118,7 @@ const Study = () => {
                   <Button
                     onClick={startReviewingMistakes}
                     variant="outline"
-                    className="w-full"
+                    className="w-full text-sm md:text-base py-2 md:py-3"
                   >
                     Review Mistakes ({mistakes.length} cards)
                   </Button>
@@ -127,7 +127,7 @@ const Study = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 md:space-y-6">
             {currentDeck.length > 0 && (
               <Flashcard
                 front={currentDeck[currentCardIndex].front}
@@ -137,7 +137,7 @@ const Study = () => {
                 onNext={handleNextCard}
               />
             )}
-            <div className="text-center text-gray-600">
+            <div className="text-center text-sm md:text-base text-muted-foreground">
               Card {currentCardIndex + 1} of {currentDeck.length}
               {isReviewingMistakes && " (Reviewing Mistakes)"}
             </div>
@@ -148,7 +148,7 @@ const Study = () => {
                   setCurrentCardIndex(0);
                 }}
                 variant="outline"
-                className="w-full"
+                className="w-full text-sm md:text-base py-2 md:py-3"
               >
                 Exit Study Mode
               </Button>
@@ -156,7 +156,7 @@ const Study = () => {
                 <Button
                   onClick={startReviewingMistakes}
                   variant="secondary"
-                  className="w-full"
+                  className="w-full text-sm md:text-base py-2 md:py-3"
                 >
                   Review Mistakes Now ({mistakes.length})
                 </Button>
@@ -165,7 +165,7 @@ const Study = () => {
                 <Button
                   onClick={startStudying}
                   variant="secondary"
-                  className="w-full"
+                  className="w-full text-sm md:text-base py-2 md:py-3"
                 >
                   Back to Study Mode
                 </Button>
