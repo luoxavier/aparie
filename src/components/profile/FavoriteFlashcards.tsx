@@ -2,24 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FlashcardFolder from "./FlashcardFolder";
-
-interface Creator {
-  id: string;
-  display_name: string;
-  username: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  creator_id: string;
-  creator: Creator;
-  folder_name: string;
-}
+import { Flashcard } from "@/types/flashcard";
 
 export function FavoriteFlashcards() {
   const { user } = useAuth();
@@ -86,6 +69,7 @@ export function FavoriteFlashcards() {
           folderName={favorite.folder_name}
           subtitle={favorite.creator.display_name}
           flashcards={favorite.flashcards}
+          onFlashcardsChange={() => {}} // Add empty handler since we don't modify favorites
           onStudy={() => {}}
           showCreator={false}
           creatorId={favorite.creator_id}

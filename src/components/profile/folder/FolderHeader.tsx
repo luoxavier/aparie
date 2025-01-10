@@ -45,7 +45,7 @@ export function FolderHeader({
         {!isMyFlashcards && !isFromFriend && (
           <FolderFavoriteButton
             isFavorited={isFavorited}
-            onFavorite={onFavorite}
+            onFavoriteClick={onFavorite}
           />
         )}
         <Button

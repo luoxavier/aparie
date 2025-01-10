@@ -12,6 +12,7 @@ interface FolderActionsProps {
   userId?: string;
   folderName?: string;
   onStudy: () => void;
+  onModifyClick?: () => void;
 }
 
 export function FolderActions({ 
@@ -20,7 +21,8 @@ export function FolderActions({
   flashcards,
   userId,
   folderName,
-  onStudy 
+  onStudy,
+  onModifyClick 
 }: FolderActionsProps) {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -61,7 +63,10 @@ export function FolderActions({
       {isFromFriend && (
         <Dialog open={isModifyOpen} onOpenChange={setIsModifyOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full bg-secondary hover:bg-secondary/90">
+            <Button 
+              className="w-full bg-secondary hover:bg-secondary/90"
+              onClick={onModifyClick}
+            >
               Modify Folder
             </Button>
           </DialogTrigger>
