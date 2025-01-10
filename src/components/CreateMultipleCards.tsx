@@ -1,21 +1,14 @@
 import { useState, useEffect, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Minus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
-interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  creator_id: string;
-}
+import { CreateCardForm } from "./flashcard/CreateCardForm";
+import { RecipientSelect } from "./flashcard/RecipientSelect";
+import { FolderHeader } from "./flashcard/FolderHeader";
 
 interface CreateMultipleCardsProps {
   recipientId?: string;
@@ -30,9 +23,11 @@ interface CardPair {
   back: string;
 }
 
-interface Friend {
+interface Flashcard {
   id: string;
-  display_name: string;
+  front: string;
+  back: string;
+  creator_id: string;
 }
 
 export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, existingCards, folderName: initialFolderName }: CreateMultipleCardsProps) {
@@ -60,7 +55,7 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
         .eq('status', 'accepted');
       
       if (error) throw error;
-      return data.map(d => d.friend) as Friend[];
+      return data.map(d => d.friend);
     },
     enabled: !!user?.id,
   });
@@ -249,36 +244,16 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
       <Card>
         <CardContent className="space-y-4 pt-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="folderName">Folder Name</Label>
-              <Input
-                id="folderName"
-                value={folderName}
-                onChange={(e) => setFolderName(e.target.value)}
-                placeholder="Enter folder name"
-                required
-              />
-            </div>
+            <FolderHeader 
+              folderName={folderName}
+              onFolderNameChange={setFolderName}
+            />
             {!initialRecipientId && (
-              <div className="space-y-2">
-                <Label htmlFor="recipient">Create For</Label>
-                <Select
-                  value={selectedRecipient}
-                  onValueChange={setSelectedRecipient}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select recipient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="myself">Myself</SelectItem>
-                    {friends?.map((friend) => (
-                      <SelectItem key={friend.id} value={friend.id}>
-                        {friend.display_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <RecipientSelect
+                selectedRecipient={selectedRecipient}
+                onRecipientChange={setSelectedRecipient}
+                friends={friends}
+              />
             )}
           </div>
           
@@ -288,41 +263,12 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
               <Label>Back</Label>
             </div>
             
-            <div className="space-y-2">
-              {cards.map((card, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="grid grid-cols-2 gap-4 flex-1">
-                    <Input
-                      id={`front-${index}`}
-                      value={card.front}
-                      onChange={(e) => updateCard(index, "front", e.target.value)}
-                      onKeyDown={(e) => handleKeyPress(e, index, "front")}
-                      placeholder="Front text"
-                      required
-                    />
-                    <Input
-                      id={`back-${index}`}
-                      value={card.back}
-                      onChange={(e) => updateCard(index, "back", e.target.value)}
-                      onKeyDown={(e) => handleKeyPress(e, index, "back")}
-                      placeholder="Back text"
-                      required
-                    />
-                  </div>
-                  {cards.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeCard(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+            <CreateCardForm
+              cards={cards}
+              onUpdateCard={updateCard}
+              onRemoveCard={removeCard}
+              onKeyPress={handleKeyPress}
+            />
           </div>
         </CardContent>
         <CardFooter className="flex gap-4">

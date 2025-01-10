@@ -4,12 +4,11 @@ import { FolderContent } from "./folder/FolderContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Heart, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useQueryClient } from "@tanstack/react-query";
+import { FolderActions } from "../flashcard/FolderActions";
 
 interface Creator {
   display_name: string;
@@ -49,6 +48,10 @@ export function FlashcardFolder({
   const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+  }, [user?.id, creatorId, folderName]);
 
   const checkFavoriteStatus = async () => {
     if (!user?.id || !creatorId || !folderName) return;
@@ -115,10 +118,6 @@ export function FlashcardFolder({
     }
   };
 
-  useEffect(() => {
-    checkFavoriteStatus();
-  }, [user?.id, creatorId, folderName]);
-
   const handleStudy = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate('/study-folder', { 
@@ -149,14 +148,6 @@ export function FlashcardFolder({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleFavorite}
-            className={`transition-colors ${isFavorited ? 'text-primary' : 'text-gray-400 hover:text-primary'} p-0`}
-          >
-            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-          </Button>
           <div>
             <div className="flex items-baseline gap-1">
               <h3 className="text-base font-medium">
@@ -173,40 +164,27 @@ export function FlashcardFolder({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleStudy}
-            disabled={flashcards.length === 0}
-            className="h-8"
-          >
-            Study
-          </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => e.stopPropagation()}
-                className="h-8"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Modify Flashcards</DialogTitle>
-              </DialogHeader>
-              <CreateMultipleCards 
-                recipientId={user?.id}
-                existingCards={flashcards}
-                folderName={folderName}
-                onSave={handleEditSuccess}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <FolderActions
+              isFavorited={isFavorited}
+              onFavoriteClick={toggleFavorite}
+              onStudyClick={handleStudy}
+              onEditClick={(e) => e.stopPropagation()}
+            />
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Modify Flashcards</DialogTitle>
+            </DialogHeader>
+            <CreateMultipleCards 
+              recipientId={user?.id}
+              existingCards={flashcards}
+              folderName={folderName}
+              onSave={handleEditSuccess}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="mt-4">
