@@ -7,6 +7,11 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface Creator {
+  display_name: string;
+  username: string | null;
+}
+
 export interface Flashcard {
   id: string;
   creator_id: string;
@@ -16,6 +21,7 @@ export interface Flashcard {
   back: string;
   created_at: string;
   updated_at: string;
+  creator?: Creator;
 }
 
 export interface FriendConnection {

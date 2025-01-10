@@ -7,24 +7,14 @@ import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-
-interface Creator {
-  display_name: string;
-  username: string | null;
-}
-
-interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  creator_id: string;
-  creator: Creator;
-  folder_name: string | null;
-}
+import { Flashcard } from "@/types/database";
 
 interface GroupedFlashcards {
   [creatorId: string]: {
-    creator: Creator;
+    creator: {
+      display_name: string;
+      username: string | null;
+    };
     folders: {
       [folderName: string]: Flashcard[];
     };
@@ -53,7 +43,7 @@ export function FlashcardsList() {
         .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
       
       if (error) throw error;
-      return data;
+      return data as Flashcard[];
     },
     enabled: !!user?.id,
   });
@@ -64,13 +54,13 @@ export function FlashcardsList() {
 
   const groupedFlashcards: GroupedFlashcards = {};
 
-  flashcards.forEach(flashcard => {
+  flashcards?.forEach(flashcard => {
     const creatorId = flashcard.creator_id;
     const folderName = flashcard.folder_name || 'Uncategorized';
     
     if (!groupedFlashcards[creatorId]) {
       groupedFlashcards[creatorId] = {
-        creator: flashcard.creator,
+        creator: flashcard.creator!,
         folders: {}
       };
     }

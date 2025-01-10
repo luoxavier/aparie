@@ -12,11 +12,6 @@ import { useStudyFolder } from "@/hooks/useStudyFolder";
 import { useToast } from "@/hooks/use-toast";
 import { Flashcard } from "@/types/database";
 
-interface Creator {
-  display_name: string;
-  username: string | null;
-}
-
 interface FlashcardFolderProps {
   title: string;
   subtitle?: string;
