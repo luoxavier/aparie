@@ -35,7 +35,6 @@ export function FlashcardDisplay({
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px] space-y-4">
         <p className="text-lg text-gray-600">No flashcard available</p>
-        <Button onClick={() => navigate("/profile")}>Return Home</Button>
       </div>
     );
   }
