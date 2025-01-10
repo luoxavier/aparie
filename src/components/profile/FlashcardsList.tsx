@@ -18,14 +18,19 @@ interface Flashcard {
   back: string;
   creator_id: string;
   creator: Creator;
+  folder_name: string | null;
 }
 
 interface GroupedFlashcards {
-  created: Flashcard[];
+  created: {
+    [folderName: string]: Flashcard[];
+  };
   received: {
     [creatorId: string]: {
       creator: Creator;
-      flashcards: Flashcard[];
+      folders: {
+        [folderName: string]: Flashcard[];
+      };
     };
   };
 }
@@ -62,21 +67,41 @@ export function FlashcardsList() {
   if (!flashcards?.length) return <EmptyFlashcardsState />;
 
   const groupedFlashcards: GroupedFlashcards = {
-    created: flashcards.filter(f => f.creator_id === user?.id),
-    received: flashcards
-      .filter(f => f.recipient_id === user?.id && f.creator_id !== user?.id)
-      .reduce((acc, flashcard) => {
-        const creatorId = flashcard.creator_id;
-        if (!acc[creatorId]) {
-          acc[creatorId] = {
-            creator: flashcard.creator,
-            flashcards: [],
-          };
-        }
-        acc[creatorId].flashcards.push(flashcard);
-        return acc;
-      }, {} as GroupedFlashcards['received'])
+    created: {},
+    received: {}
   };
+
+  // Group flashcards by folder name for created cards
+  flashcards
+    .filter(f => f.creator_id === user?.id)
+    .forEach(flashcard => {
+      const folderName = flashcard.folder_name || 'Uncategorized';
+      if (!groupedFlashcards.created[folderName]) {
+        groupedFlashcards.created[folderName] = [];
+      }
+      groupedFlashcards.created[folderName].push(flashcard);
+    });
+
+  // Group flashcards by creator and then by folder name for received cards
+  flashcards
+    .filter(f => f.recipient_id === user?.id && f.creator_id !== user?.id)
+    .forEach(flashcard => {
+      const creatorId = flashcard.creator_id;
+      const folderName = flashcard.folder_name || 'Uncategorized';
+      
+      if (!groupedFlashcards.received[creatorId]) {
+        groupedFlashcards.received[creatorId] = {
+          creator: flashcard.creator,
+          folders: {}
+        };
+      }
+      
+      if (!groupedFlashcards.received[creatorId].folders[folderName]) {
+        groupedFlashcards.received[creatorId].folders[folderName] = [];
+      }
+      
+      groupedFlashcards.received[creatorId].folders[folderName].push(flashcard);
+    });
 
   const startStudying = (deck: Flashcard[]) => {
     setCurrentDeck([...deck]);
@@ -95,19 +120,31 @@ export function FlashcardsList() {
   return (
     <div className="space-y-4">
       <Accordion type="single" collapsible className="space-y-4">
-        <FlashcardFolder
-          title="My Flashcards"
-          flashcards={groupedFlashcards.created}
-          onStudy={startStudying}
-        />
-        {Object.entries(groupedFlashcards.received).map(([creatorId, { creator, flashcards }]) => (
+        {/* My Flashcards section */}
+        {Object.entries(groupedFlashcards.created).map(([folderName, cards]) => (
           <FlashcardFolder
-            key={creatorId}
-            title={`Flashcards from ${creator.display_name}`}
-            flashcards={flashcards}
+            key={`my-${folderName}`}
+            title={`My Flashcards - ${folderName}`}
+            flashcards={cards}
             onStudy={startStudying}
-            showCreator={false}
+            folderName={folderName}
+            creatorId={user?.id}
           />
+        ))}
+
+        {/* Received Flashcards section */}
+        {Object.entries(groupedFlashcards.received).map(([creatorId, { creator, folders }]) => (
+          Object.entries(folders).map(([folderName, cards]) => (
+            <FlashcardFolder
+              key={`${creatorId}-${folderName}`}
+              title={`${folderName} from ${creator.display_name}`}
+              flashcards={cards}
+              onStudy={startStudying}
+              showCreator={false}
+              creatorId={creatorId}
+              folderName={folderName}
+            />
+          ))
         ))}
       </Accordion>
     </div>
