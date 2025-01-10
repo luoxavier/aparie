@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
@@ -37,7 +37,10 @@ export function FlashcardsList() {
   const { user } = useAuth();
   const [isStudying, setIsStudying] = useState(false);
   const [currentDeck, setCurrentDeck] = useState<Flashcard[]>([]);
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() => {
+    const saved = localStorage.getItem('expandedSections');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [creatorOrder, setCreatorOrder] = useState<string[]>([]);
 
   const { data: flashcards, isLoading, error } = useQuery({
@@ -61,6 +64,10 @@ export function FlashcardsList() {
     },
     enabled: !!user?.id,
   });
+
+  useEffect(() => {
+    localStorage.setItem('expandedSections', JSON.stringify(expandedSections));
+  }, [expandedSections]);
 
   if (isLoading) return <div className="text-center">Loading flashcards...</div>;
   if (error) return <div className="text-center text-red-500">Error loading flashcards</div>;
