@@ -1,14 +1,8 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useToast } from "@/hooks/use-toast";
-import { Profile, Flashcard } from "@/types/database";
-
-interface Creator {
-  display_name: string;
-  username: string | null;
-}
+import { Flashcard } from "@/types/flashcard";
 
 interface FolderActionsProps {
   isMyFlashcards: boolean;

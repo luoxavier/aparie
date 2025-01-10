@@ -5,6 +5,8 @@ import { Plus } from "lucide-react";
 import { CreateCard } from "@/components/CreateCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import FlashcardFolder from "./FlashcardFolder";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FlashcardsListProps {
   flashcards: Flashcard[];
@@ -14,6 +16,7 @@ interface FlashcardsListProps {
 export function FlashcardsList({ flashcards, onFlashcardsChange }: FlashcardsListProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const groupFlashcardsByCreatorAndFolder = (flashcards: Flashcard[]): GroupedFlashcards => {
     const groupedFlashcards: GroupedFlashcards = {};
@@ -40,14 +43,25 @@ export function FlashcardsList({ flashcards, onFlashcardsChange }: FlashcardsLis
   };
 
   const handleSaveNewCard = async (front: string, back: string) => {
-    const newCard = {
+    if (!user) return;
+
+    const newCard: Flashcard = {
+      id: crypto.randomUUID(),
       front,
       back,
-      creator_id: "", // Set the creator_id appropriately
-      recipient_id: null, // Set the recipient_id appropriately
-      folder_name: null, // Set the folder_name appropriately
+      creator_id: user.id,
+      recipient_id: null,
+      folder_name: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      creator: {
+        id: user.id,
+        username: null,
+        display_name: user.email || 'Anonymous',
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
     };
 
     onFlashcardsChange([...flashcards, newCard]);
@@ -86,6 +100,9 @@ export function FlashcardsList({ flashcards, onFlashcardsChange }: FlashcardsLis
               folderName={folderName}
               flashcards={folderFlashcards}
               onFlashcardsChange={onFlashcardsChange}
+              isMyFlashcards={user?.id === creatorId}
+              isFromFriend={user?.id !== creatorId}
+              showCreator={false}
             />
           ))}
         </div>

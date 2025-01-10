@@ -14,6 +14,7 @@ import { Plus } from "lucide-react";
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -71,7 +72,10 @@ export default function Profile() {
         </div>
 
         <TabsContent value="flashcards">
-          <FlashcardsList />
+          <FlashcardsList 
+            flashcards={flashcards}
+            onFlashcardsChange={setFlashcards}
+          />
         </TabsContent>
 
         <TabsContent value="favorites">

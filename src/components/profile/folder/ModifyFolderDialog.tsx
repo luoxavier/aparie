@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Flashcard } from "@/types/database";
+import { Flashcard } from "@/types/flashcard";
 
 interface ModifyFolderDialogProps {
   isOpen: boolean;
