@@ -9,12 +9,22 @@ interface FolderActionsProps {
 }
 
 export function FolderActions({ onStudyClick, onEditClick }: FolderActionsProps) {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent folder from collapsing
+    onEditClick(e);
+  };
+
+  const handleStudyClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent folder from collapsing
+    onStudyClick(e);
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Button
         variant="default"
         size="sm"
-        onClick={onStudyClick}
+        onClick={handleStudyClick}
         className="h-8"
       >
         Study
@@ -22,7 +32,7 @@ export function FolderActions({ onStudyClick, onEditClick }: FolderActionsProps)
       <Button
         variant="ghost"
         size="sm"
-        onClick={onEditClick}
+        onClick={handleEditClick}
         className="h-8"
       >
         <Edit className="h-4 w-4" />

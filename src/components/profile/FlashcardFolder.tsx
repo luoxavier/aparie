@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderActions } from "../flashcard/FolderActions";
@@ -50,6 +50,7 @@ export function FlashcardFolder({
   const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     checkFavoriteStatus();
@@ -137,10 +138,16 @@ export function FlashcardFolder({
 
   const handleEditSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+    setIsDialogOpen(false);
     toast({
       title: "Success",
       description: "Flashcards updated successfully",
     });
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDialogOpen(true);
   };
 
   return (
@@ -174,28 +181,28 @@ export function FlashcardFolder({
             </div>
           </div>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <FolderActions
-              isFavorited={isFavorited}
-              onFavoriteClick={toggleFavorite}
-              onStudyClick={handleStudy}
-              onEditClick={(e) => e.stopPropagation()}
-            />
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Modify Flashcards</DialogTitle>
-            </DialogHeader>
-            <CreateMultipleCards 
-              recipientId={user?.id}
-              existingCards={flashcards}
-              folderName={folderName}
-              onSave={handleEditSuccess}
-            />
-          </DialogContent>
-        </Dialog>
+
+        <FolderActions
+          isFavorited={isFavorited}
+          onFavoriteClick={toggleFavorite}
+          onStudyClick={handleStudy}
+          onEditClick={handleEditClick}
+        />
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Modify Flashcards</DialogTitle>
+          </DialogHeader>
+          <CreateMultipleCards 
+            recipientId={user?.id}
+            existingCards={flashcards}
+            folderName={folderName}
+            onSave={handleEditSuccess}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-4">
         <FolderContent
