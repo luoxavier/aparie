@@ -7,6 +7,20 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface Creator extends Profile {}
+
+export interface Flashcard {
+  id: string;
+  creator_id: string;
+  recipient_id: string | null;
+  folder_name: string | null;
+  front: string;
+  back: string;
+  created_at: string;
+  updated_at: string;
+  creator: Creator;
+}
+
 export interface FriendConnection {
   id: string;
   user_id: string;
@@ -14,4 +28,6 @@ export interface FriendConnection {
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   updated_at: string;
+  user: Profile;
+  friend: Profile;
 }

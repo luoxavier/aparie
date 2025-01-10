@@ -13,8 +13,12 @@ export function FriendsList() {
       const { data: connections, error } = await supabase
         .from('friend_connections')
         .select(`
-          friend_id,
+          id,
           user_id,
+          friend_id,
+          status,
+          created_at,
+          updated_at,
           friend:profiles!friend_connections_friend_id_fkey (
             id,
             display_name,
@@ -32,25 +36,21 @@ export function FriendsList() {
             updated_at
           )
         `)
-        .or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)
-        .eq('status', 'accepted');
+        .eq('status', 'accepted')
+        .or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`);
       
       if (error) throw error;
 
-      return (connections as FriendConnection[]).map(connection => {
-        const isFriend = connection.friend_id === user?.id;
-        const friendProfile = isFriend ? connection.user : connection.friend;
-
-        return friendProfile;
-      });
+      return connections as FriendConnection[];
     },
   });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {friends?.map((friend) => (
-        <FriendCard key={friend.id} friend={friend} />
-      ))}
+      {friends?.map((connection) => {
+        const friendProfile = connection.user_id === user?.id ? connection.friend : connection.user;
+        return <FriendCard key={connection.id} friend={friendProfile} />;
+      })}
     </div>
   );
 }
