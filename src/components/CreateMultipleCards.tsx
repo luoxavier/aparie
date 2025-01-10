@@ -25,6 +25,7 @@ interface CreateMultipleCardsProps {
 }
 
 interface CardPair {
+  id?: string;
   front: string;
   back: string;
 }
@@ -38,6 +39,7 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
   const [folderName, setFolderName] = useState(initialFolderName || "");
   const [cards, setCards] = useState<CardPair[]>([{ front: "", back: "" }]);
   const [selectedRecipient, setSelectedRecipient] = useState(initialRecipientId || "myself");
+  const [originalCardIds, setOriginalCardIds] = useState<string[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -66,9 +68,11 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
   useEffect(() => {
     if (existingCards?.length) {
       setCards(existingCards.map(card => ({
+        id: card.id,
         front: card.front,
         back: card.back
       })));
+      setOriginalCardIds(existingCards.map(card => card.id));
     }
   }, [existingCards]);
 
@@ -94,13 +98,11 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
       e.preventDefault();
       if (field === 'back') {
         addCard();
-        // Focus the front input of the new card after a short delay
         setTimeout(() => {
           const nextInput = document.getElementById(`front-${index + 1}`);
           nextInput?.focus();
         }, 0);
       } else {
-        // Focus the back input of the current card
         const backInput = document.getElementById(`back-${index}`);
         backInput?.focus();
       }
@@ -141,37 +143,87 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
     try {
       const finalRecipientId = selectedRecipient === "myself" ? null : selectedRecipient;
 
-      const { error: cardsError } = await supabase
-        .from('flashcards')
-        .insert(
-          validCards.map(card => ({
-            front: card.front.trim(),
-            back: card.back.trim(),
-            creator_id: user.id,
-            recipient_id: finalRecipientId,
-            folder_name: folderName.trim()
-          }))
-        );
+      // If we're modifying existing cards
+      if (existingCards) {
+        // Get IDs of cards that were removed
+        const currentCardIds = cards.map(card => card.id).filter(Boolean);
+        const removedCardIds = originalCardIds.filter(id => !currentCardIds.includes(id));
 
-      if (cardsError) throw cardsError;
+        // Delete removed cards
+        if (removedCardIds.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('flashcards')
+            .delete()
+            .in('id', removedCardIds);
 
-      // Send notification if creating cards for a friend
-      if (finalRecipientId) {
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert({
-            recipient_id: finalRecipientId,
-            sender_id: user.id,
-            type: 'new_flashcard',
-            content: { folder_name: folderName.trim() }
-          });
+          if (deleteError) throw deleteError;
+        }
 
-        if (notificationError) throw notificationError;
+        // Update existing cards and add new ones
+        for (const card of validCards) {
+          if (card.id) {
+            // Update existing card
+            const { error: updateError } = await supabase
+              .from('flashcards')
+              .update({
+                front: card.front.trim(),
+                back: card.back.trim(),
+                folder_name: folderName.trim()
+              })
+              .eq('id', card.id);
+
+            if (updateError) throw updateError;
+          } else {
+            // Add new card
+            const { error: insertError } = await supabase
+              .from('flashcards')
+              .insert({
+                front: card.front.trim(),
+                back: card.back.trim(),
+                creator_id: user.id,
+                recipient_id: finalRecipientId,
+                folder_name: folderName.trim()
+              });
+
+            if (insertError) throw insertError;
+          }
+        }
+      } else {
+        // Creating new cards
+        const { error: cardsError } = await supabase
+          .from('flashcards')
+          .insert(
+            validCards.map(card => ({
+              front: card.front.trim(),
+              back: card.back.trim(),
+              creator_id: user.id,
+              recipient_id: finalRecipientId,
+              folder_name: folderName.trim()
+            }))
+          );
+
+        if (cardsError) throw cardsError;
+
+        // Send notification if creating cards for a friend
+        if (finalRecipientId) {
+          const { error: notificationError } = await supabase
+            .from('notifications')
+            .insert({
+              recipient_id: finalRecipientId,
+              sender_id: user.id,
+              type: 'new_flashcard',
+              content: { folder_name: folderName.trim() }
+            });
+
+          if (notificationError) throw notificationError;
+        }
       }
 
       toast({
         title: "Success",
-        description: `Created ${validCards.length} flashcards in folder "${folderName}"`,
+        description: existingCards 
+          ? `Updated flashcards in folder "${folderName}"`
+          : `Created ${validCards.length} flashcards in folder "${folderName}"`,
       });
 
       if (onSave) {
@@ -183,10 +235,10 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
         setCards([{ front: "", back: "" }]);
       }
     } catch (error) {
-      console.error('Error creating flashcards:', error);
+      console.error('Error managing flashcards:', error);
       toast({
         title: "Error",
-        description: "Failed to create flashcards",
+        description: "Failed to manage flashcards",
         variant: "destructive",
       });
     }
