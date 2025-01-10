@@ -7,30 +7,11 @@ export interface Profile {
   updated_at: string;
 }
 
-export interface Creator {
-  display_name: string;
-  username: string | null;
-}
-
-export interface Flashcard {
-  id: string;
-  creator_id: string;
-  recipient_id: string | null;
-  folder_name: string | null;
-  front: string;
-  back: string;
-  created_at: string;
-  updated_at: string;
-  creator: Creator;  // Changed from optional to required
-}
-
 export interface FriendConnection {
   id: string;
   user_id: string;
   friend_id: string;
-  status: string;
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   updated_at: string;
-  friend: Profile;
-  user: Profile;
 }
