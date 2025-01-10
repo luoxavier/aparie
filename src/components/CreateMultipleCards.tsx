@@ -43,7 +43,7 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const { data, error } = await supabase
+      const { data: connections, error } = await supabase
         .from('friend_connections')
         .select(`
           friend:profiles!friend_connections_friend_id_fkey (
@@ -54,8 +54,12 @@ export function CreateMultipleCards({ recipientId: initialRecipientId, onSave, e
         .eq('user_id', user.id)
         .eq('status', 'accepted');
       
-      if (error) throw error;
-      return data?.map(d => d.friend) || [];
+      if (error) {
+        console.error('Error fetching friends:', error);
+        return [];
+      }
+      
+      return connections?.map(c => c.friend) || [];
     },
     enabled: !!user?.id,
   });
