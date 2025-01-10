@@ -6,6 +6,7 @@ import { StudyHeader } from "@/components/study/StudyHeader";
 import { ScoreDisplay } from "@/components/study/ScoreDisplay";
 import { FlashcardDisplay } from "@/components/study/FlashcardDisplay";
 import { StudyProgress } from "@/components/study/StudyProgress";
+import { Button } from "@/components/ui/button";
 
 interface Flashcard {
   id: string;
@@ -90,21 +91,38 @@ export default function StudyFolder() {
 
   return (
     <div className="container max-w-md mx-auto py-8 px-4">
-      <div className="mb-8 space-y-2">
+      {/* Top bar with user info and sign out */}
+      <div className="flex justify-between items-center mb-8">
+        <div className="text-lg font-medium">{user?.email?.split('@')[0]}</div>
+        <Button variant="outline" onClick={handleSignOut}>
+          Sign out
+        </Button>
+      </div>
+
+      {/* Folder title and creator */}
+      <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">{folderName}</h1>
         {creatorName && (
-          <p className="text-sm text-muted-foreground">Created by {creatorName}</p>
+          <p className="text-sm text-muted-foreground mt-1">Created by {creatorName}</p>
         )}
       </div>
 
-      <StudyHeader 
-        userEmail={user?.email} 
-        onSignOut={handleSignOut}
-        folderName={folderName}
-      />
-
       {!mode ? (
-        <StudyModeSelector onModeSelect={setMode} folderName={folderName} />
+        <div className="space-y-4">
+          <Button 
+            className="w-full h-24 text-xl"
+            onClick={() => setMode("normal")}
+          >
+            Study Mode
+          </Button>
+          <Button 
+            className="w-full h-24 text-xl"
+            variant="secondary"
+            onClick={() => setMode("infinite")}
+          >
+            Infinite Mode
+          </Button>
+        </div>
       ) : isComplete ? (
         <ScoreDisplay
           score={score}
@@ -132,6 +150,17 @@ export default function StudyFolder() {
           />
         </>
       )}
+
+      {/* Return home button at the bottom */}
+      <div className="mt-8">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => navigate("/profile")}
+        >
+          Return Home
+        </Button>
+      </div>
     </div>
   );
 }
