@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier, signUpWithEmail, signOut as authSignOut } from "@/services/auth";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -17,22 +18,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Initialize session
+    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+      if (error) {
+        console.error('Error fetching initial session:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize session",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (initialSession) {
+        setSession(initialSession);
+        setUser(initialSession.user);
+      }
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      try {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error handling auth state change:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update authentication state",
+          variant: "destructive",
+        });
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [toast]);
 
   const value = {
     session,
@@ -42,9 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut: authSignOut,
   };
 
+  // Show loading state
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
