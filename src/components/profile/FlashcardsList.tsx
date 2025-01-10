@@ -5,8 +5,6 @@ import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
@@ -106,22 +104,6 @@ export function FlashcardsList() {
             <h3 className="text-xl font-semibold">
               {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
             </h3>
-            {creatorId === user?.id && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Cards
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle>Create New Flashcards</DialogTitle>
-                  </DialogHeader>
-                  <CreateMultipleCards />
-                </DialogContent>
-              </Dialog>
-            )}
           </div>
           <div className="space-y-3">
             {Object.entries(folders).map(([folderName, cards]) => (
