@@ -1,8 +1,11 @@
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Star, ChevronDown } from "lucide-react";
+import { FolderFavoriteButton } from "./FolderFavoriteButton";
+import { FolderInfo } from "./FolderInfo";
 
 export interface FolderHeaderProps {
   title: string;
+  subtitle?: string;
   flashcardsCount: number;
   isMyFlashcards: boolean;
   isFromFriend: boolean;
@@ -12,11 +15,11 @@ export interface FolderHeaderProps {
   onFavorite: () => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  folderName: string;
 }
 
 export function FolderHeader({
   title,
+  subtitle,
   flashcardsCount,
   isMyFlashcards,
   isFromFriend,
@@ -26,46 +29,37 @@ export function FolderHeader({
   onFavorite,
   isExpanded,
   onToggleExpand,
-  folderName,
 }: FolderHeaderProps) {
   return (
-    <div className="flex items-center justify-between w-full pr-4">
-      <span className="font-medium">
-        {title}
-        <span className="text-sm text-muted-foreground ml-2">
-          ({flashcardsCount} cards)
-        </span>
-      </span>
-      <div className="flex items-center gap-2">
-        {isFromFriend && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onFavorite();
-            }}
-            className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
-          >
-            <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-          </Button>
-        )}
-        {!isMyFlashcards && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCards();
-            }}
-          >
-            Show Cards
-          </Button>
-        )}
-        <ChevronDown 
-          className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-          onClick={onToggleExpand}
+    <div className="flex items-center justify-between">
+      <div className="flex-1">
+        <FolderInfo
+          title={title}
+          subtitle={subtitle}
+          flashcardsCount={flashcardsCount}
+          showCards={showCards}
+          onToggleCards={onToggleCards}
         />
+      </div>
+      <div className="flex items-center gap-2">
+        {!isMyFlashcards && !isFromFriend && (
+          <FolderFavoriteButton
+            isFavorited={isFavorited}
+            onFavorite={onFavorite}
+          />
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleExpand}
+          className="shrink-0"
+        >
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     </div>
   );

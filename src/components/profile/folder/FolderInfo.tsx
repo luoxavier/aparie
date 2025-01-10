@@ -1,25 +1,44 @@
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 interface FolderInfoProps {
   title: string;
   subtitle?: string;
-  cardsCount: number;
+  flashcardsCount: number;
+  showCards: boolean;
+  onToggleCards: () => void;
 }
 
-export function FolderInfo({ title, subtitle, cardsCount }: FolderInfoProps) {
+export function FolderInfo({
+  title,
+  subtitle,
+  flashcardsCount,
+  showCards,
+  onToggleCards,
+}: FolderInfoProps) {
   return (
-    <div>
-      <div className="flex items-baseline gap-1">
-        <h3 className="text-base font-medium">
-          {title}
-          <span className="text-sm text-muted-foreground ml-2">
-            ({cardsCount} cards)
-          </span>
-        </h3>
+    <div className="flex items-center gap-2">
+      <div>
+        <h3 className="font-semibold">{title}</h3>
         {subtitle && (
-          <span className="text-xs text-muted-foreground">
-            {subtitle}
-          </span>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
+        <p className="text-sm text-muted-foreground">
+          {flashcardsCount} card{flashcardsCount !== 1 ? "s" : ""}
+        </p>
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggleCards}
+        className="shrink-0"
+      >
+        {showCards ? (
+          <EyeOff className="h-4 w-4" />
+        ) : (
+          <Eye className="h-4 w-4" />
+        )}
+      </Button>
     </div>
   );
 }

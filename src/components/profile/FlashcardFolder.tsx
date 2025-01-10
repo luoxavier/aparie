@@ -9,20 +9,26 @@ import { ModifyFolderDialog } from "./folder/ModifyFolderDialog";
 
 interface FlashcardFolderProps {
   folderName: string;
+  subtitle?: string;
   flashcards: Flashcard[];
   onFlashcardsChange: (flashcards: Flashcard[]) => void;
   isMyFlashcards?: boolean;
   isFromFriend?: boolean;
   showCreator?: boolean;
+  creatorId?: string;
+  onStudy?: () => void;
 }
 
 export default function FlashcardFolder({
   folderName,
+  subtitle,
   flashcards,
   onFlashcardsChange,
   isMyFlashcards = false,
   isFromFriend = false,
   showCreator = true,
+  creatorId,
+  onStudy,
 }: FlashcardFolderProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
@@ -45,6 +51,7 @@ export default function FlashcardFolder({
     <Card className="p-4">
       <FolderHeader
         title={folderName}
+        subtitle={subtitle}
         flashcardsCount={flashcards.length}
         isMyFlashcards={isMyFlashcards}
         isFromFriend={isFromFriend}
@@ -54,7 +61,6 @@ export default function FlashcardFolder({
         onFavorite={() => {}}
         isExpanded={isExpanded}
         onToggleExpand={() => setIsExpanded(!isExpanded)}
-        folderName={folderName}
       />
 
       {isExpanded && (
@@ -69,9 +75,10 @@ export default function FlashcardFolder({
             isMyFlashcards={isMyFlashcards}
             isFromFriend={isFromFriend}
             flashcards={flashcards}
-            userId={flashcards[0]?.creator_id}
+            userId={creatorId}
             folderName={folderName}
-            onStudy={() => {}}
+            onStudy={onStudy}
+            onModifyFolder={handleModifyFolder}
           />
         </>
       )}
@@ -79,7 +86,7 @@ export default function FlashcardFolder({
       <ModifyFolderDialog
         isOpen={isModifyModalOpen}
         onOpenChange={setIsModifyModalOpen}
-        userId={flashcards[0]?.creator_id}
+        userId={creatorId}
         flashcards={flashcards}
         folderName={folderName}
         onSave={handleSaveModifications}
