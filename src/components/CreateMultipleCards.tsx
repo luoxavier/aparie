@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Profile } from "@/types/database";
 import { useFriendsList } from "./profile/FriendSelector";
+import { Separator } from "@/components/ui/separator";
 
 interface Flashcard {
   id?: string;
@@ -35,6 +36,7 @@ interface CreateMultipleCardsProps {
   existingCards?: Flashcard[];
   folderName?: string;
   isModifying?: boolean;
+  hideRecipientSelect?: boolean;
 }
 
 export function CreateMultipleCards({ 
@@ -44,7 +46,8 @@ export function CreateMultipleCards({
   recipientId: initialRecipientId,
   existingCards,
   folderName: initialFolderName,
-  isModifying = false
+  isModifying = false,
+  hideRecipientSelect = false
 }: CreateMultipleCardsProps) {
   const { user } = useAuth();
   const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "self");
@@ -177,22 +180,24 @@ export function CreateMultipleCards({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>Create for</Label>
-        <Select value={recipientId} onValueChange={setRecipientId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select recipient" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="self">Myself</SelectItem>
-            {friends.map((friend) => (
-              <SelectItem key={friend.id} value={friend.id}>
-                {friend.display_name || friend.username}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {!hideRecipientSelect && (
+        <div className="space-y-2">
+          <Label>Create for</Label>
+          <Select value={recipientId} onValueChange={setRecipientId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select recipient" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="self">Myself</SelectItem>
+              {friends.map((friend) => (
+                <SelectItem key={friend.id} value={friend.id}>
+                  {friend.display_name || friend.username}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Folder Name</Label>
@@ -203,6 +208,13 @@ export function CreateMultipleCards({
           required
         />
       </div>
+
+      {isModifying && (
+        <>
+          <Separator className="my-4" />
+          <h3 className="text-lg font-semibold mb-4">Flashcards</h3>
+        </>
+      )}
 
       <div className="space-y-2">
         {cards.map((card, index) => (

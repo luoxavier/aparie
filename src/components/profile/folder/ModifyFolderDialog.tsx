@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
+import { Separator } from "@/components/ui/separator";
 
 interface Creator {
   display_name: string;
@@ -42,6 +43,8 @@ export function ModifyFolderDialog({
           existingCards={flashcards}
           folderName={folderName}
           onSave={onSave}
+          isModifying={true}
+          hideRecipientSelect={true}
         />
       </DialogContent>
     </Dialog>
