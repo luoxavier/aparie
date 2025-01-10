@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Heart } from "lucide-react";
-import { FolderContent } from "./folder/FolderContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderActions } from "../flashcard/FolderActions";
+import { FolderContent } from "./folder/FolderContent";
+import { FolderInfo } from "./folder/FolderInfo";
+import { FolderFavoriteButton } from "./folder/FolderFavoriteButton";
+import { ModifyFolderDialog } from "./folder/ModifyFolderDialog";
 
 interface Creator {
   display_name: string;
@@ -157,29 +156,15 @@ export function FlashcardFolder({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleFavorite}
-            className={`transition-colors ${isFavorited ? 'text-primary' : 'text-gray-400'} p-0`}
-          >
-            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-          </Button>
-          <div>
-            <div className="flex items-baseline gap-1">
-              <h3 className="text-base font-medium">
-                {title}
-                <span className="text-sm text-muted-foreground ml-2">
-                  ({flashcards.length} cards)
-                </span>
-              </h3>
-              {subtitle && (
-                <span className="text-xs text-muted-foreground">
-                  {subtitle}
-                </span>
-              )}
-            </div>
-          </div>
+          <FolderFavoriteButton
+            isFavorited={isFavorited}
+            onFavoriteClick={toggleFavorite}
+          />
+          <FolderInfo
+            title={title}
+            subtitle={subtitle}
+            cardsCount={flashcards.length}
+          />
         </div>
 
         <FolderActions
@@ -190,19 +175,14 @@ export function FlashcardFolder({
         />
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Modify Flashcards</DialogTitle>
-          </DialogHeader>
-          <CreateMultipleCards 
-            recipientId={user?.id}
-            existingCards={flashcards}
-            folderName={folderName}
-            onSave={handleEditSuccess}
-          />
-        </DialogContent>
-      </Dialog>
+      <ModifyFolderDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        userId={user?.id}
+        flashcards={flashcards}
+        folderName={folderName}
+        onSave={handleEditSuccess}
+      />
 
       <div className="mt-4">
         <FolderContent
