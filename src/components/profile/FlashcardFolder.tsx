@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Star, Edit } from "lucide-react";
+import { Heart, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Creator {
   display_name: string;
@@ -45,6 +46,7 @@ export function FlashcardFolder({
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
@@ -102,6 +104,7 @@ export function FlashcardFolder({
           description: "The folder has been added to your favorites.",
         });
       }
+      queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
     } catch (error) {
       console.error('Error toggling favorite:', error);
       toast({
@@ -131,6 +134,14 @@ export function FlashcardFolder({
     setShowCards(!showCards);
   };
 
+  const handleEditSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+    toast({
+      title: "Success",
+      description: "Flashcards updated successfully",
+    });
+  };
+
   return (
     <Card 
       className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
@@ -142,9 +153,9 @@ export function FlashcardFolder({
             variant="ghost"
             size="sm"
             onClick={toggleFavorite}
-            className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} p-0`}
+            className={`transition-colors ${isFavorited ? 'text-primary' : 'text-gray-400 hover:text-primary'} p-0`}
           >
-            <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
           </Button>
           <div>
             <div className="flex items-baseline gap-1">
@@ -191,12 +202,7 @@ export function FlashcardFolder({
                 recipientId={user?.id}
                 existingCards={flashcards}
                 folderName={folderName}
-                onSave={() => {
-                  toast({
-                    title: "Success",
-                    description: "Flashcards updated successfully",
-                  });
-                }}
+                onSave={handleEditSuccess}
               />
             </DialogContent>
           </Dialog>
