@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { FolderContent } from "./folder/FolderContent";
 import { FolderHeader } from "./folder/FolderHeader";
@@ -108,9 +108,9 @@ export function FlashcardFolder({
   };
 
   // Check favorite status on mount
-  useState(() => {
+  useEffect(() => {
     checkFavoriteStatus();
-  });
+  }, [user?.id, creatorId, folderName]);
 
   const isMyFlashcards = creatorId === user?.id;
   const isFromFriend = !isMyFlashcards && creatorId && folderName;
