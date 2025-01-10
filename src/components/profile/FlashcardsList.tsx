@@ -112,7 +112,6 @@ export function FlashcardsList() {
                 showCreator={false}
                 creatorId={creatorId}
                 folderName={folderName}
-                expanded={true}
               />
             ))}
           </div>

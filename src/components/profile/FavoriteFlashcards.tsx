@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FlashcardFolder } from "./FlashcardFolder";
-import { Accordion } from "@/components/ui/accordion";
 
 interface Creator {
   display_name: string;
@@ -74,7 +73,6 @@ export function FavoriteFlashcards() {
           showCreator={false}
           creatorId={favorite.creator_id}
           folderName={favorite.folder_name}
-          expanded={true}
         />
       ))}
     </div>
