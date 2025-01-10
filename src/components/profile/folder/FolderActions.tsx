@@ -35,12 +35,13 @@ export function FolderActions({
   onStudy 
 }: FolderActionsProps) {
   const { toast } = useToast();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isModifyOpen, setIsModifyOpen] = useState(false);
 
   return (
     <div className="space-y-4">
       {isMyFlashcards && (
-        <Dialog>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="w-full bg-secondary hover:bg-secondary/90 mb-4">
               Create New Flashcard
@@ -53,7 +54,7 @@ export function FolderActions({
                 Add new flashcards to your collection.
               </DialogDescription>
             </DialogHeader>
-            <CreateMultipleCards />
+            <CreateMultipleCards onSave={() => setIsCreateOpen(false)} />
           </DialogContent>
         </Dialog>
       )}
