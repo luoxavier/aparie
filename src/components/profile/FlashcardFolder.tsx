@@ -5,8 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Star, Eye, Edit } from "lucide-react";
+import { Star, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 interface Creator {
   display_name: string;
@@ -65,7 +67,8 @@ export function FlashcardFolder({
     }
   };
 
-  const toggleFavorite = async () => {
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!user?.id || !creatorId || !folderName) return;
 
     try {
@@ -113,10 +116,8 @@ export function FlashcardFolder({
     checkFavoriteStatus();
   }, [user?.id, creatorId, folderName]);
 
-  const isMyFlashcards = creatorId === user?.id;
-  const isFromFriend = !isMyFlashcards && creatorId && folderName;
-
-  const handleStudy = () => {
+  const handleStudy = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate('/study-folder', { 
       state: { 
         flashcards, 
@@ -126,20 +127,27 @@ export function FlashcardFolder({
     });
   };
 
+  const handleFolderClick = () => {
+    setShowCards(!showCards);
+  };
+
+  const isMyFlashcards = creatorId === user?.id;
+
   return (
-    <Card className="p-4">
+    <Card 
+      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+      onClick={handleFolderClick}
+    >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {isFromFriend && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleFavorite}
-              className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} p-0`}
-            >
-              <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-            </Button>
-          )}
+        <div className="flex items-center gap-2 flex-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleFavorite}
+            className={`transition-colors ${isFavorited ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} p-0`}
+          >
+            <Star className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+          </Button>
           <div className="space-y-1">
             <h3 className="text-lg font-medium">
               {title}
@@ -163,20 +171,34 @@ export function FlashcardFolder({
           >
             Study
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowCards(!showCards)}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          {isMyFlashcards && (
-            <Button
-              variant="ghost"
-              size="sm"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+          {!isMyFlashcards && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Modify Flashcards</DialogTitle>
+                </DialogHeader>
+                <CreateMultipleCards 
+                  recipientId={user?.id}
+                  existingCards={flashcards}
+                  folderName={folderName}
+                  onSave={() => {
+                    toast({
+                      title: "Success",
+                      description: "Flashcards updated successfully",
+                    });
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </div>

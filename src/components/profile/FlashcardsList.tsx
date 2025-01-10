@@ -62,7 +62,6 @@ export function FlashcardsList() {
 
   const groupedFlashcards: GroupedFlashcards = {};
 
-  // Group flashcards by creator and then by folder name
   flashcards.forEach(flashcard => {
     const creatorId = flashcard.creator_id;
     const folderName = flashcard.folder_name || 'Uncategorized';
