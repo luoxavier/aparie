@@ -21,7 +21,7 @@ export interface Flashcard {
   back: string;
   created_at: string;
   updated_at: string;
-  creator?: Creator;
+  creator: Creator;  // Changed from optional to required
 }
 
 export interface FriendConnection {

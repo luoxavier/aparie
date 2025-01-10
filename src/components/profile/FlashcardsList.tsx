@@ -60,7 +60,7 @@ export function FlashcardsList() {
     
     if (!groupedFlashcards[creatorId]) {
       groupedFlashcards[creatorId] = {
-        creator: flashcard.creator!,
+        creator: flashcard.creator,
         folders: {}
       };
     }
