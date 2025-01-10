@@ -4,8 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import FlashcardFolder from "./FlashcardFolder";
 
 interface Creator {
+  id: string;
   display_name: string;
   username: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Flashcard {
@@ -79,13 +83,12 @@ export function FavoriteFlashcards() {
       {favorites.map((favorite) => (
         <FlashcardFolder
           key={`${favorite.creator_id}-${favorite.folder_name}`}
-          title={favorite.folder_name}
+          folderName={favorite.folder_name}
           subtitle={favorite.creator.display_name}
           flashcards={favorite.flashcards}
           onStudy={() => {}}
           showCreator={false}
           creatorId={favorite.creator_id}
-          folderName={favorite.folder_name}
         />
       ))}
     </div>
