@@ -65,15 +65,25 @@ export function CreateMultipleCards({
 
     try {
       if (isModifying && existingCards) {
-        // If folder name has changed, update all existing cards with new folder name
+        // If folder name has changed, update both flashcards and favorite_folders
         if (initialFolderName && folderName !== initialFolderName) {
-          const updateFolderResult = await supabase
+          // Update flashcards folder name
+          const updateFlashcardsResult = await supabase
             .from("flashcards")
             .update({ folder_name: folderName })
             .eq('creator_id', user.id)
             .eq('folder_name', initialFolderName);
 
-          if (updateFolderResult.error) throw updateFolderResult.error;
+          if (updateFlashcardsResult.error) throw updateFlashcardsResult.error;
+
+          // Update favorite_folders folder name
+          const updateFavoritesResult = await supabase
+            .from("favorite_folders")
+            .update({ folder_name: folderName })
+            .eq('creator_id', user.id)
+            .eq('folder_name', initialFolderName);
+
+          if (updateFavoritesResult.error) throw updateFavoritesResult.error;
         }
 
         // Handle deletions
