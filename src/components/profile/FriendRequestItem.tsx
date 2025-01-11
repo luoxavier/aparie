@@ -18,7 +18,7 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
   const handleFriendRequest = useMutation({
     mutationFn: async (action: 'accept' | 'deny') => {
       if (action === 'accept') {
-        // Update the friend connection status
+        // Update the original friend connection status
         const { error: connectionError } = await supabase
           .from('friend_connections')
           .update({ status: 'accepted' })
@@ -26,6 +26,37 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
           .eq('friend_id', user?.id);
 
         if (connectionError) throw connectionError;
+
+        // Check if reverse connection exists
+        const { data: reverseConnection, error: checkError } = await supabase
+          .from('friend_connections')
+          .select('id')
+          .eq('user_id', user?.id)
+          .eq('friend_id', requesterId)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (reverseConnection) {
+          // Update existing reverse connection
+          const { error: reverseUpdateError } = await supabase
+            .from('friend_connections')
+            .update({ status: 'accepted' })
+            .eq('id', reverseConnection.id);
+
+          if (reverseUpdateError) throw reverseUpdateError;
+        } else {
+          // Create new reverse connection
+          const { error: reverseInsertError } = await supabase
+            .from('friend_connections')
+            .insert([{
+              user_id: user?.id,
+              friend_id: requesterId,
+              status: 'accepted'
+            }]);
+
+          if (reverseInsertError) throw reverseInsertError;
+        }
 
         // Create a notification for the requester
         const { error: notificationError } = await supabase
@@ -39,7 +70,7 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
 
         if (notificationError) throw notificationError;
       } else {
-        // Delete the friend connection
+        // Delete the friend connection for deny action
         const { error: deleteError } = await supabase
           .from('friend_connections')
           .delete()
