@@ -25,6 +25,12 @@ export function FriendCard({ friend }: FriendCardProps) {
     setIsDialogOpen(false);
   }, []);
 
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDialogOpen(true);
+  }, []);
+
   // Ensure friend data is valid before rendering
   if (!friend?.id) {
     console.error("Invalid friend data:", friend);
@@ -32,9 +38,10 @@ export function FriendCard({ friend }: FriendCardProps) {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+    <>
       <div 
-        onClick={() => setIsDialogOpen(true)}
+        role="button"
+        onClick={handleClick}
         className="flex items-center space-x-4 p-4 rounded-lg border cursor-pointer hover:bg-accent transition-colors"
       >
         <Avatar>
@@ -47,19 +54,24 @@ export function FriendCard({ friend }: FriendCardProps) {
           <p className="font-medium">{friend.display_name || friend.username}</p>
         </div>
       </div>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Flashcards for {friend.display_name || friend.username}</DialogTitle>
-          <DialogDescription>
-            Create and share flashcards with your friend
-          </DialogDescription>
-        </DialogHeader>
-        <CreateMultipleCards 
-          preselectedFriend={friend} 
-          onComplete={handleComplete}
-          hideRecipientSelect
-        />
-      </DialogContent>
-    </Dialog>
+
+      {isDialogOpen && (
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Flashcards for {friend.display_name || friend.username}</DialogTitle>
+              <DialogDescription>
+                Create and share flashcards with your friend
+              </DialogDescription>
+            </DialogHeader>
+            <CreateMultipleCards 
+              preselectedFriend={friend} 
+              onComplete={handleComplete}
+              hideRecipientSelect
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
