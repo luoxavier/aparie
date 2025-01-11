@@ -57,7 +57,6 @@ export function FlashcardFolder({
   };
 
   const handleEditSuccess = () => {
-    // Invalidate both favorites and flashcards queries
     queryClient.invalidateQueries({ queryKey: ['flashcards'] });
     queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
     setIsDialogOpen(false);
@@ -100,6 +99,8 @@ export function FlashcardFolder({
           onFavoriteClick={toggleFavorite}
           onStudyClick={handleStudyClick}
           onEditClick={handleEditClick}
+          creatorId={creatorId}
+          folderName={folderName}
         />
       </div>
 
