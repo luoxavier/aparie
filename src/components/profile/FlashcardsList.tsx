@@ -44,7 +44,11 @@ export function FlashcardsList() {
       const { data, error } = await supabase
         .from('flashcards')
         .select(`
-          *,
+          id,
+          front,
+          back,
+          creator_id,
+          folder_name,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
             username
