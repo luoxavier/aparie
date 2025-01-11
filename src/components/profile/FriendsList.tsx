@@ -44,12 +44,21 @@ export function FriendsList() {
       
       if (error) throw error;
 
-      return (connections as FriendConnection[]).map(connection => {
+      // Create a Map to store unique friends by their ID
+      const uniqueFriendsMap = new Map<string, Profile>();
+
+      (connections as FriendConnection[]).forEach(connection => {
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend ? connection.user : connection.friend;
-
-        return friendProfile;
+        
+        // Only add if not already in the map
+        if (!uniqueFriendsMap.has(friendProfile.id)) {
+          uniqueFriendsMap.set(friendProfile.id, friendProfile);
+        }
       });
+
+      // Convert Map values back to array
+      return Array.from(uniqueFriendsMap.values());
     },
   });
 
