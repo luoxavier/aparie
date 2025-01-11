@@ -71,18 +71,18 @@ export function CreateMultipleCards({
         );
         
         if (deletedCards.length > 0) {
-          const { error: deleteError } = await supabase
+          const deleteResult = await supabase
             .from("flashcards")
             .delete()
             .in('id', deletedCards.map(card => card.id));
 
-          if (deleteError) throw deleteError;
+          if (deleteResult.error) throw deleteResult.error;
         }
 
         // Handle updates for existing cards
         const cardsToUpdate = cards.filter(card => card.id);
         if (cardsToUpdate.length > 0) {
-          const { error: updateError } = await supabase
+          const updateResult = await supabase
             .from("flashcards")
             .upsert(cardsToUpdate.map(card => ({
               id: card.id,
@@ -93,13 +93,13 @@ export function CreateMultipleCards({
               back: card.back,
             })));
 
-          if (updateError) throw updateError;
+          if (updateResult.error) throw updateResult.error;
         }
 
         // Handle new cards
         const newCards = cards.filter(card => !card.id);
         if (newCards.length > 0) {
-          const { error: insertError } = await supabase
+          const insertResult = await supabase
             .from("flashcards")
             .insert(newCards.map(card => ({
               creator_id: user.id,
@@ -109,7 +109,7 @@ export function CreateMultipleCards({
               back: card.back,
             })));
 
-          if (insertError) throw insertError;
+          if (insertResult.error) throw insertResult.error;
         }
 
         toast({
@@ -118,7 +118,7 @@ export function CreateMultipleCards({
         });
       } else {
         // Handle new folder creation
-        const { error: insertError } = await supabase
+        const insertResult = await supabase
           .from("flashcards")
           .insert(cards.map(card => ({
             creator_id: user.id,
@@ -128,7 +128,7 @@ export function CreateMultipleCards({
             back: card.back,
           })));
 
-        if (insertError) throw insertError;
+        if (insertResult.error) throw insertResult.error;
 
         toast({
           title: "Success",
