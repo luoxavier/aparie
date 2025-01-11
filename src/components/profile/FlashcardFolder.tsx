@@ -32,6 +32,7 @@ interface FlashcardFolderProps {
   showCreator?: boolean;
   creatorId?: string;
   folderName?: string;
+  onEditSuccess?: () => void;
 }
 
 export function FlashcardFolder({ 
@@ -41,6 +42,7 @@ export function FlashcardFolder({
   showCreator = true,
   creatorId,
   folderName,
+  onEditSuccess,
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -55,8 +57,11 @@ export function FlashcardFolder({
   };
 
   const handleEditSuccess = () => {
+    // Invalidate both favorites and flashcards queries
     queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+    queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
     setIsDialogOpen(false);
+    onEditSuccess?.();
     toast({
       title: "Success",
       description: "Flashcards updated successfully",

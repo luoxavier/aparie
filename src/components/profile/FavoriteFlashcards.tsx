@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FlashcardFolder } from "./FlashcardFolder";
@@ -19,6 +19,7 @@ interface Flashcard {
 
 export function FavoriteFlashcards() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['favorite-folders', user?.id],
@@ -57,6 +58,12 @@ export function FavoriteFlashcards() {
     enabled: !!user?.id,
   });
 
+  const handleEditSuccess = () => {
+    // Invalidate both favorites and flashcards queries to refresh both tabs
+    queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
+    queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+  };
+
   if (isLoading) return <div className="text-center">Loading favorites...</div>;
   if (!favorites?.length) return <div className="text-center text-gray-500">No favorite folders found</div>;
 
@@ -72,6 +79,7 @@ export function FavoriteFlashcards() {
           showCreator={false}
           creatorId={favorite.creator_id}
           folderName={favorite.folder_name}
+          onEditSuccess={handleEditSuccess}
         />
       ))}
     </div>
