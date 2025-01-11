@@ -65,6 +65,17 @@ export function CreateMultipleCards({
 
     try {
       if (isModifying && existingCards) {
+        // If folder name has changed, update all existing cards with new folder name
+        if (initialFolderName && folderName !== initialFolderName) {
+          const updateFolderResult = await supabase
+            .from("flashcards")
+            .update({ folder_name: folderName })
+            .eq('creator_id', user.id)
+            .eq('folder_name', initialFolderName);
+
+          if (updateFolderResult.error) throw updateFolderResult.error;
+        }
+
         // Handle deletions
         const deletedCards = existingCards.filter(existingCard => 
           !cards.some(card => card.id === existingCard.id)
