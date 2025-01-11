@@ -19,6 +19,16 @@ interface FriendCardProps {
 export function FriendCard({ friend }: FriendCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Add console logs to help debug
+  console.log("Friend data:", friend);
+  console.log("Dialog state:", isDialogOpen);
+
+  // Ensure friend data is valid before rendering
+  if (!friend || !friend.id) {
+    console.error("Invalid friend data:", friend);
+    return null;
+  }
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
@@ -41,7 +51,10 @@ export function FriendCard({ friend }: FriendCardProps) {
             Create and share flashcards with your friend
           </DialogDescription>
         </DialogHeader>
-        <CreateMultipleCards preselectedFriend={friend} onComplete={() => setIsDialogOpen(false)} />
+        <CreateMultipleCards 
+          preselectedFriend={friend} 
+          onComplete={() => setIsDialogOpen(false)} 
+        />
       </DialogContent>
     </Dialog>
   );
