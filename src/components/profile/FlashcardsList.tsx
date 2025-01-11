@@ -20,6 +20,7 @@ interface Flashcard {
   creator_id: string;
   creator: Creator;
   folder_name: string | null;
+  recipient_id: string | null;
 }
 
 interface GroupedFlashcards {
@@ -48,6 +49,7 @@ export function FlashcardsList() {
           front,
           back,
           creator_id,
+          recipient_id,
           folder_name,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
