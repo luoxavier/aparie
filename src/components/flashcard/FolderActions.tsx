@@ -22,49 +22,49 @@ interface FolderActionsProps {
   onStudyClick: (e: React.MouseEvent) => void;
   onEditClick: (e: React.MouseEvent) => void;
   creatorId?: string;
-  folderName?: string;
+  playlistName?: string;
 }
 
 export function FolderActions({ 
   onStudyClick, 
   onEditClick,
   creatorId,
-  folderName 
+  playlistName 
 }: FolderActionsProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent folder from collapsing
+    e.stopPropagation();
     onEditClick(e);
   };
 
   const handleStudyClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent folder from collapsing
+    e.stopPropagation();
     onStudyClick(e);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!creatorId || !folderName) return;
+    if (!creatorId || !playlistName) return;
 
     try {
-      // Delete all flashcards in the folder
+      // Delete all flashcards in the playlist
       const deleteFlashcardsResult = await supabase
         .from("flashcards")
         .delete()
         .eq('creator_id', creatorId)
-        .eq('folder_name', folderName);
+        .eq('playlist_name', playlistName);
 
       if (deleteFlashcardsResult.error) throw deleteFlashcardsResult.error;
 
-      // Delete folder from favorites
+      // Delete playlist from favorites
       const deleteFavoritesResult = await supabase
         .from("favorite_folders")
         .delete()
         .eq('creator_id', creatorId)
-        .eq('folder_name', folderName);
+        .eq('playlist_name', playlistName);
 
       if (deleteFavoritesResult.error) throw deleteFavoritesResult.error;
 
@@ -74,14 +74,14 @@ export function FolderActions({
 
       toast({
         title: "Success",
-        description: "Folder deleted successfully",
+        description: "Playlist deleted successfully",
       });
     } catch (error) {
-      console.error("Error deleting folder:", error);
+      console.error("Error deleting playlist:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete folder. Please try again.",
+        description: "Failed to delete playlist. Please try again.",
       });
     }
   };
@@ -123,9 +123,9 @@ export function FolderActions({
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               {!isConfirming ? (
-                "This will permanently delete this folder and all its flashcards. This action cannot be undone."
+                "This will permanently delete this playlist and all its flashcards. This action cannot be undone."
               ) : (
-                "Please confirm one more time that you want to delete this folder and all its contents permanently."
+                "Please confirm one more time that you want to delete this playlist and all its contents permanently."
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>

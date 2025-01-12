@@ -20,7 +20,7 @@ interface ModifyFolderDialogProps {
   onOpenChange: (open: boolean) => void;
   userId?: string;
   flashcards: Flashcard[];
-  folderName?: string;
+  playlistName?: string;
   onSave: () => void;
 }
 
@@ -29,7 +29,7 @@ export function ModifyFolderDialog({
   onOpenChange,
   userId,
   flashcards,
-  folderName,
+  playlistName,
   onSave,
 }: ModifyFolderDialogProps) {
   return (
@@ -41,7 +41,7 @@ export function ModifyFolderDialog({
         <CreateMultipleCards 
           recipientId={userId}
           existingCards={flashcards}
-          folderName={folderName}
+          playlistName={playlistName}
           onSave={onSave}
           isModifying={true}
           hideRecipientSelect={true}

@@ -31,7 +31,7 @@ interface FlashcardFolderProps {
   onStudy: (flashcards: Flashcard[]) => void;
   showCreator?: boolean;
   creatorId?: string;
-  folderName?: string;
+  playlistName?: string;
   onEditSuccess?: () => void;
 }
 
@@ -41,7 +41,7 @@ export function FlashcardFolder({
   flashcards, 
   showCreator = true,
   creatorId,
-  folderName,
+  playlistName,
   onEditSuccess,
 }: FlashcardFolderProps) {
   const { user } = useAuth();
@@ -49,7 +49,7 @@ export function FlashcardFolder({
   const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, folderName);
+  const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
   const { handleStudy } = useStudyFolder();
 
   const handleFolderClick = () => {
@@ -100,7 +100,7 @@ export function FlashcardFolder({
           onStudyClick={handleStudyClick}
           onEditClick={handleEditClick}
           creatorId={creatorId}
-          folderName={folderName}
+          playlistName={playlistName}
         />
       </div>
 
@@ -109,7 +109,7 @@ export function FlashcardFolder({
         onOpenChange={setIsDialogOpen}
         userId={user?.id}
         flashcards={flashcards}
-        folderName={folderName}
+        playlistName={playlistName}
         onSave={handleEditSuccess}
       />
 
