@@ -53,6 +53,11 @@ export function FlashcardFolder({
   const { handleStudy } = useStudyFolder();
 
   const handleFolderClick = () => {
+    handleStudy(null, flashcards, title, subtitle || user?.email);
+  };
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setShowCards(!showCards);
   };
 
@@ -70,10 +75,6 @@ export function FlashcardFolder({
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDialogOpen(true);
-  };
-
-  const handleStudyClick = (e: React.MouseEvent) => {
-    handleStudy(e, flashcards, title, subtitle || user?.email);
   };
 
   return (
@@ -97,10 +98,12 @@ export function FlashcardFolder({
         <FolderActions
           isFavorited={isFavorited}
           onFavoriteClick={toggleFavorite}
-          onStudyClick={handleStudyClick}
+          onStudyClick={handleFolderClick}
           onEditClick={handleEditClick}
+          onExpandClick={handleExpandClick}
           creatorId={creatorId}
           playlistName={playlistName}
+          isExpanded={showCards}
         />
       </div>
 
@@ -113,7 +116,7 @@ export function FlashcardFolder({
         onSave={handleEditSuccess}
       />
 
-      <div className="mt-4">
+      <div className={`mt-4 transition-all duration-300 ${showCards ? 'animate-accordion-down' : 'animate-accordion-up'}`}>
         <FolderContent
           flashcards={flashcards}
           showCards={showCards}
