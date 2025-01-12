@@ -73,6 +73,7 @@ export function PublicPlaylists() {
             title={playlist.playlistName}
             subtitle={`Created by ${playlist.creator.display_name}`}
             flashcards={playlist.flashcards}
+            onStudy={() => {}}
             showCreator={true}
             creatorId={playlist.creatorId}
             playlistName={playlist.playlistName}

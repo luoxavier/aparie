@@ -17,10 +17,12 @@ export function useStudyFolder() {
   const navigate = useNavigate();
 
   const handleStudy = (
+    e: React.MouseEvent,
     flashcards: Flashcard[],
     title: string,
     creatorName?: string
   ) => {
+    e.stopPropagation();
     navigate('/study-folder', { 
       state: { 
         flashcards, 
