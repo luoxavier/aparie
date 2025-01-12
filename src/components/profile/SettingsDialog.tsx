@@ -4,9 +4,24 @@ import { Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
 import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
 
 export function SettingsDialog() {
-  const { setTheme, theme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon">
+        <Settings className="h-5 w-5" />
+      </Button>
+    );
+  }
 
   return (
     <Dialog>
