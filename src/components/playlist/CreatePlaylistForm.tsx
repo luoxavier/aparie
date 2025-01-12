@@ -28,7 +28,7 @@ export function CreatePlaylistForm({ onComplete }: CreatePlaylistFormProps) {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [allowModification, setAllowModification] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedFriendId, setSelectedFriendId] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,10 +40,10 @@ export function CreatePlaylistForm({ onComplete }: CreatePlaylistFormProps) {
 
       // Create the playlist
       const { error: playlistError } = await supabase
-        .from("flashcards")
+        .from("playlists")
         .insert({
           creator_id: user.id,
-          playlist_name: name,
+          name,
           description,
           tags,
           is_public: playlistType === "public",
@@ -53,17 +53,15 @@ export function CreatePlaylistForm({ onComplete }: CreatePlaylistFormProps) {
       if (playlistError) throw playlistError;
 
       // Handle permissions for private and partial-public playlists
-      if (playlistType !== "public" && selectedUsers.length > 0) {
-        const permissions = selectedUsers.map(userId => ({
-          playlist_name: name,
-          creator_id: user.id,
-          user_id: userId,
-          can_modify: allowModification,
-        }));
-
+      if (playlistType !== "public" && selectedFriendId) {
         const { error: permissionsError } = await supabase
           .from("playlist_permissions")
-          .insert(permissions);
+          .insert({
+            playlist_name: name,
+            creator_id: user.id,
+            user_id: selectedFriendId,
+            can_modify: allowModification,
+          });
 
         if (permissionsError) throw permissionsError;
       }
@@ -86,11 +84,15 @@ export function CreatePlaylistForm({ onComplete }: CreatePlaylistFormProps) {
     }
   };
 
+  const handlePlaylistTypeChange = (value: string) => {
+    setPlaylistType(value as PlaylistType);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PlaylistTypeSelector
         value={playlistType}
-        onChange={setPlaylistType}
+        onChange={handlePlaylistTypeChange}
       />
 
       <div className="space-y-4">
@@ -123,15 +125,14 @@ export function CreatePlaylistForm({ onComplete }: CreatePlaylistFormProps) {
             </TabsList>
             <TabsContent value="single" className="space-y-4">
               <FriendSelector
-                selectedFriends={selectedUsers}
-                onSelectFriend={(userId) => setSelectedUsers([userId])}
-                maxSelections={1}
+                selectedFriendId={selectedFriendId}
+                onSelect={(friend) => setSelectedFriendId(friend.id)}
               />
             </TabsContent>
             <TabsContent value="group" className="space-y-4">
               <FriendSelector
-                selectedFriends={selectedUsers}
-                onSelectFriend={(userId) => setSelectedUsers([...selectedUsers, userId])}
+                selectedFriendId={selectedFriendId}
+                onSelect={(friend) => setSelectedFriendId(friend.id)}
               />
             </TabsContent>
           </Tabs>
