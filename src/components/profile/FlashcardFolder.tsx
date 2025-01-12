@@ -1,55 +1,35 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useStudyFolder } from "@/hooks/useStudyFolder";
 import { FolderActions } from "../flashcard/FolderActions";
 import { FolderContent } from "./folder/FolderContent";
-import { FolderInfo } from "./folder/FolderInfo";
-import { FolderFavoriteButton } from "./folder/FolderFavoriteButton";
 import { ModifyFolderDialog } from "./folder/ModifyFolderDialog";
-import { useFavoriteFolder } from "@/hooks/useFavoriteFolder";
-import { useStudyFolder } from "@/hooks/useStudyFolder";
-import { useToast } from "@/hooks/use-toast";
-
-interface Creator {
-  display_name: string;
-  username: string | null;
-}
-
-interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  creator_id: string;
-  creator: Creator;
-}
+import { FolderHeader } from "../flashcard/FolderHeader";
+import { FolderFavoriteButton } from "./folder/FolderFavoriteButton";
+import { FolderInfo } from "./folder/FolderInfo";
 
 interface FlashcardFolderProps {
   title: string;
   subtitle?: string;
-  flashcards: Flashcard[];
-  onStudy: (flashcards: Flashcard[]) => void;
-  showCreator?: boolean;
+  flashcards: any[];
   creatorId?: string;
   playlistName?: string;
-  onEditSuccess?: () => void;
+  isFavorited?: boolean;
+  onFavoriteToggle?: () => void;
 }
 
-export function FlashcardFolder({ 
-  title, 
+export function FlashcardFolder({
+  title,
   subtitle,
-  flashcards, 
-  showCreator = true,
+  flashcards,
   creatorId,
   playlistName,
-  onEditSuccess,
+  isFavorited,
+  onFavoriteToggle,
 }: FlashcardFolderProps) {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
+  const { user } = useAuth();
   const { handleStudy } = useStudyFolder();
 
   const handleFolderClick = () => {
@@ -61,15 +41,9 @@ export function FlashcardFolder({
     setShowCards(!showCards);
   };
 
-  const handleEditSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-    queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
-    setIsDialogOpen(false);
-    onEditSuccess?.();
-    toast({
-      title: "Success",
-      description: "Flashcards updated successfully",
-    });
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onFavoriteToggle?.();
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -77,24 +51,27 @@ export function FlashcardFolder({
     setIsDialogOpen(true);
   };
 
+  const handleEditSuccess = () => {
+    setIsDialogOpen(false);
+  };
+
   return (
-    <Card 
-      className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
+    <div 
+      className="rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md"
       onClick={handleFolderClick}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-1">
+      <div className="flex items-center justify-between p-6">
+        <div className="flex items-center gap-4">
           <FolderFavoriteButton
             isFavorited={isFavorited}
-            onFavoriteClick={toggleFavorite}
+            onClick={toggleFavorite}
           />
           <FolderInfo
             title={title}
             subtitle={subtitle}
-            cardsCount={flashcards.length}
+            flashcardCount={flashcards.length}
           />
         </div>
-
         <FolderActions
           isFavorited={isFavorited}
           onFavoriteClick={toggleFavorite}
@@ -110,19 +87,23 @@ export function FlashcardFolder({
       <ModifyFolderDialog
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        userId={user?.id}
         flashcards={flashcards}
         playlistName={playlistName}
         onSave={handleEditSuccess}
       />
 
-      <div className={`mt-4 transition-all duration-300 ${showCards ? 'animate-accordion-down' : 'animate-accordion-up'}`}>
+      <div 
+        className={`overflow-hidden transition-all duration-300 ${
+          showCards 
+            ? 'max-h-[500px] animate-accordion-down' 
+            : 'max-h-0 animate-accordion-up'
+        }`}
+      >
         <FolderContent
           flashcards={flashcards}
           showCards={showCards}
-          showCreator={showCreator}
         />
       </div>
-    </Card>
+    </div>
   );
 }
