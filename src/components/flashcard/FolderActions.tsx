@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Eye } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,15 +21,19 @@ interface FolderActionsProps {
   onFavoriteClick: (e: React.MouseEvent) => void;
   onStudyClick: (e: React.MouseEvent) => void;
   onEditClick: (e: React.MouseEvent) => void;
+  onExpandClick: (e: React.MouseEvent) => void;
   creatorId?: string;
   playlistName?: string;
+  isExpanded?: boolean;
 }
 
 export function FolderActions({ 
   onStudyClick, 
   onEditClick,
+  onExpandClick,
   creatorId,
-  playlistName 
+  playlistName,
+  isExpanded 
 }: FolderActionsProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const { toast } = useToast();
@@ -40,9 +44,9 @@ export function FolderActions({
     onEditClick(e);
   };
 
-  const handleStudyClick = (e: React.MouseEvent) => {
+  const handleExpandClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onStudyClick(e);
+    onExpandClick(e);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -89,12 +93,12 @@ export function FolderActions({
   return (
     <div className="flex items-center gap-2">
       <Button
-        variant="default"
+        variant="ghost"
         size="sm"
-        onClick={handleStudyClick}
+        onClick={handleExpandClick}
         className="h-8"
       >
-        Study
+        <Eye className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"

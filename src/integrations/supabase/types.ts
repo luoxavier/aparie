@@ -53,42 +53,67 @@ export type Database = {
           back: string
           created_at: string
           creator_id: string
+          description: string | null
           front: string
           id: string
           is_public: boolean
+          last_modified_at: string | null
+          last_modified_by: string | null
+          modification_history: Json[] | null
           playlist_name: string | null
           recipient_can_modify: boolean
           recipient_id: string | null
+          share_code: string | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
           back: string
           created_at?: string
           creator_id: string
+          description?: string | null
           front: string
           id?: string
           is_public?: boolean
+          last_modified_at?: string | null
+          last_modified_by?: string | null
+          modification_history?: Json[] | null
           playlist_name?: string | null
           recipient_can_modify?: boolean
           recipient_id?: string | null
+          share_code?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
           back?: string
           created_at?: string
           creator_id?: string
+          description?: string | null
           front?: string
           id?: string
           is_public?: boolean
+          last_modified_at?: string | null
+          last_modified_by?: string | null
+          modification_history?: Json[] | null
           playlist_name?: string | null
           recipient_can_modify?: boolean
           recipient_id?: string | null
+          share_code?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "flashcards_creator_id_fkey"
             columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcards_last_modified_by_fkey"
+            columns: ["last_modified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -186,6 +211,51 @@ export type Database = {
           {
             foreignKeyName: "notifications_sender_id_fkey"
             columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlist_permissions: {
+        Row: {
+          can_modify: boolean
+          created_at: string | null
+          creator_id: string
+          id: string
+          playlist_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          can_modify?: boolean
+          created_at?: string | null
+          creator_id: string
+          id?: string
+          playlist_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          can_modify?: boolean
+          created_at?: string | null
+          creator_id?: string
+          id?: string
+          playlist_name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_permissions_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_permissions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

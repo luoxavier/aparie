@@ -74,7 +74,6 @@ export function FavoriteFlashcards() {
           title={favorite.playlist_name}
           subtitle={favorite.creator.display_name}
           flashcards={favorite.flashcards}
-          onStudy={() => {}}
           showCreator={false}
           creatorId={favorite.creator_id}
           playlistName={favorite.playlist_name}

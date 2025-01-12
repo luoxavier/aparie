@@ -33,12 +33,22 @@ const animations = {
       "50%": { boxShadow: "0 0 20px 10px rgba(239, 68, 68, 0.5)" },
       "100%": { boxShadow: "0 0 0 0 rgba(239, 68, 68, 0)" },
     },
+    "accordion-down": {
+      from: { height: "0" },
+      to: { height: "var(--radix-accordion-content-height)" }
+    },
+    "accordion-up": {
+      from: { height: "var(--radix-accordion-content-height)" },
+      to: { height: "0" }
+    }
   },
   animation: {
     "card-flip": "card-flip 0.6s ease-in-out",
     "slide-up": "slide-up 0.3s ease-out",
     "sparkle": "sparkle 0.7s ease-in-out forwards",
     "glow-red": "glow-red 0.7s ease-in-out",
+    "accordion-down": "accordion-down 0.2s ease-out",
+    "accordion-up": "accordion-up 0.2s ease-out"
   },
 };
 
