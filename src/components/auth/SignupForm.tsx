@@ -15,8 +15,26 @@ export function SignupForm() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid password",
+        description: "Password must be at least 6 characters long.",
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password before proceeding
+    if (!validatePassword(password)) {
+      return;
+    }
+
     setLoading(true);
     try {
       // First check if username is taken
@@ -33,6 +51,12 @@ export function SignupForm() {
             variant: "destructive",
             title: "Account already exists",
             description: "This email is already registered. Please try logging in instead.",
+          });
+        } else if (errorBody.code === "weak_password") {
+          toast({
+            variant: "destructive",
+            title: "Password too weak",
+            description: errorBody.message || "Please choose a stronger password.",
           });
         } else {
           toast({
@@ -80,6 +104,7 @@ export function SignupForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={6}
         />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
