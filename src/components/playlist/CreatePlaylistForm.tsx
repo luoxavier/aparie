@@ -38,12 +38,14 @@ export function CreatePlaylistForm({ onComplete }: CreatePlaylistFormProps) {
     try {
       setIsSubmitting(true);
 
-      // Create the playlist
+      // Create a placeholder flashcard to represent the playlist
       const { error: playlistError } = await supabase
-        .from("playlists")
+        .from("flashcards")
         .insert({
           creator_id: user.id,
-          name,
+          playlist_name: name,
+          front: "Playlist Cover",
+          back: "Playlist Cover",
           description,
           tags,
           is_public: playlistType === "public",
