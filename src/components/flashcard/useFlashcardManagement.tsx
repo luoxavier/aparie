@@ -23,7 +23,8 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
     recipientId: string,
     playlistName: string,
     initialPlaylistName?: string,
-    existingCards?: Flashcard[]
+    existingCards?: Flashcard[],
+    isPublic: boolean = false
   ) => {
     if (!userId || !existingCards) return;
 
@@ -73,6 +74,7 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
             playlist_name: playlistName,
             front: card.front,
             back: card.back,
+            is_public: isPublic
           })));
 
         if (updateResult.error) throw updateResult.error;
@@ -89,6 +91,7 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
             playlist_name: playlistName,
             front: card.front,
             back: card.back,
+            is_public: isPublic
           })));
 
         if (insertResult.error) throw insertResult.error;
@@ -113,7 +116,8 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
     cards: Flashcard[],
     recipientId: string,
     playlistName: string,
-    allowRecipientModify: boolean
+    allowRecipientModify: boolean,
+    isPublic: boolean = false
   ) => {
     if (!userId) return;
 
@@ -126,7 +130,8 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
           creator_id: userId,
           recipient_id: recipientId === "self" ? null : recipientId,
           playlist_name: playlistName,
-          recipient_can_modify: recipientId !== "self" ? allowRecipientModify : false
+          recipient_can_modify: recipientId !== "self" ? allowRecipientModify : false,
+          is_public: isPublic
         })));
 
       if (insertResult.error) throw insertResult.error;

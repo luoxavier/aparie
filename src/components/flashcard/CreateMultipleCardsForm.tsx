@@ -7,6 +7,8 @@ import { CreateCardForm } from "./CreateCardForm";
 import { RecipientSelect } from "./RecipientSelect";
 import { FolderNameInput } from "./FolderNameInput";
 import { RecipientModifyToggle } from "./RecipientModifyToggle";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Flashcard {
   id?: string;
@@ -31,6 +33,7 @@ interface CreateMultipleCardsFormProps {
     playlistName: string;
     cards: Flashcard[];
     allowRecipientModify: boolean;
+    isPublic: boolean;
   }) => void;
 }
 
@@ -51,6 +54,7 @@ export function CreateMultipleCardsForm({
     back: card.back
   })) || [{ front: "", back: "" }]);
   const [allowRecipientModify, setAllowRecipientModify] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const { data: friends = [] } = useFriendsList();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,7 +63,8 @@ export function CreateMultipleCardsForm({
       recipientId,
       playlistName,
       cards,
-      allowRecipientModify
+      allowRecipientModify,
+      isPublic
     });
   };
 
@@ -94,7 +99,16 @@ export function CreateMultipleCardsForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {!hideRecipientSelect && (
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="public-playlist"
+          checked={isPublic}
+          onCheckedChange={setIsPublic}
+        />
+        <Label htmlFor="public-playlist">Make this playlist public</Label>
+      </div>
+
+      {!hideRecipientSelect && !isPublic && (
         <RecipientSelect
           recipientId={recipientId}
           setRecipientId={setRecipientId}
@@ -108,7 +122,7 @@ export function CreateMultipleCardsForm({
         label="Playlist Name"
       />
 
-      {!isModifying && recipientId !== "self" && (
+      {!isModifying && recipientId !== "self" && !isPublic && (
         <RecipientModifyToggle
           allowRecipientModify={allowRecipientModify}
           setAllowRecipientModify={setAllowRecipientModify}

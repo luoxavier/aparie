@@ -47,6 +47,7 @@ export function CreateMultipleCards({
     playlistName: string;
     cards: Flashcard[];
     allowRecipientModify: boolean;
+    isPublic: boolean;
   }) => {
     if (!user) return;
 
@@ -57,14 +58,16 @@ export function CreateMultipleCards({
           formData.recipientId,
           formData.playlistName,
           initialPlaylistName,
-          existingCards
+          existingCards,
+          formData.isPublic
         );
       } else {
         await handleCreation(
           formData.cards,
           formData.recipientId,
           formData.playlistName,
-          formData.allowRecipientModify
+          formData.allowRecipientModify,
+          formData.isPublic
         );
       }
 

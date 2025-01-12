@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FriendsList } from "@/components/profile/FriendsList";
 import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
+import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +50,7 @@ export default function Profile() {
           <TabsList>
             <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="public">Public Playlists</TabsTrigger>
             <TabsTrigger value="friends">My Friends</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
@@ -76,6 +78,10 @@ export default function Profile() {
 
         <TabsContent value="favorites">
           <FavoriteFlashcards />
+        </TabsContent>
+
+        <TabsContent value="public">
+          <PublicPlaylists />
         </TabsContent>
 
         <TabsContent value="friends">
