@@ -233,7 +233,7 @@ export function CreateMultipleCards({
         />
       </div>
 
-      {recipientId !== "self" && (
+      {!isModifying && recipientId !== "self" && (
         <div className="flex items-center space-x-2">
           <Checkbox
             id="recipient-modify"
