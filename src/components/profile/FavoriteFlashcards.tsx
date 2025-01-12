@@ -14,7 +14,7 @@ interface Flashcard {
   back: string;
   creator_id: string;
   creator: Creator;
-  folder_name: string;
+  playlist_name: string;
 }
 
 export function FavoriteFlashcards() {
@@ -44,7 +44,7 @@ export function FavoriteFlashcards() {
             )
           `)
           .eq('creator_id', favorite.creator_id)
-          .eq('folder_name', favorite.folder_name);
+          .eq('playlist_name', favorite.playlist_name);
 
         if (flashcardsError) throw flashcardsError;
         return {
@@ -59,26 +59,25 @@ export function FavoriteFlashcards() {
   });
 
   const handleEditSuccess = () => {
-    // Invalidate both favorites and flashcards queries to refresh both tabs
     queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
     queryClient.invalidateQueries({ queryKey: ['flashcards'] });
   };
 
   if (isLoading) return <div className="text-center">Loading favorites...</div>;
-  if (!favorites?.length) return <div className="text-center text-gray-500">No favorite folders found</div>;
+  if (!favorites?.length) return <div className="text-center text-gray-500">No favorite playlists found</div>;
 
   return (
     <div className="space-y-3">
       {favorites.map((favorite) => (
         <FlashcardFolder
-          key={`${favorite.creator_id}-${favorite.folder_name}`}
-          title={favorite.folder_name}
+          key={`${favorite.creator_id}-${favorite.playlist_name}`}
+          title={favorite.playlist_name}
           subtitle={favorite.creator.display_name}
           flashcards={favorite.flashcards}
           onStudy={() => {}}
           showCreator={false}
           creatorId={favorite.creator_id}
-          folderName={favorite.folder_name}
+          playlistName={favorite.playlist_name}
           onEditSuccess={handleEditSuccess}
         />
       ))}

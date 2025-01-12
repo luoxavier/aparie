@@ -3,17 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function useFavoriteFolder(userId?: string, creatorId?: string, folderName?: string) {
+export function useFavoriteFolder(userId?: string, creatorId?: string, playlistName?: string) {
   const [isFavorited, setIsFavorited] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     checkFavoriteStatus();
-  }, [userId, creatorId, folderName]);
+  }, [userId, creatorId, playlistName]);
 
   const checkFavoriteStatus = async () => {
-    if (!userId || !creatorId || !folderName) return;
+    if (!userId || !creatorId || !playlistName) return;
 
     try {
       const { data, error } = await supabase
@@ -21,7 +21,7 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, folderNam
         .select('*')
         .eq('user_id', userId)
         .eq('creator_id', creatorId)
-        .eq('folder_name', folderName)
+        .eq('playlist_name', playlistName)
         .maybeSingle();
 
       if (error) throw error;
@@ -33,7 +33,7 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, folderNam
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!userId || !creatorId || !folderName) return;
+    if (!userId || !creatorId || !playlistName) return;
 
     try {
       if (isFavorited) {
@@ -42,13 +42,13 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, folderNam
           .delete()
           .eq('user_id', userId)
           .eq('creator_id', creatorId)
-          .eq('folder_name', folderName);
+          .eq('playlist_name', playlistName);
 
         if (error) throw error;
         setIsFavorited(false);
         toast({
-          title: "Folder removed from favorites",
-          description: "The folder has been removed from your favorites.",
+          title: "Playlist removed from favorites",
+          description: "The playlist has been removed from your favorites.",
         });
       } else {
         const { error } = await supabase
@@ -56,14 +56,14 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, folderNam
           .insert({
             user_id: userId,
             creator_id: creatorId,
-            folder_name: folderName,
+            playlist_name: playlistName,
           });
 
         if (error) throw error;
         setIsFavorited(true);
         toast({
-          title: "Folder added to favorites",
-          description: "The folder has been added to your favorites.",
+          title: "Playlist added to favorites",
+          description: "The playlist has been added to your favorites.",
         });
       }
       queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });

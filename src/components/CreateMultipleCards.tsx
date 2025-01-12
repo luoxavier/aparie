@@ -29,7 +29,7 @@ interface CreateMultipleCardsProps {
   onSave?: () => void;
   recipientId?: string;
   existingCards?: Flashcard[];
-  folderName?: string;
+  playlistName?: string;
   isModifying?: boolean;
   hideRecipientSelect?: boolean;
 }
@@ -40,13 +40,13 @@ export function CreateMultipleCards({
   onSave,
   recipientId: initialRecipientId,
   existingCards,
-  folderName: initialFolderName,
+  playlistName: initialPlaylistName,
   isModifying = false,
   hideRecipientSelect = false
 }: CreateMultipleCardsProps) {
   const { user } = useAuth();
   const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "self");
-  const [folderName, setFolderName] = useState(initialFolderName || "");
+  const [playlistName, setPlaylistName] = useState(initialPlaylistName || "");
   const [cards, setCards] = useState<Flashcard[]>(existingCards?.map(card => ({
     id: card.id,
     front: card.front,
@@ -81,21 +81,21 @@ export function CreateMultipleCards({
   const handleModification = async () => {
     if (!user || !existingCards) return;
 
-    // If folder name has changed, update both flashcards and favorite_folders
-    if (initialFolderName && folderName !== initialFolderName) {
+    // If playlist name has changed, update both flashcards and favorite_folders
+    if (initialPlaylistName && playlistName !== initialPlaylistName) {
       const updateFlashcardsResult = await supabase
         .from("flashcards")
-        .update({ folder_name: folderName })
+        .update({ playlist_name: playlistName })
         .eq('creator_id', user.id)
-        .eq('folder_name', initialFolderName);
+        .eq('playlist_name', initialPlaylistName);
 
       if (updateFlashcardsResult.error) throw updateFlashcardsResult.error;
 
       const updateFavoritesResult = await supabase
         .from("favorite_folders")
-        .update({ folder_name: folderName })
+        .update({ playlist_name: playlistName })
         .eq('creator_id', user.id)
-        .eq('folder_name', initialFolderName);
+        .eq('playlist_name', initialPlaylistName);
 
       if (updateFavoritesResult.error) throw updateFavoritesResult.error;
     }
@@ -123,7 +123,7 @@ export function CreateMultipleCards({
           id: card.id,
           creator_id: user.id,
           recipient_id: recipientId === "self" ? null : recipientId,
-          folder_name: folderName,
+          playlist_name: playlistName,
           front: card.front,
           back: card.back,
         })));
@@ -139,7 +139,7 @@ export function CreateMultipleCards({
         .insert(newCards.map(card => ({
           creator_id: user.id,
           recipient_id: recipientId === "self" ? null : recipientId,
-          folder_name: folderName,
+          playlist_name: playlistName,
           front: card.front,
           back: card.back,
         })));
@@ -149,7 +149,7 @@ export function CreateMultipleCards({
 
     toast({
       title: "Success",
-      description: "Folder updated successfully!",
+      description: "Playlist updated successfully!",
     });
   };
 
@@ -163,7 +163,7 @@ export function CreateMultipleCards({
         back: card.back,
         creator_id: user.id,
         recipient_id: recipientId === "self" ? null : recipientId,
-        folder_name: folderName,
+        playlist_name: playlistName,
         recipient_can_modify: recipientId !== "self" ? allowRecipientModify : false
       })));
 
@@ -214,7 +214,11 @@ export function CreateMultipleCards({
         />
       )}
 
-      <FolderNameInput folderName={folderName} setFolderName={setFolderName} />
+      <FolderNameInput 
+        folderName={playlistName} 
+        setFolderName={setPlaylistName}
+        label="Playlist Name"
+      />
 
       {!isModifying && recipientId !== "self" && (
         <RecipientModifyToggle
@@ -242,7 +246,7 @@ export function CreateMultipleCards({
       </Button>
 
       <Button type="submit" className="w-full">
-        {isModifying ? "Update Folder" : "Create Flashcards"}
+        {isModifying ? "Update Playlist" : "Create Flashcards"}
       </Button>
     </form>
   );
