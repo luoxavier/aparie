@@ -21,7 +21,6 @@ export function LoginForm() {
     } catch (error: any) {
       console.error("Error signing in:", error);
       
-      // Check if it's an invalid credentials error
       const isInvalidCredentials = error.message?.includes("Invalid login credentials") ||
                                  error.error?.message?.includes("Invalid login credentials");
       
@@ -44,7 +43,7 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full">
       <div className="space-y-2">
         <Input
           type="text"
@@ -52,6 +51,7 @@ export function LoginForm() {
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
           required
+          className="w-full"
         />
       </div>
       <div className="space-y-2">
@@ -61,6 +61,7 @@ export function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="w-full"
         />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>

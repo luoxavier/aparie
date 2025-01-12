@@ -3,8 +3,8 @@ import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function Login() {
   return (
-    <div className="container mx-auto flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-[350px] mx-auto space-y-6">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Welcome back
@@ -14,7 +14,7 @@ export default function Login() {
           </p>
         </div>
         <LoginForm />
-        <p className="px-8 text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link to="/signup" className="underline underline-offset-4 hover:text-primary">
             Sign up
