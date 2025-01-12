@@ -5,8 +5,6 @@ import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 
 interface Creator {
   display_name: string;
@@ -120,7 +118,7 @@ export function FlashcardsList() {
                 onStudy={startStudying}
                 showCreator={false}
                 creatorId={creatorId}
-                folderName={playlistName}
+                playlistName={playlistName}
               />
             ))}
           </div>

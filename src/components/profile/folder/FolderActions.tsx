@@ -22,7 +22,7 @@ interface FolderActionsProps {
   isFromFriend: boolean;
   flashcards: Flashcard[];
   userId?: string;
-  folderName?: string;
+  playlistName?: string;
   onStudy: () => void;
 }
 
@@ -31,7 +31,7 @@ export function FolderActions({
   isFromFriend, 
   flashcards,
   userId,
-  folderName,
+  playlistName,
   onStudy 
 }: FolderActionsProps) {
   const { toast } = useToast();
@@ -71,20 +71,20 @@ export function FolderActions({
         <Dialog open={isModifyOpen} onOpenChange={setIsModifyOpen}>
           <DialogTrigger asChild>
             <Button className="w-full bg-secondary hover:bg-secondary/90">
-              Modify Folder
+              Modify Playlist
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>Modify Flashcards</DialogTitle>
               <DialogDescription>
-                Update or remove flashcards in this folder.
+                Update or remove flashcards in this playlist.
               </DialogDescription>
             </DialogHeader>
             <CreateMultipleCards 
               recipientId={userId}
               existingCards={flashcards}
-              folderName={folderName}
+              playlistName={playlistName}
               onSave={() => {
                 setIsModifyOpen(false);
                 toast({
