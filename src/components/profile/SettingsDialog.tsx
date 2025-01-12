@@ -20,12 +20,8 @@ export function SettingsDialog() {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     
-    // Update document class for immediate visual feedback
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    // Ensure document class list is in sync with theme
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
   if (!mounted) {
