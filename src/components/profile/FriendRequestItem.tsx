@@ -18,16 +18,7 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
   const handleFriendRequest = useMutation({
     mutationFn: async (action: 'accept' | 'deny') => {
       if (action === 'accept') {
-        // Update the original friend connection status
-        const { error: connectionError } = await supabase
-          .from('friend_connections')
-          .update({ status: 'accepted' })
-          .eq('user_id', requesterId)
-          .eq('friend_id', user?.id);
-
-        if (connectionError) throw connectionError;
-
-        // Check if reverse connection exists
+        // First check if there's already a reverse connection
         const { data: reverseConnection, error: checkError } = await supabase
           .from('friend_connections')
           .select('id')
@@ -36,6 +27,15 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
           .maybeSingle();
 
         if (checkError) throw checkError;
+
+        // Update the original friend connection status
+        const { error: connectionError } = await supabase
+          .from('friend_connections')
+          .update({ status: 'accepted' })
+          .eq('user_id', requesterId)
+          .eq('friend_id', user?.id);
+
+        if (connectionError) throw connectionError;
 
         if (reverseConnection) {
           // Update existing reverse connection
@@ -46,7 +46,7 @@ export function FriendRequestItem({ requesterId, requesterDisplayName, requester
 
           if (reverseUpdateError) throw reverseUpdateError;
         } else {
-          // Create new reverse connection
+          // Create new reverse connection with accepted status
           const { error: reverseInsertError } = await supabase
             .from('friend_connections')
             .insert([{
