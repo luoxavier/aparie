@@ -19,9 +19,7 @@ export function SettingsDialog() {
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
-    
-    // Ensure document class list is in sync with theme
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    document.documentElement.classList.toggle("dark");
   };
 
   if (!mounted) {
