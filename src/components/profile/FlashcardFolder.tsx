@@ -28,7 +28,6 @@ interface FlashcardFolderProps {
   title: string;
   subtitle?: string;
   flashcards: Flashcard[];
-  onStudy: (flashcards: Flashcard[]) => void;
   showCreator?: boolean;
   creatorId?: string;
   playlistName?: string;
@@ -53,11 +52,10 @@ export function FlashcardFolder({
   const { handleStudy } = useStudyFolder();
 
   const handleFolderClick = () => {
-    handleStudy(null, flashcards, title, subtitle || user?.email);
+    handleStudy(flashcards, title, subtitle || user?.email);
   };
 
-  const handleExpandClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleExpandClick = () => {
     setShowCards(!showCards);
   };
 
@@ -72,8 +70,7 @@ export function FlashcardFolder({
     });
   };
 
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleEditClick = () => {
     setIsDialogOpen(true);
   };
 
@@ -86,7 +83,10 @@ export function FlashcardFolder({
         <div className="flex items-center gap-2 flex-1">
           <FolderFavoriteButton
             isFavorited={isFavorited}
-            onFavoriteClick={toggleFavorite}
+            onFavoriteClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(e);
+            }}
           />
           <FolderInfo
             title={title}
