@@ -1,22 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Minus } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Profile } from "@/types/database";
 import { useFriendsList } from "./profile/FriendSelector";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CreateCardForm } from "./flashcard/CreateCardForm";
+import { RecipientSelect } from "./flashcard/RecipientSelect";
+import { FolderNameInput } from "./flashcard/FolderNameInput";
+import { RecipientModifyToggle } from "./flashcard/RecipientModifyToggle";
 
 interface Flashcard {
   id?: string;
@@ -67,100 +61,11 @@ export function CreateMultipleCards({
 
     try {
       if (isModifying && existingCards) {
-        // If folder name has changed, update both flashcards and favorite_folders
-        if (initialFolderName && folderName !== initialFolderName) {
-          // Update flashcards folder name
-          const updateFlashcardsResult = await supabase
-            .from("flashcards")
-            .update({ folder_name: folderName })
-            .eq('creator_id', user.id)
-            .eq('folder_name', initialFolderName);
-
-          if (updateFlashcardsResult.error) throw updateFlashcardsResult.error;
-
-          // Update favorite_folders folder name
-          const updateFavoritesResult = await supabase
-            .from("favorite_folders")
-            .update({ folder_name: folderName })
-            .eq('creator_id', user.id)
-            .eq('folder_name', initialFolderName);
-
-          if (updateFavoritesResult.error) throw updateFavoritesResult.error;
-        }
-
-        // Handle deletions
-        const deletedCards = existingCards.filter(existingCard => 
-          !cards.some(card => card.id === existingCard.id)
-        );
-        
-        if (deletedCards.length > 0) {
-          const deleteResult = await supabase
-            .from("flashcards")
-            .delete()
-            .in('id', deletedCards.map(card => card.id));
-
-          if (deleteResult.error) throw deleteResult.error;
-        }
-
-        // Handle updates for existing cards
-        const cardsToUpdate = cards.filter(card => card.id);
-        if (cardsToUpdate.length > 0) {
-          const updateResult = await supabase
-            .from("flashcards")
-            .upsert(cardsToUpdate.map(card => ({
-              id: card.id,
-              creator_id: user.id,
-              recipient_id: recipientId === "self" ? null : recipientId,
-              folder_name: folderName,
-              front: card.front,
-              back: card.back,
-            })));
-
-          if (updateResult.error) throw updateResult.error;
-        }
-
-        // Handle new cards
-        const newCards = cards.filter(card => !card.id);
-        if (newCards.length > 0) {
-          const insertResult = await supabase
-            .from("flashcards")
-            .insert(newCards.map(card => ({
-              creator_id: user.id,
-              recipient_id: recipientId === "self" ? null : recipientId,
-              folder_name: folderName,
-              front: card.front,
-              back: card.back,
-            })));
-
-          if (insertResult.error) throw insertResult.error;
-        }
-
-        toast({
-          title: "Success",
-          description: "Folder updated successfully!",
-        });
+        await handleModification();
       } else {
-        // Handle new folder creation
-        const insertResult = await supabase
-          .from("flashcards")
-          .insert(cards.map(card => ({
-            front: card.front,
-            back: card.back,
-            creator_id: user.id,
-            recipient_id: recipientId === "self" ? null : recipientId,
-            folder_name: folderName,
-            recipient_can_modify: recipientId !== "self" ? allowRecipientModify : false
-          })));
-
-        if (insertResult.error) throw insertResult.error;
-
-        toast({
-          title: "Success",
-          description: "Flashcards created successfully!",
-        });
+        await handleCreation();
       }
 
-      // Close the interface after successful operation
       onComplete?.();
       onSave?.();
     } catch (error) {
@@ -171,6 +76,103 @@ export function CreateMultipleCards({
         description: `Failed to ${isModifying ? 'update' : 'create'} flashcards. Please try again.`,
       });
     }
+  };
+
+  const handleModification = async () => {
+    if (!user || !existingCards) return;
+
+    // If folder name has changed, update both flashcards and favorite_folders
+    if (initialFolderName && folderName !== initialFolderName) {
+      const updateFlashcardsResult = await supabase
+        .from("flashcards")
+        .update({ folder_name: folderName })
+        .eq('creator_id', user.id)
+        .eq('folder_name', initialFolderName);
+
+      if (updateFlashcardsResult.error) throw updateFlashcardsResult.error;
+
+      const updateFavoritesResult = await supabase
+        .from("favorite_folders")
+        .update({ folder_name: folderName })
+        .eq('creator_id', user.id)
+        .eq('folder_name', initialFolderName);
+
+      if (updateFavoritesResult.error) throw updateFavoritesResult.error;
+    }
+
+    // Handle deletions
+    const deletedCards = existingCards.filter(existingCard => 
+      !cards.some(card => card.id === existingCard.id)
+    );
+    
+    if (deletedCards.length > 0) {
+      const deleteResult = await supabase
+        .from("flashcards")
+        .delete()
+        .in('id', deletedCards.map(card => card.id));
+
+      if (deleteResult.error) throw deleteResult.error;
+    }
+
+    // Handle updates for existing cards
+    const cardsToUpdate = cards.filter(card => card.id);
+    if (cardsToUpdate.length > 0) {
+      const updateResult = await supabase
+        .from("flashcards")
+        .upsert(cardsToUpdate.map(card => ({
+          id: card.id,
+          creator_id: user.id,
+          recipient_id: recipientId === "self" ? null : recipientId,
+          folder_name: folderName,
+          front: card.front,
+          back: card.back,
+        })));
+
+      if (updateResult.error) throw updateResult.error;
+    }
+
+    // Handle new cards
+    const newCards = cards.filter(card => !card.id);
+    if (newCards.length > 0) {
+      const insertResult = await supabase
+        .from("flashcards")
+        .insert(newCards.map(card => ({
+          creator_id: user.id,
+          recipient_id: recipientId === "self" ? null : recipientId,
+          folder_name: folderName,
+          front: card.front,
+          back: card.back,
+        })));
+
+      if (insertResult.error) throw insertResult.error;
+    }
+
+    toast({
+      title: "Success",
+      description: "Folder updated successfully!",
+    });
+  };
+
+  const handleCreation = async () => {
+    if (!user) return;
+
+    const insertResult = await supabase
+      .from("flashcards")
+      .insert(cards.map(card => ({
+        front: card.front,
+        back: card.back,
+        creator_id: user.id,
+        recipient_id: recipientId === "self" ? null : recipientId,
+        folder_name: folderName,
+        recipient_can_modify: recipientId !== "self" ? allowRecipientModify : false
+      })));
+
+    if (insertResult.error) throw insertResult.error;
+
+    toast({
+      title: "Success",
+      description: "Flashcards created successfully!",
+    });
   };
 
   const addCard = () => {
@@ -205,45 +207,20 @@ export function CreateMultipleCards({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {!hideRecipientSelect && (
-        <div className="space-y-2">
-          <Label>Create for</Label>
-          <Select value={recipientId} onValueChange={setRecipientId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select recipient" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="self">Myself</SelectItem>
-              {friends.map((friend) => (
-                <SelectItem key={friend.id} value={friend.id}>
-                  {friend.display_name || friend.username}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <RecipientSelect
+          recipientId={recipientId}
+          setRecipientId={setRecipientId}
+          friends={friends}
+        />
       )}
 
-      <div className="space-y-2">
-        <Label>Folder Name</Label>
-        <Input
-          value={folderName}
-          onChange={(e) => setFolderName(e.target.value)}
-          placeholder="Enter folder name"
-          required
-        />
-      </div>
+      <FolderNameInput folderName={folderName} setFolderName={setFolderName} />
 
       {!isModifying && recipientId !== "self" && (
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="recipient-modify"
-            checked={allowRecipientModify}
-            onCheckedChange={(checked) => setAllowRecipientModify(checked as boolean)}
-          />
-          <Label htmlFor="recipient-modify" className="text-sm">
-            Allow recipient to modify these flashcards
-          </Label>
-        </div>
+        <RecipientModifyToggle
+          allowRecipientModify={allowRecipientModify}
+          setAllowRecipientModify={setAllowRecipientModify}
+        />
       )}
 
       {isModifying && (
@@ -253,39 +230,12 @@ export function CreateMultipleCards({
         </>
       )}
 
-      <div className="space-y-2">
-        {cards.map((card, index) => (
-          <div key={card.id || index} className="flex items-center gap-2">
-            <div className="grid grid-cols-2 gap-4 flex-1">
-              <Input
-                id={`front-${index}`}
-                value={card.front}
-                onChange={(e) => updateCard(index, "front", e.target.value)}
-                onKeyDown={(e) => handleKeyPress(e, index, "front")}
-                placeholder="Front of card"
-                required
-              />
-              <Input
-                id={`back-${index}`}
-                value={card.back}
-                onChange={(e) => updateCard(index, "back", e.target.value)}
-                onKeyDown={(e) => handleKeyPress(e, index, "back")}
-                placeholder="Back of card"
-                required
-              />
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => removeCard(index)}
-              className="text-red-500 hover:text-red-700"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
+      <CreateCardForm
+        cards={cards}
+        onUpdateCard={updateCard}
+        onRemoveCard={removeCard}
+        onKeyPress={handleKeyPress}
+      />
 
       <Button type="button" variant="outline" onClick={addCard}>
         Add Another Card
