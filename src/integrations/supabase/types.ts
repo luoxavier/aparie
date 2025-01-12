@@ -13,22 +13,22 @@ export type Database = {
         Row: {
           created_at: string
           creator_id: string
-          folder_name: string
           id: string
+          playlist_name: string
           user_id: string
         }
         Insert: {
           created_at?: string
           creator_id: string
-          folder_name: string
           id?: string
+          playlist_name: string
           user_id: string
         }
         Update: {
           created_at?: string
           creator_id?: string
-          folder_name?: string
           id?: string
+          playlist_name?: string
           user_id?: string
         }
         Relationships: [
@@ -53,9 +53,10 @@ export type Database = {
           back: string
           created_at: string
           creator_id: string
-          folder_name: string | null
           front: string
           id: string
+          is_public: boolean
+          playlist_name: string | null
           recipient_can_modify: boolean
           recipient_id: string | null
           updated_at: string
@@ -64,9 +65,10 @@ export type Database = {
           back: string
           created_at?: string
           creator_id: string
-          folder_name?: string | null
           front: string
           id?: string
+          is_public?: boolean
+          playlist_name?: string | null
           recipient_can_modify?: boolean
           recipient_id?: string | null
           updated_at?: string
@@ -75,9 +77,10 @@ export type Database = {
           back?: string
           created_at?: string
           creator_id?: string
-          folder_name?: string | null
           front?: string
           id?: string
+          is_public?: boolean
+          playlist_name?: string | null
           recipient_can_modify?: boolean
           recipient_id?: string | null
           updated_at?: string

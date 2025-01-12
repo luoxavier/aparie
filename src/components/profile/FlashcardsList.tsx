@@ -19,7 +19,7 @@ interface Flashcard {
   back: string;
   creator_id: string;
   creator: Creator;
-  folder_name: string | null;
+  playlist_name: string | null;
   recipient_id: string | null;
 }
 
@@ -27,7 +27,7 @@ interface GroupedFlashcards {
   [creatorId: string]: {
     creator: Creator;
     folders: {
-      [folderName: string]: Flashcard[];
+      [playlistName: string]: Flashcard[];
     };
   };
 }
@@ -50,7 +50,7 @@ export function FlashcardsList() {
           back,
           creator_id,
           recipient_id,
-          folder_name,
+          playlist_name,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
             username
@@ -72,7 +72,7 @@ export function FlashcardsList() {
 
   flashcards.forEach(flashcard => {
     const creatorId = flashcard.creator_id;
-    const folderName = flashcard.folder_name || 'Uncategorized';
+    const playlistName = flashcard.playlist_name || 'Uncategorized';
     
     if (!groupedFlashcards[creatorId]) {
       groupedFlashcards[creatorId] = {
@@ -81,11 +81,11 @@ export function FlashcardsList() {
       };
     }
     
-    if (!groupedFlashcards[creatorId].folders[folderName]) {
-      groupedFlashcards[creatorId].folders[folderName] = [];
+    if (!groupedFlashcards[creatorId].folders[playlistName]) {
+      groupedFlashcards[creatorId].folders[playlistName] = [];
     }
     
-    groupedFlashcards[creatorId].folders[folderName].push(flashcard);
+    groupedFlashcards[creatorId].folders[playlistName].push(flashcard);
   });
 
   const startStudying = (deck: Flashcard[]) => {
@@ -112,15 +112,15 @@ export function FlashcardsList() {
             </h3>
           </div>
           <div className="space-y-3">
-            {Object.entries(folders).map(([folderName, cards]) => (
+            {Object.entries(folders).map(([playlistName, cards]) => (
               <FlashcardFolder
-                key={`${creatorId}-${folderName}`}
-                title={folderName}
+                key={`${creatorId}-${playlistName}`}
+                title={playlistName}
                 flashcards={cards}
                 onStudy={startStudying}
                 showCreator={false}
                 creatorId={creatorId}
-                folderName={folderName}
+                folderName={playlistName}
               />
             ))}
           </div>
