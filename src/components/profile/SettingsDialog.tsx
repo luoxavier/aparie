@@ -40,7 +40,9 @@ export function SettingsDialog() {
             <Switch
               id="dark-mode"
               checked={theme === "dark"}
-              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+              onCheckedChange={() => {
+                setTheme(theme === "dark" ? "light" : "dark");
+              }}
             />
           </div>
         </div>
