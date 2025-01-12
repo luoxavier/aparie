@@ -86,11 +86,6 @@ export function FlashcardsList() {
     groupedFlashcards[creatorId].folders[playlistName].push(flashcard);
   });
 
-  const startStudying = (deck: Flashcard[]) => {
-    setCurrentDeck([...deck]);
-    setIsStudying(true);
-  };
-
   if (isStudying && currentDeck.length > 0) {
     return (
       <StudyMode 
@@ -115,7 +110,6 @@ export function FlashcardsList() {
                 key={`${creatorId}-${playlistName}`}
                 title={playlistName}
                 flashcards={cards}
-                onStudy={startStudying}
                 showCreator={false}
                 creatorId={creatorId}
                 playlistName={playlistName}

@@ -11,12 +11,14 @@ import { SettingsDialog } from "@/components/profile/SettingsDialog";
 import { ProfileSettingsDialog } from "@/components/profile/ProfileSettingsDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { Plus } from "lucide-react";
+import { useState } from "react";
+import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
+import { PlaylistList } from "@/components/playlist/PlaylistList";
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -62,35 +64,29 @@ export default function Profile() {
         <p className="text-muted-foreground mb-8">{profile.bio}</p>
       )}
 
-      <Tabs defaultValue="flashcards" className="space-y-4">
+      <Tabs defaultValue="playlists" className="space-y-4">
         <div className="flex justify-between items-center">
           <TabsList>
-            <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
+            <TabsTrigger value="playlists">My Playlists</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
             <TabsTrigger value="public">Public Playlists</TabsTrigger>
             <TabsTrigger value="friends">My Friends</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
             <AddFriendDialog />
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="default" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Cards
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Create New Flashcards</DialogTitle>
-                </DialogHeader>
-                <CreateMultipleCards />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              size="default" 
+              className="gap-2"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Create Playlist
+            </Button>
           </div>
         </div>
 
-        <TabsContent value="flashcards">
-          <FlashcardsList />
+        <TabsContent value="playlists">
+          <PlaylistList />
         </TabsContent>
 
         <TabsContent value="favorites">
@@ -107,6 +103,11 @@ export default function Profile() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <CreatePlaylistModal 
+        isOpen={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+      />
     </div>
   );
 }
