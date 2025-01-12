@@ -56,6 +56,7 @@ export type Database = {
           folder_name: string | null
           front: string
           id: string
+          recipient_can_modify: boolean
           recipient_id: string | null
           updated_at: string
         }
@@ -66,6 +67,7 @@ export type Database = {
           folder_name?: string | null
           front: string
           id?: string
+          recipient_can_modify?: boolean
           recipient_id?: string | null
           updated_at?: string
         }
@@ -76,6 +78,7 @@ export type Database = {
           folder_name?: string | null
           front?: string
           id?: string
+          recipient_can_modify?: boolean
           recipient_id?: string | null
           updated_at?: string
         }

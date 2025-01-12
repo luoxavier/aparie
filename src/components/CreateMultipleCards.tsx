@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { Profile } from "@/types/database";
 import { useFriendsList } from "./profile/FriendSelector";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Flashcard {
   id?: string;
@@ -57,6 +58,7 @@ export function CreateMultipleCards({
     front: card.front,
     back: card.back
   })) || [{ front: "", back: "" }]);
+  const [allowRecipientModify, setAllowRecipientModify] = useState(false);
   const { data: friends = [] } = useFriendsList();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,11 +144,12 @@ export function CreateMultipleCards({
         const insertResult = await supabase
           .from("flashcards")
           .insert(cards.map(card => ({
+            front: card.front,
+            back: card.back,
             creator_id: user.id,
             recipient_id: recipientId === "self" ? null : recipientId,
             folder_name: folderName,
-            front: card.front,
-            back: card.back,
+            recipient_can_modify: recipientId !== "self" ? allowRecipientModify : false
           })));
 
         if (insertResult.error) throw insertResult.error;
@@ -229,6 +232,19 @@ export function CreateMultipleCards({
           required
         />
       </div>
+
+      {recipientId !== "self" && (
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="recipient-modify"
+            checked={allowRecipientModify}
+            onCheckedChange={(checked) => setAllowRecipientModify(checked as boolean)}
+          />
+          <Label htmlFor="recipient-modify" className="text-sm">
+            Allow recipient to modify these flashcards
+          </Label>
+        </div>
+      )}
 
       {isModifying && (
         <>
