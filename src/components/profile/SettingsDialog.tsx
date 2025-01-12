@@ -17,13 +17,12 @@ export function SettingsDialog() {
 
   // Handle theme toggle
   const handleThemeToggle = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    // Ensure the HTML element gets the dark class
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
+    if (theme === "dark") {
+      setTheme("light");
       document.documentElement.classList.remove("dark");
+    } else {
+      setTheme("dark");
+      document.documentElement.classList.add("dark");
     }
   };
 
