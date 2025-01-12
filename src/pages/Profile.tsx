@@ -7,6 +7,8 @@ import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
+import { SettingsDialog } from "@/components/profile/SettingsDialog";
+import { ProfileSettingsDialog } from "@/components/profile/ProfileSettingsDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -21,7 +23,7 @@ export default function Profile() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, avatar_url, bio')
         .eq('id', user?.id)
         .single();
       
@@ -33,17 +35,32 @@ export default function Profile() {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-2">
-          <h1 className="text-3xl font-bold">Profile</h1>
-          {profile?.username && (
-            <span className="text-muted-foreground">(@{profile.username})</span>
-          )}
-        </div>
         <div className="flex items-center gap-4">
+          {profile?.avatar_url && (
+            <img
+              src={profile.avatar_url}
+              alt="Profile"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          )}
+          <div>
+            <h1 className="text-3xl font-bold">Profile</h1>
+            {profile?.username && (
+              <span className="text-muted-foreground">(@{profile.username})</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <NotificationsDialog />
+          <SettingsDialog />
+          <ProfileSettingsDialog />
           <Button onClick={() => signOut()}>Sign Out</Button>
         </div>
       </div>
+
+      {profile?.bio && (
+        <p className="text-muted-foreground mb-8">{profile.bio}</p>
+      )}
 
       <Tabs defaultValue="flashcards" className="space-y-4">
         <div className="flex justify-between items-center">
