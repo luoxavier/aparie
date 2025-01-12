@@ -15,6 +15,18 @@ export function SettingsDialog() {
     setMounted(true);
   }, []);
 
+  // Handle theme toggle
+  const handleThemeToggle = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    // Ensure the HTML element gets the dark class
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
+
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon">
@@ -40,9 +52,7 @@ export function SettingsDialog() {
             <Switch
               id="dark-mode"
               checked={theme === "dark"}
-              onCheckedChange={() => {
-                setTheme(theme === "dark" ? "light" : "dark");
-              }}
+              onCheckedChange={handleThemeToggle}
             />
           </div>
         </div>
