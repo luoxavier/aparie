@@ -13,7 +13,6 @@ import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationsList } from "./NotificationsList";
-import { FriendRequestsList } from "./FriendRequestsList";
 
 export function NotificationsDialog() {
   const { user } = useAuth();
@@ -39,28 +38,19 @@ export function NotificationsDialog() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: pendingRequests } = useQuery({
-    queryKey: ['friend-requests', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('friend_connections')
-        .select(`
-          user_id,
-          profiles!friend_connections_user_id_fkey (
-            display_name,
-            username,
-            avatar_url
-          )
-        `)
-        .eq('friend_id', user?.id)
-        .eq('status', 'pending');
-      
-      if (error) throw error;
-      return data;
+      return data.map(notification => ({
+        ...notification,
+        sender: {
+          ...notification.sender,
+          display_name: notification.sender.username 
+            ? `${notification.sender.display_name} (@${notification.sender.username})`
+            : notification.sender.display_name
+        },
+        content: notification.content ? {
+          playlistName: notification.content.playlistName,
+          message: notification.content.message
+        } : undefined
+      }));
     },
   });
 
@@ -79,7 +69,7 @@ export function NotificationsDialog() {
     }
   };
 
-  const totalNotifications = (notifications?.length || 0) + (pendingRequests?.length || 0);
+  const totalNotifications = notifications?.length || 0;
 
   return (
     <Dialog>
@@ -103,15 +93,7 @@ export function NotificationsDialog() {
         <div className="space-y-4">
           {notifications && notifications.length > 0 && (
             <NotificationsList 
-              notifications={notifications.map(notification => ({
-                ...notification,
-                sender: {
-                  ...notification.sender,
-                  display_name: notification.sender.username 
-                    ? `${notification.sender.display_name} (@${notification.sender.username})`
-                    : notification.sender.display_name
-                }
-              }))}
+              notifications={notifications}
               onMarkAsRead={markAsRead}
             />
           )}
