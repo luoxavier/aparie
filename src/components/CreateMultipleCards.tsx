@@ -2,6 +2,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Profile } from "@/types/database";
 import { CreateMultipleCardsForm } from "./flashcard/CreateMultipleCardsForm";
 import { useFlashcardManagement } from "./flashcard/useFlashcardManagement";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Flashcard {
   id?: string;
@@ -36,11 +38,39 @@ export function CreateMultipleCards({
   hideRecipientSelect = false
 }: CreateMultipleCardsProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { handleModification, handleCreation } = useFlashcardManagement({
     userId: user?.id,
     onComplete,
     onSave
   });
+
+  const sendNotification = async (recipientId: string, playlistName: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          recipient_id: recipientId,
+          sender_id: user.id,
+          type: 'shared_playlist',
+          content: {
+            playlistName,
+            message: "has created a playlist for you"
+          }
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send notification",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSubmit = async (formData: {
     recipientId: string;
@@ -69,6 +99,11 @@ export function CreateMultipleCards({
           formData.allowRecipientModify,
           formData.isPublic
         );
+        
+        // Send notification only when creating a new playlist for a recipient
+        if (formData.recipientId && formData.recipientId !== user.id) {
+          await sendNotification(formData.recipientId, formData.playlistName);
+        }
       }
 
       onComplete?.();

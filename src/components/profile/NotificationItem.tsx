@@ -106,11 +106,10 @@ export function NotificationItem({
 
   const handlePlaylistClick = () => {
     if (content?.playlistName) {
-      // Mark as read before navigating
       setIsExiting(true);
       setTimeout(() => {
         onMarkAsRead(id);
-        // Navigate to the playlist
+        // Navigate to the playlist study page
         navigate(`/study/${senderId}/${content.playlistName}`);
       }, 300);
     }
@@ -136,12 +135,7 @@ export function NotificationItem({
             )}
             {type === 'shared_playlist' && (
               <p className="text-sm text-gray-600">
-                Shared a playlist with you: {content?.playlistName}
-              </p>
-            )}
-            {type === 'new_public_playlist' && (
-              <p className="text-sm text-gray-600">
-                Created a new public playlist: {content?.playlistName}
+                {content?.message || "Shared a playlist with you"}: {content?.playlistName}
               </p>
             )}
           </div>
