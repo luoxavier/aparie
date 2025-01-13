@@ -14,6 +14,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationsList } from "./NotificationsList";
 
+interface NotificationContent {
+  playlistName?: string;
+  message?: string;
+}
+
 export function NotificationsDialog() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -46,10 +51,7 @@ export function NotificationsDialog() {
             ? `${notification.sender.display_name} (@${notification.sender.username})`
             : notification.sender.display_name
         },
-        content: notification.content ? {
-          playlistName: notification.content.playlistName,
-          message: notification.content.message
-        } : undefined
+        content: notification.content as NotificationContent
       }));
     },
   });
