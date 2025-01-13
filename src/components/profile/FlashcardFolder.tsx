@@ -51,7 +51,8 @@ export function FlashcardFolder({
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
   const { handleStudy } = useStudyFolder();
 
-  const handleFolderClick = () => {
+  const handleFolderClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     handleStudy(flashcards, title, subtitle || user?.email);
   };
 
