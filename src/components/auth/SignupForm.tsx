@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { checkExistingUsername } from "@/utils/auth-utils";
 import { handleSignupError } from "@/utils/auth-error-utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -27,6 +28,25 @@ export function SignupForm() {
     return true;
   };
 
+  const checkExistingEmail = async (email: string) => {
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+      }
+    });
+    
+    if (!error) {
+      toast({
+        variant: "destructive",
+        title: "Account already exists",
+        description: "This email is already registered. Please try logging in instead.",
+      });
+      return true;
+    }
+    return false;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -36,7 +56,17 @@ export function SignupForm() {
 
     setLoading(true);
     try {
+      // Check if email exists
+      const emailExists = await checkExistingEmail(email);
+      if (emailExists) {
+        setLoading(false);
+        return;
+      }
+
+      // Check username
       await checkExistingUsername(username);
+      
+      // Attempt signup
       await signUp(email, password, username, username);
       navigate("/profile");
     } catch (error) {

@@ -18,6 +18,7 @@ export const handleSignupError = (error: unknown) => {
       errorBody = null;
     }
 
+    // Handle specific error cases
     if (errorBody?.code === "user_already_exists" || error.message.includes('User already registered')) {
       toast({
         variant: "destructive",
