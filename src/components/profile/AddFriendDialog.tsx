@@ -10,12 +10,22 @@ import {
 import { FriendSearchInput } from "./FriendSearchInput";
 import { useFriendRequest } from "@/hooks/useFriendRequest";
 import { UserPlus } from "lucide-react";
+import { useState } from "react";
 
 export function AddFriendDialog() {
   const { friendIdentifier, setFriendIdentifier, sendFriendRequest } = useFriendRequest();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSendRequest = async () => {
+    if (friendIdentifier) {
+      await sendFriendRequest.mutateAsync(friendIdentifier);
+      setIsOpen(false);
+      setFriendIdentifier("");
+    }
+  };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button size="default" className="gap-2">
           <UserPlus className="h-4 w-4" />
@@ -35,13 +45,10 @@ export function AddFriendDialog() {
             onChange={setFriendIdentifier}
           />
           <Button
-            onClick={() => {
-              if (friendIdentifier) {
-                sendFriendRequest.mutate(friendIdentifier);
-              }
-            }}
+            onClick={handleSendRequest}
+            disabled={sendFriendRequest.isPending || !friendIdentifier}
           >
-            Send Friend Request
+            {sendFriendRequest.isPending ? "Sending..." : "Send Friend Request"}
           </Button>
         </div>
       </DialogContent>
