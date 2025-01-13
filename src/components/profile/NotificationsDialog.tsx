@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -95,12 +96,11 @@ export function NotificationsDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Notifications</DialogTitle>
+          <DialogDescription>
+            View and manage your notifications
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {pendingRequests && pendingRequests.length > 0 && (
-            <FriendRequestsList requests={pendingRequests} />
-          )}
-          
           {notifications && notifications.length > 0 && (
             <NotificationsList 
               notifications={notifications.map(notification => ({

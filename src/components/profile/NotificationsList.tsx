@@ -7,6 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface Notification {
   id: string;
   type: string;
+  content?: {
+    playlistName?: string;
+    message?: string;
+  };
   sender: {
     id: string;
     display_name: string;
@@ -22,6 +26,15 @@ interface NotificationsListProps {
 export function NotificationsList({ notifications, onMarkAsRead }: NotificationsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Separate notifications by type
+  const actionNotifications = notifications.filter(n => 
+    n.type === 'friend_request'
+  );
+  
+  const updateNotifications = notifications.filter(n => 
+    ['shared_playlist', 'new_public_playlist'].includes(n.type)
+  );
 
   const handleRemoveAll = async () => {
     try {
@@ -48,7 +61,7 @@ export function NotificationsList({ notifications, onMarkAsRead }: Notifications
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {notifications?.length > 0 && (
         <div className="flex justify-end">
           <Button
@@ -60,17 +73,45 @@ export function NotificationsList({ notifications, onMarkAsRead }: Notifications
           </Button>
         </div>
       )}
-      {notifications?.map((notification) => (
-        <NotificationItem
-          key={notification.id}
-          id={notification.id}
-          senderName={notification.sender.display_name}
-          senderAvatar={notification.sender.avatar_url}
-          type={notification.type}
-          senderId={notification.sender.id}
-          onMarkAsRead={onMarkAsRead}
-        />
-      ))}
+
+      {actionNotifications.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-semibold">Action Required</h3>
+          {actionNotifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              id={notification.id}
+              senderName={notification.sender.display_name}
+              senderAvatar={notification.sender.avatar_url}
+              type={notification.type}
+              senderId={notification.sender.id}
+              onMarkAsRead={onMarkAsRead}
+            />
+          ))}
+        </div>
+      )}
+
+      {updateNotifications.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-semibold">Updates</h3>
+          {updateNotifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              id={notification.id}
+              senderName={notification.sender.display_name}
+              senderAvatar={notification.sender.avatar_url}
+              type={notification.type}
+              senderId={notification.sender.id}
+              content={notification.content}
+              onMarkAsRead={onMarkAsRead}
+            />
+          ))}
+        </div>
+      )}
+
+      {notifications.length === 0 && (
+        <p className="text-center text-muted-foreground">No notifications</p>
+      )}
     </div>
   );
 }

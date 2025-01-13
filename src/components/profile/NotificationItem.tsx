@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Check, X, List } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationItemProps {
   id: string;
@@ -13,6 +14,10 @@ interface NotificationItemProps {
   senderAvatar?: string;
   type: string;
   senderId: string;
+  content?: {
+    playlistName?: string;
+    message?: string;
+  };
   onMarkAsRead: (id: string) => void;
 }
 
@@ -22,12 +27,14 @@ export function NotificationItem({
   senderAvatar, 
   type, 
   senderId,
+  content,
   onMarkAsRead 
 }: NotificationItemProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isExiting, setIsExiting] = useState(false);
+  const navigate = useNavigate();
 
   const handleFriendRequest = useMutation({
     mutationFn: async (action: 'accept' | 'deny') => {
@@ -97,11 +104,16 @@ export function NotificationItem({
     }
   });
 
-  const handleMarkAsRead = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onMarkAsRead(id);
-    }, 300); // Wait for animation to complete
+  const handlePlaylistClick = () => {
+    if (content?.playlistName) {
+      // Mark as read before navigating
+      setIsExiting(true);
+      setTimeout(() => {
+        onMarkAsRead(id);
+        // Navigate to the playlist
+        navigate(`/study/${senderId}/${content.playlistName}`);
+      }, 300);
+    }
   };
 
   return (
@@ -117,14 +129,19 @@ export function NotificationItem({
           )}
           <div className="flex-1">
             <p className="font-medium">{senderName}</p>
-            {type === 'new_flashcard' && (
-              <p className="text-sm text-gray-600">
-                Created a new flashcard folder for you
-              </p>
-            )}
             {type === 'friend_request' && (
               <p className="text-sm text-gray-600">
                 Sent you a friend request
+              </p>
+            )}
+            {type === 'shared_playlist' && (
+              <p className="text-sm text-gray-600">
+                Shared a playlist with you: {content?.playlistName}
+              </p>
+            )}
+            {type === 'new_public_playlist' && (
+              <p className="text-sm text-gray-600">
+                Created a new public playlist: {content?.playlistName}
               </p>
             )}
           </div>
@@ -150,10 +167,11 @@ export function NotificationItem({
           ) : (
             <Button
               variant="ghost"
-              size="sm"
-              onClick={handleMarkAsRead}
+              size="icon"
+              onClick={handlePlaylistClick}
+              className="h-8 w-8"
             >
-              Mark as read
+              <List className="h-4 w-4" />
             </Button>
           )}
         </div>
