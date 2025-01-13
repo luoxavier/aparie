@@ -41,7 +41,10 @@ export async function validateFriendRequest(userId: string, friendId: string): P
 
   if (connectionError) {
     console.error('Error checking connections:', connectionError);
-    throw new Error('Failed to check existing connections');
+    return {
+      type: 'server_error',
+      message: 'Failed to check existing connections'
+    };
   }
 
   if (existingConnections && existingConnections.length > 0) {
@@ -58,32 +61,11 @@ export async function validateFriendRequest(userId: string, friendId: string): P
 }
 
 export async function createFriendRequest(userId: string, friendId: string) {
-  if (!userId || !friendId) {
-    throw new Error('Invalid user information provided');
+  const validationError = await validateFriendRequest(userId, friendId);
+  if (validationError) {
+    throw new Error(validationError.message);
   }
 
-  // First check if there's an existing connection in either direction
-  const { data: existingConnections, error: checkError } = await supabase
-    .from('friend_connections')
-    .select('id, status')
-    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
-
-  if (checkError) {
-    console.error('Error checking existing connections:', checkError);
-    throw new Error('Failed to check existing connections');
-  }
-
-  // If there's an existing connection, handle it appropriately
-  if (existingConnections && existingConnections.length > 0) {
-    const connection = existingConnections[0];
-    if (connection.status === 'accepted') {
-      throw new Error('You are already friends with this user');
-    } else {
-      throw new Error('A friend request is already pending');
-    }
-  }
-
-  // If no existing connection, create a new one
   const { error: insertError } = await supabase
     .from('friend_connections')
     .insert([{
@@ -93,6 +75,9 @@ export async function createFriendRequest(userId: string, friendId: string) {
     }]);
 
   if (insertError) {
+    if (insertError.code === '23505') {
+      throw new Error('A friend request already exists between you and this user');
+    }
     console.error('Error creating friend request:', insertError);
     throw new Error('Failed to send friend request');
   }
@@ -104,7 +89,7 @@ export async function createFriendRequest(userId: string, friendId: string) {
       recipient_id: friendId,
       sender_id: userId,
       type: 'friend_request',
-      content: null
+      content: { message: 'sent you a friend request' }
     }]);
 
   if (notificationError) {

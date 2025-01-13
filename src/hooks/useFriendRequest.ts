@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { findUserByIdentifier, validateFriendRequest, createFriendRequest } from "@/utils/friend-request-utils";
+import { findUserByIdentifier, createFriendRequest } from "@/utils/friend-request-utils";
 
 export function useFriendRequest() {
   const [friendIdentifier, setFriendIdentifier] = useState("");
@@ -21,17 +20,8 @@ export function useFriendRequest() {
           throw new Error("No user found with that username or display name");
         }
 
-        const validationError = await validateFriendRequest(user.id, friendProfile.id);
-        if (validationError) {
-          throw new Error(validationError.message);
-        }
-
         await createFriendRequest(user.id, friendProfile.id);
       } catch (error: any) {
-        // Check for duplicate connection error
-        if (error.message?.includes("duplicate key value")) {
-          throw new Error("A friend request already exists between you and this user");
-        }
         throw error;
       }
     },
