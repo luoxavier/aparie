@@ -117,7 +117,7 @@ export function NotificationItem({
   };
 
   return (
-    <Card className={`relative transition-all ${isExiting ? 'notification-exit' : ''}`}>
+    <Card className={`relative transition-all duration-300 ${isExiting ? 'opacity-0 translate-x-full' : 'opacity-100'}`}>
       <CardContent className="p-4">
         <div className="flex items-center space-x-4">
           {senderAvatar && (
