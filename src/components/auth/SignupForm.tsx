@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { AuthError } from "@supabase/supabase-js";
 import { checkExistingUsername } from "@/utils/auth-utils";
+import { handleSignupError } from "@/utils/auth-error-utils";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -30,57 +30,17 @@ export function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password before proceeding
     if (!validatePassword(password)) {
       return;
     }
 
     setLoading(true);
     try {
-      // First check if username is taken
       await checkExistingUsername(username);
-      // Then attempt signup
       await signUp(email, password, username, username);
       navigate("/profile");
     } catch (error) {
-      console.error("Signup error:", error);
-      
-      // Handle specific error cases
-      if (error instanceof AuthError) {
-        // Parse the error body if it exists
-        let errorBody;
-        try {
-          errorBody = JSON.parse((error as any).body);
-        } catch {
-          errorBody = null;
-        }
-
-        if (errorBody?.code === "user_already_exists") {
-          toast({
-            variant: "destructive",
-            title: "Account already exists",
-            description: "This email is already registered. Please try logging in instead.",
-          });
-        } else if (errorBody?.code === "weak_password") {
-          toast({
-            variant: "destructive",
-            title: "Password too weak",
-            description: errorBody.message || "Please choose a stronger password.",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error signing up",
-            description: errorBody?.message || error.message || "An unexpected error occurred",
-          });
-        }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error signing up",
-          description: (error as Error).message || "An unexpected error occurred",
-        });
-      }
+      handleSignupError(error);
     } finally {
       setLoading(false);
     }
