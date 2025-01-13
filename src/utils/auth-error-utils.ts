@@ -18,7 +18,7 @@ export const handleSignupError = (error: unknown) => {
       errorBody = null;
     }
 
-    if (errorBody?.code === "user_already_exists") {
+    if (errorBody?.code === "user_already_exists" || error.message.includes('User already registered')) {
       toast({
         variant: "destructive",
         title: "Account already exists",

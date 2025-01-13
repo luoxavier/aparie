@@ -61,23 +61,36 @@ export async function signUpWithEmail(
   username: string, 
   displayName: string
 ) {
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        username,
-        display_name: displayName,
+  try {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          display_name: displayName,
+        },
       },
-    },
-  });
-
-  if (error) {
-    toast({
-      variant: "destructive",
-      title: "Error signing up",
-      description: error.message,
     });
+
+    if (error) {
+      if (error.message.includes('User already registered')) {
+        toast({
+          variant: "destructive",
+          title: "Account already exists",
+          description: "This email is already registered. Please try logging in instead.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: error.message,
+        });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error signing up:', error);
     throw error;
   }
 }
