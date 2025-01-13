@@ -43,16 +43,25 @@ export function SignupForm() {
       await signUp(email, password, username, username);
       navigate("/profile");
     } catch (error) {
-      const authError = error as AuthError;
-      if (authError.status === 422) {
-        const errorBody = JSON.parse((authError as any).body);
-        if (errorBody.code === "user_already_exists") {
+      console.error("Signup error:", error);
+      
+      // Handle specific error cases
+      if (error instanceof AuthError) {
+        // Parse the error body if it exists
+        let errorBody;
+        try {
+          errorBody = JSON.parse((error as any).body);
+        } catch {
+          errorBody = null;
+        }
+
+        if (errorBody?.code === "user_already_exists") {
           toast({
             variant: "destructive",
             title: "Account already exists",
             description: "This email is already registered. Please try logging in instead.",
           });
-        } else if (errorBody.code === "weak_password") {
+        } else if (errorBody?.code === "weak_password") {
           toast({
             variant: "destructive",
             title: "Password too weak",
@@ -62,17 +71,16 @@ export function SignupForm() {
           toast({
             variant: "destructive",
             title: "Error signing up",
-            description: errorBody.message || "An unexpected error occurred",
+            description: errorBody?.message || error.message || "An unexpected error occurred",
           });
         }
       } else {
         toast({
           variant: "destructive",
           title: "Error signing up",
-          description: authError.message || "An unexpected error occurred",
+          description: (error as Error).message || "An unexpected error occurred",
         });
       }
-      console.error("Error signing up:", error);
     } finally {
       setLoading(false);
     }
