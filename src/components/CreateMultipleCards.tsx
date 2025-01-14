@@ -46,7 +46,7 @@ export function CreateMultipleCards({
   });
 
   const sendNotification = async (recipientId: string, playlistName: string) => {
-    if (!user) return;
+    if (!user || recipientId === "self") return;
 
     try {
       const { error } = await supabase
@@ -103,7 +103,7 @@ export function CreateMultipleCards({
         );
         
         // Send notification only when creating a new playlist for a recipient
-        if (formData.recipientId && formData.recipientId !== user.id) {
+        if (formData.recipientId && formData.recipientId !== "self" && formData.recipientId !== user.id) {
           await sendNotification(formData.recipientId, formData.playlistName);
         }
       }
