@@ -43,8 +43,7 @@ export function FolderActions({
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!creatorId || !playlistName) return;
+    if (!creatorId || !playlistName || !user?.id) return;
 
     try {
       // Get all users who have this folder in their favorites or as recipients
@@ -88,7 +87,7 @@ export function FolderActions({
       // Send notifications to affected users
       const notifications = Array.from(affectedUsers).map(userId => ({
         recipient_id: userId,
-        sender_id: user?.id,
+        sender_id: user.id,
         type: 'folder_deleted',
         content: {
           message: `The playlist "${playlistName}" has been deleted by the owner.`,
