@@ -13,12 +13,17 @@ export function SettingsDialog() {
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Get stored theme from localStorage or default to 'light'
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(storedTheme);
+    document.documentElement.classList.toggle("dark", storedTheme === "dark");
+  }, [setTheme]);
 
   // Handle theme toggle
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle("dark");
   };
 
