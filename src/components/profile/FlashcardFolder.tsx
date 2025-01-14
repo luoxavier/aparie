@@ -52,24 +52,12 @@ export function FlashcardFolder({
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
   const { handleStudy } = useStudyFolder();
 
-  // Check if any flashcard in the playlist allows recipient modification
   const recipientCanModify = flashcards.some(card => card.recipient_can_modify);
 
   const handleFolderClick = (e: React.MouseEvent) => {
-    // Only navigate if clicking the main card area, not buttons or expanded content
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
       handleStudy(flashcards, title, subtitle || user?.email);
     }
-  };
-
-  const handleExpandClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation
-    setShowCards(!showCards);
-  };
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation
-    setIsDialogOpen(true);
   };
 
   const handleEditSuccess = () => {
@@ -114,8 +102,8 @@ export function FlashcardFolder({
             e.stopPropagation();
             handleStudy(flashcards, title, subtitle || user?.email);
           }}
-          onEditClick={handleEditClick}
-          onExpandClick={handleExpandClick}
+          onEditClick={() => setIsDialogOpen(true)}
+          onExpandClick={() => setShowCards(!showCards)}
           creatorId={creatorId}
           playlistName={playlistName}
           isExpanded={showCards}
@@ -134,7 +122,7 @@ export function FlashcardFolder({
 
       <div 
         className={`mt-4 transition-all duration-300 ${showCards ? 'animate-accordion-down' : 'animate-accordion-up'}`}
-        onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking expanded content
+        onClick={(e) => e.stopPropagation()}
       >
         <FolderContent
           flashcards={flashcards}
