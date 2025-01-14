@@ -51,12 +51,21 @@ export function FlashcardFolder({
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
   const { handleStudy } = useStudyFolder();
 
-  const handleFolderClick = () => {
-    handleStudy(flashcards, title, subtitle || user?.email);
+  const handleFolderClick = (e: React.MouseEvent) => {
+    // Only navigate if clicking the main card area, not buttons or expanded content
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
+      handleStudy(flashcards, title, subtitle || user?.email);
+    }
   };
 
-  const handleExpandClick = () => {
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
     setShowCards(!showCards);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
+    setIsDialogOpen(true);
   };
 
   const handleEditSuccess = () => {
@@ -70,16 +79,12 @@ export function FlashcardFolder({
     });
   };
 
-  const handleEditClick = () => {
-    setIsDialogOpen(true);
-  };
-
   return (
     <Card 
       className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
       onClick={handleFolderClick}
     >
-      <div className="flex items-center justify-between">
+      <div className="folder-main-area flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1">
           <FolderFavoriteButton
             isFavorited={isFavorited}
@@ -97,8 +102,14 @@ export function FlashcardFolder({
 
         <FolderActions
           isFavorited={isFavorited}
-          onFavoriteClick={toggleFavorite}
-          onStudyClick={handleFolderClick}
+          onFavoriteClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(e);
+          }}
+          onStudyClick={(e) => {
+            e.stopPropagation();
+            handleStudy(flashcards, title, subtitle || user?.email);
+          }}
           onEditClick={handleEditClick}
           onExpandClick={handleExpandClick}
           creatorId={creatorId}
@@ -116,7 +127,10 @@ export function FlashcardFolder({
         onSave={handleEditSuccess}
       />
 
-      <div className={`mt-4 transition-all duration-300 ${showCards ? 'animate-accordion-down' : 'animate-accordion-up'}`}>
+      <div 
+        className={`mt-4 transition-all duration-300 ${showCards ? 'animate-accordion-down' : 'animate-accordion-up'}`}
+        onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking expanded content
+      >
         <FolderContent
           flashcards={flashcards}
           showCards={showCards}
