@@ -19,9 +19,17 @@ interface DeleteFolderDialogProps {
 
 export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(e);
+    setIsOpen(false);
+    setIsConfirming(false);
+  };
 
   return (
-    <AlertDialog>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
@@ -56,7 +64,7 @@ export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
             </AlertDialogAction>
           ) : (
             <AlertDialogAction 
-              onClick={onDelete}
+              onClick={handleDelete}
               className="bg-red-500 hover:bg-red-700"
             >
               Delete Permanently
