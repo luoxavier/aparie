@@ -11,6 +11,8 @@ interface Flashcard {
   back: string;
   creator_id: string;
   creator: Creator;
+  recipient_can_modify?: boolean;
+  is_public?: boolean;
 }
 
 interface FolderContentProps {
@@ -22,18 +24,23 @@ interface FolderContentProps {
 export function FolderContent({ flashcards, showCards, showCreator }: FolderContentProps) {
   if (!showCards) return null;
 
+  const isPublicWithMultipleCreators = 
+    flashcards.some(card => card.is_public && card.recipient_can_modify);
+
   return (
     <div className="space-y-3">
       {flashcards.map((flashcard) => (
         <Card key={flashcard.id} className="mt-2">
-          <CardContent className="p-4 grid grid-cols-2 gap-4">
-            {showCreator && (
-              <p className="col-span-2 text-xs text-muted-foreground mb-2">
-                <strong>From:</strong> {flashcard.creator.display_name}
-              </p>
-            )}
-            <p className="text-sm md:text-base">{flashcard.front}</p>
-            <p className="text-sm md:text-base">{flashcard.back}</p>
+          <CardContent className="p-4">
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
+              <p className="text-sm md:text-base">{flashcard.front}</p>
+              <p className="text-sm md:text-base">{flashcard.back}</p>
+              {isPublicWithMultipleCreators && (
+                <p className="text-[10px] text-muted-foreground text-right">
+                  {flashcard.creator.display_name}
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}
