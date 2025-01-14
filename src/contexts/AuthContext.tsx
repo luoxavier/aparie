@@ -25,9 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleAuthError = async (error: any) => {
     console.error('Auth error:', error);
     
-    // Check if it's a refresh token error
-    const isRefreshTokenError = error.message?.includes('refresh_token_not_found') || 
-                               error.error?.message?.includes('refresh_token_not_found');
+    // Check for refresh token errors
+    const isRefreshTokenError = 
+      error.message?.includes('refresh_token_not_found') || 
+      error.message?.includes('Invalid Refresh Token') ||
+      error.error?.message?.includes('refresh_token_not_found') ||
+      error.status === 400;
     
     if (isRefreshTokenError) {
       // Clear the session and redirect to login
