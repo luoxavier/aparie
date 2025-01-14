@@ -47,6 +47,27 @@ export function FolderActions({
     if (!creatorId || !playlistName) return;
 
     try {
+      // Get all users who have this folder in their favorites or as recipients
+      const { data: favoritesData } = await supabase
+        .from('favorite_folders')
+        .select('user_id')
+        .eq('creator_id', creatorId)
+        .eq('playlist_name', playlistName);
+
+      const { data: recipientsData } = await supabase
+        .from('flashcards')
+        .select('recipient_id')
+        .eq('creator_id', creatorId)
+        .eq('playlist_name', playlistName)
+        .not('recipient_id', 'is', null);
+
+      // Combine unique user IDs
+      const affectedUsers = new Set([
+        ...(favoritesData?.map(f => f.user_id) || []),
+        ...(recipientsData?.map(r => r.recipient_id).filter(Boolean) || [])
+      ]);
+
+      // Delete flashcards
       const deleteFlashcardsResult = await supabase
         .from("flashcards")
         .delete()
@@ -55,6 +76,7 @@ export function FolderActions({
 
       if (deleteFlashcardsResult.error) throw deleteFlashcardsResult.error;
 
+      // Delete favorites
       const deleteFavoritesResult = await supabase
         .from("favorite_folders")
         .delete()
@@ -62,6 +84,25 @@ export function FolderActions({
         .eq('playlist_name', playlistName);
 
       if (deleteFavoritesResult.error) throw deleteFavoritesResult.error;
+
+      // Send notifications to affected users
+      const notifications = Array.from(affectedUsers).map(userId => ({
+        recipient_id: userId,
+        sender_id: user?.id,
+        type: 'folder_deleted',
+        content: {
+          message: `The playlist "${playlistName}" has been deleted by the owner.`,
+          playlistName: playlistName
+        }
+      }));
+
+      if (notifications.length > 0) {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert(notifications);
+
+        if (notificationError) throw notificationError;
+      }
 
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });

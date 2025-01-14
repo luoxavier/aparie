@@ -104,7 +104,16 @@ export function NotificationItem({
     }
   });
 
-  const handlePlaylistClick = async () => {
+  const handleNotificationClick = async () => {
+    if (type === 'folder_deleted') {
+      // For deleted folder notifications, just mark as read and remove
+      setIsExiting(true);
+      setTimeout(() => {
+        onMarkAsRead(id);
+      }, 300);
+      return;
+    }
+
     if (content?.playlistName) {
       try {
         // Get the flashcards for this playlist
@@ -164,9 +173,9 @@ export function NotificationItem({
                 Sent you a friend request
               </p>
             )}
-            {type === 'shared_playlist' && (
+            {(type === 'shared_playlist' || type === 'folder_deleted') && (
               <p className="text-sm text-gray-600">
-                {content?.message || "Shared a playlist with you"}: {content?.playlistName}
+                {content?.message || "Shared a playlist with you"}
               </p>
             )}
           </div>
@@ -193,7 +202,7 @@ export function NotificationItem({
             <Button
               variant="ghost"
               size="icon"
-              onClick={handlePlaylistClick}
+              onClick={handleNotificationClick}
               className="h-8 w-8"
             >
               <List className="h-4 w-4" />
