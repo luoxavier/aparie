@@ -1,122 +1,74 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
 import { FlashcardFolder } from "./FlashcardFolder";
-import { StudyMode } from "./StudyMode";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
-
-interface Creator {
-  display_name: string;
-  username: string | null;
-}
-
-interface Flashcard {
-  id: string;
-  front: string;
-  back: string;
-  creator_id: string;
-  creator: Creator;
-  playlist_name: string | null;
-  recipient_id: string | null;
-}
-
-interface GroupedFlashcards {
-  [creatorId: string]: {
-    creator: Creator;
-    folders: {
-      [playlistName: string]: Flashcard[];
-    };
-  };
-}
 
 export function FlashcardsList() {
   const { user } = useAuth();
-  const [isStudying, setIsStudying] = useState(false);
-  const [currentDeck, setCurrentDeck] = useState<Flashcard[]>([]);
 
-  const { data: flashcards, isLoading, error } = useQuery({
+  const { data: flashcards = [], isLoading } = useQuery({
     queryKey: ['flashcards', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from('flashcards')
         .select(`
           id,
-          front,
-          back,
           creator_id,
           recipient_id,
           playlist_name,
+          front,
+          back,
+          is_public,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
             username
           )
         `)
-        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
-      
+        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id},is_public.eq.true`);
+
       if (error) throw error;
-      return data;
+
+      // Group flashcards by playlist_name
+      const groupedFlashcards = data.reduce((acc: any, card) => {
+        const key = `${card.creator_id}-${card.playlist_name}`;
+        if (!acc[key]) {
+          acc[key] = {
+            creatorId: card.creator_id,
+            playlistName: card.playlist_name,
+            creator: card.creator,
+            flashcards: []
+          };
+        }
+        acc[key].flashcards.push(card);
+        return acc;
+      }, {});
+
+      return Object.values(groupedFlashcards);
     },
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 
-  if (isLoading) return <div className="text-center">Loading flashcards...</div>;
-  if (error) return <div className="text-center text-red-500">Error loading flashcards</div>;
-  if (!flashcards?.length) return <EmptyFlashcardsState />;
+  if (isLoading) return <div>Loading flashcards...</div>;
 
-  const groupedFlashcards: GroupedFlashcards = {};
-
-  flashcards.forEach(flashcard => {
-    const creatorId = flashcard.creator_id;
-    const playlistName = flashcard.playlist_name || 'Uncategorized';
-    
-    if (!groupedFlashcards[creatorId]) {
-      groupedFlashcards[creatorId] = {
-        creator: flashcard.creator,
-        folders: {}
-      };
-    }
-    
-    if (!groupedFlashcards[creatorId].folders[playlistName]) {
-      groupedFlashcards[creatorId].folders[playlistName] = [];
-    }
-    
-    groupedFlashcards[creatorId].folders[playlistName].push(flashcard);
-  });
-
-  if (isStudying && currentDeck.length > 0) {
-    return (
-      <StudyMode 
-        deck={currentDeck}
-        onExit={() => setIsStudying(false)}
-      />
-    );
+  if (!flashcards.length) {
+    return <EmptyFlashcardsState />;
   }
 
   return (
-    <div className="space-y-8">
-      {Object.entries(groupedFlashcards).map(([creatorId, { creator, folders }]) => (
-        <div key={creatorId} className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold">
-              {creatorId === user?.id ? 'My Flashcards' : `Flashcards from ${creator.display_name}`}
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {Object.entries(folders).map(([playlistName, cards]) => (
-              <FlashcardFolder
-                key={`${creatorId}-${playlistName}`}
-                title={playlistName}
-                flashcards={cards}
-                showCreator={false}
-                creatorId={creatorId}
-                playlistName={playlistName}
-              />
-            ))}
-          </div>
-        </div>
+    <div className="space-y-4">
+      {flashcards.map((playlist: any) => (
+        <FlashcardFolder
+          key={`${playlist.creatorId}-${playlist.playlistName}`}
+          title={playlist.playlistName}
+          subtitle={`Created by ${playlist.creator.display_name}`}
+          flashcards={playlist.flashcards}
+          showCreator={true}
+          creatorId={playlist.creatorId}
+          playlistName={playlist.playlistName}
+        />
       ))}
     </div>
   );
