@@ -93,7 +93,7 @@ export function NotificationItem({
         });
         queryClient.invalidateQueries({ queryKey: ['friends'] });
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      }, 300); // Wait for animation to complete
+      }, 300);
     },
     onError: (error: any) => {
       toast({
@@ -104,14 +104,45 @@ export function NotificationItem({
     }
   });
 
-  const handlePlaylistClick = () => {
+  const handlePlaylistClick = async () => {
     if (content?.playlistName) {
-      setIsExiting(true);
-      setTimeout(() => {
-        onMarkAsRead(id);
-        // Navigate to the playlist study page
-        navigate(`/study/${senderId}/${content.playlistName}`);
-      }, 300);
+      try {
+        // Get the flashcards for this playlist
+        const { data: flashcards, error } = await supabase
+          .from('flashcards')
+          .select(`
+            id,
+            front,
+            back,
+            creator:profiles!flashcards_creator_id_fkey (
+              display_name,
+              username
+            )
+          `)
+          .eq('playlist_name', content.playlistName)
+          .eq('creator_id', senderId);
+
+        if (error) throw error;
+
+        setIsExiting(true);
+        setTimeout(() => {
+          onMarkAsRead(id);
+          // Navigate to study folder with the flashcards data
+          navigate('/study-folder', {
+            state: {
+              flashcards,
+              folderName: content.playlistName,
+              creatorName: senderName
+            }
+          });
+        }, 300);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: "Failed to load playlist",
+          variant: "destructive",
+        });
+      }
     }
   };
 
