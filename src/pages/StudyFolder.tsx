@@ -6,6 +6,7 @@ import { FlashcardDisplay } from "@/components/study/FlashcardDisplay";
 import { StudyProgress } from "@/components/study/StudyProgress";
 import { Button } from "@/components/ui/button";
 import { StudyControls } from "@/components/study/StudyControls";
+import { Home } from "lucide-react";
 
 interface Flashcard {
   id: string;
@@ -120,6 +121,14 @@ export default function StudyFolder() {
             onClick={() => setMode("infinite")}
           >
             Infinite Mode
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/profile")}
+            className="w-full mt-4 flex items-center justify-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Return Home
           </Button>
         </div>
       ) : isComplete ? (
