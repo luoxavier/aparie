@@ -15,6 +15,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FolderActionsProps {
   isFavorited: boolean;
@@ -25,6 +26,7 @@ interface FolderActionsProps {
   creatorId?: string;
   playlistName?: string;
   isExpanded?: boolean;
+  recipientCanModify?: boolean;
 }
 
 export function FolderActions({ 
@@ -33,11 +35,15 @@ export function FolderActions({
   onExpandClick,
   creatorId,
   playlistName,
-  isExpanded 
+  isExpanded,
+  recipientCanModify = false
 }: FolderActionsProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const canModify = user?.id === creatorId || recipientCanModify;
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -100,58 +106,62 @@ export function FolderActions({
       >
         <Eye className="h-4 w-4" />
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleEditClick}
-        className="h-8"
-      >
-        <Edit className="h-4 w-4" />
-      </Button>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsConfirming(false);
-            }}
-            className="h-8 text-red-500 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+      {canModify && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleEditClick}
+          className="h-8"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+      )}
+      {user?.id === creatorId && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsConfirming(false);
+              }}
+              className="h-8 text-red-500 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {!isConfirming ? (
+                  "This will permanently delete this playlist and all its flashcards. This action cannot be undone."
+                ) : (
+                  "Please confirm one more time that you want to delete this playlist and all its contents permanently."
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setIsConfirming(false)}>
+                Cancel
+              </AlertDialogCancel>
               {!isConfirming ? (
-                "This will permanently delete this playlist and all its flashcards. This action cannot be undone."
+                <AlertDialogAction onClick={() => setIsConfirming(true)}>
+                  Continue
+                </AlertDialogAction>
               ) : (
-                "Please confirm one more time that you want to delete this playlist and all its contents permanently."
+                <AlertDialogAction 
+                  onClick={handleDelete}
+                  className="bg-red-500 hover:bg-red-700"
+                >
+                  Delete Permanently
+                </AlertDialogAction>
               )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsConfirming(false)}>
-              Cancel
-            </AlertDialogCancel>
-            {!isConfirming ? (
-              <AlertDialogAction onClick={() => setIsConfirming(true)}>
-                Continue
-              </AlertDialogAction>
-            ) : (
-              <AlertDialogAction 
-                onClick={handleDelete}
-                className="bg-red-500 hover:bg-red-700"
-              >
-                Delete Permanently
-              </AlertDialogAction>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

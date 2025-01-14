@@ -22,6 +22,7 @@ interface Flashcard {
   back: string;
   creator_id: string;
   creator: Creator;
+  recipient_can_modify?: boolean;
 }
 
 interface FlashcardFolderProps {
@@ -50,6 +51,9 @@ export function FlashcardFolder({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
   const { handleStudy } = useStudyFolder();
+
+  // Check if any flashcard in the playlist allows recipient modification
+  const recipientCanModify = flashcards.some(card => card.recipient_can_modify);
 
   const handleFolderClick = (e: React.MouseEvent) => {
     // Only navigate if clicking the main card area, not buttons or expanded content
@@ -115,6 +119,7 @@ export function FlashcardFolder({
           creatorId={creatorId}
           playlistName={playlistName}
           isExpanded={showCards}
+          recipientCanModify={recipientCanModify}
         />
       </div>
 
