@@ -42,7 +42,7 @@ export function FolderActions({
     onExpandClick(e);
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDelete = async () => {
     if (!creatorId || !playlistName || !user?.id) return;
 
     try {
@@ -67,22 +67,22 @@ export function FolderActions({
       ]);
 
       // Delete flashcards
-      const deleteFlashcardsResult = await supabase
+      const { error: deleteFlashcardsError } = await supabase
         .from("flashcards")
         .delete()
         .eq('creator_id', creatorId)
         .eq('playlist_name', playlistName);
 
-      if (deleteFlashcardsResult.error) throw deleteFlashcardsResult.error;
+      if (deleteFlashcardsError) throw deleteFlashcardsError;
 
       // Delete favorites
-      const deleteFavoritesResult = await supabase
+      const { error: deleteFavoritesError } = await supabase
         .from("favorite_folders")
         .delete()
         .eq('creator_id', creatorId)
         .eq('playlist_name', playlistName);
 
-      if (deleteFavoritesResult.error) throw deleteFavoritesResult.error;
+      if (deleteFavoritesError) throw deleteFavoritesError;
 
       // Send notifications to affected users
       const notifications = Array.from(affectedUsers).map(userId => ({
@@ -103,6 +103,7 @@ export function FolderActions({
         if (notificationError) throw notificationError;
       }
 
+      // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
 
