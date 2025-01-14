@@ -1,9 +1,9 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { Profile } from "@/types/database";
 import { CreateMultipleCardsForm } from "./flashcard/CreateMultipleCardsForm";
 import { useFlashcardManagement } from "./flashcard/useFlashcardManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Flashcard {
   id?: string;
@@ -18,24 +18,24 @@ interface Flashcard {
 
 interface CreateMultipleCardsProps {
   preselectedFriend?: Profile;
-  onComplete?: () => void;
-  onSave?: () => void;
   recipientId?: string;
   existingCards?: Flashcard[];
   playlistName?: string;
   isModifying?: boolean;
   hideRecipientSelect?: boolean;
+  onComplete?: () => void;
+  onSave?: () => void;
 }
 
-export function CreateMultipleCards({ 
-  preselectedFriend, 
-  onComplete,
-  onSave,
+export function CreateMultipleCards({
+  preselectedFriend,
   recipientId: initialRecipientId,
   existingCards,
   playlistName: initialPlaylistName,
   isModifying = false,
-  hideRecipientSelect = false
+  hideRecipientSelect = false,
+  onComplete,
+  onSave
 }: CreateMultipleCardsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -91,6 +91,8 @@ export function CreateMultipleCards({
           existingCards,
           formData.isPublic
         );
+        // Call onSave directly without navigating
+        onSave?.();
       } else {
         await handleCreation(
           formData.cards,
@@ -107,9 +109,8 @@ export function CreateMultipleCards({
       }
 
       onComplete?.();
-      onSave?.();
     } catch (error) {
-      console.error("Error managing flashcards:", error);
+      console.error("Error handling flashcards:", error);
     }
   };
 
