@@ -3,6 +3,8 @@ import { Edit, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
 import { usePlaylistDeletion } from "@/hooks/usePlaylistDeletion";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface FolderActionsProps {
   isFavorited: boolean;
@@ -25,6 +27,8 @@ export function FolderActions({
   recipientCanModify = false
 }: FolderActionsProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { deletePlaylist } = usePlaylistDeletion();
 
   const canModify = user?.id === creatorId || recipientCanModify;
@@ -40,8 +44,37 @@ export function FolderActions({
   };
 
   const handleDelete = async () => {
-    if (!creatorId || !playlistName || !user?.id) return;
-    await deletePlaylist(creatorId, playlistName, user.id);
+    if (!creatorId || !playlistName || !user?.id) {
+      console.error("Missing required data for deletion");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not delete playlist. Missing required data.",
+      });
+      return;
+    }
+
+    try {
+      await deletePlaylist(creatorId, playlistName, user.id);
+      
+      // Invalidate both queries to ensure UI updates
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['flashcards'] }),
+        queryClient.invalidateQueries({ queryKey: ['favorite-folders'] })
+      ]);
+
+      toast({
+        title: "Success",
+        description: "Playlist deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting playlist:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete playlist. Please try again.",
+      });
+    }
   };
 
   return (
