@@ -34,16 +34,16 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
         const updateFlashcardsResult = await supabase
           .from("flashcards")
           .update({ playlist_name: playlistName })
-          .eq('creator_id', userId)
-          .eq('playlist_name', initialPlaylistName);
+          .eq('playlist_name', initialPlaylistName)
+          .eq('creator_id', existingCards[0].creator_id); // Use original creator's ID
 
         if (updateFlashcardsResult.error) throw updateFlashcardsResult.error;
 
         const updateFavoritesResult = await supabase
           .from("favorite_folders")
           .update({ playlist_name: playlistName })
-          .eq('creator_id', userId)
-          .eq('playlist_name', initialPlaylistName);
+          .eq('playlist_name', initialPlaylistName)
+          .eq('creator_id', existingCards[0].creator_id); // Use original creator's ID
 
         if (updateFavoritesResult.error) throw updateFavoritesResult.error;
       }
@@ -69,12 +69,14 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
           .from("flashcards")
           .upsert(cardsToUpdate.map(card => ({
             id: card.id,
-            creator_id: userId,
+            creator_id: existingCards[0].creator_id, // Maintain original creator
             recipient_id: recipientId === "self" ? null : recipientId,
             playlist_name: playlistName,
             front: card.front,
             back: card.back,
-            is_public: isPublic
+            is_public: isPublic,
+            last_modified_by: userId,
+            last_modified_at: new Date().toISOString()
           })));
 
         if (updateResult.error) throw updateResult.error;
@@ -86,12 +88,14 @@ export function useFlashcardManagement({ userId, onComplete, onSave }: UseFlashc
         const insertResult = await supabase
           .from("flashcards")
           .insert(newCards.map(card => ({
-            creator_id: userId,
+            creator_id: existingCards[0].creator_id, // Use original creator's ID
             recipient_id: recipientId === "self" ? null : recipientId,
             playlist_name: playlistName,
             front: card.front,
             back: card.back,
-            is_public: isPublic
+            is_public: isPublic,
+            last_modified_by: userId,
+            last_modified_at: new Date().toISOString()
           })));
 
         if (insertResult.error) throw insertResult.error;
