@@ -9,6 +9,7 @@ import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
 import { ProfileSettingsDialog } from "@/components/profile/ProfileSettingsDialog";
+import { FeedbackDialog } from "@/components/profile/FeedbackDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -107,6 +108,8 @@ export default function Profile() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <FeedbackDialog />
     </div>
   );
 }
