@@ -66,23 +66,35 @@ export function usePlaylistDeletion() {
 
   const deletePlaylist = async (creatorId: string, playlistName: string, userId: string) => {
     try {
+      console.log('Starting playlist deletion process...');
+      
       // Step 1: Delete all flashcards
+      console.log('Step 1: Deleting flashcards...');
       await deleteFlashcards(playlistName);
+      console.log('Flashcards deleted successfully');
 
       // Step 2: Get users who have this folder in favorites
+      console.log('Step 2: Getting users with favorites...');
       const favoritesData = await getFavoriteUsers(creatorId, playlistName);
+      console.log('Found favorites for users:', favoritesData);
 
       // Step 3: Delete from favorites
+      console.log('Step 3: Deleting favorites...');
       await deleteFavorites(creatorId, playlistName);
+      console.log('Favorites deleted successfully');
 
       // Step 4: Send notifications to affected users
+      console.log('Step 4: Sending notifications...');
       await sendNotifications(favoritesData, userId, playlistName);
+      console.log('Notifications sent successfully');
 
       // Step 5: Refresh queries
+      console.log('Step 5: Refreshing queries...');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['flashcards'] }),
         queryClient.invalidateQueries({ queryKey: ['favorite-folders'] })
       ]);
+      console.log('Queries refreshed successfully');
 
       toast({
         title: "Success",
