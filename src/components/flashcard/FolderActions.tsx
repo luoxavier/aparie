@@ -46,12 +46,11 @@ export function FolderActions({
     if (!creatorId || !playlistName || !user?.id) return;
 
     try {
-      // Delete flashcards first
+      // Delete all flashcards in this playlist (both as creator and recipient)
       const { error: deleteFlashcardsError } = await supabase
         .from("flashcards")
         .delete()
-        .eq('creator_id', creatorId)
-        .eq('playlist_name', playlistName);
+        .or(`and(creator_id.eq.${creatorId},playlist_name.eq.${playlistName}),and(recipient_id.eq.${user.id},playlist_name.eq.${playlistName})`);
 
       if (deleteFlashcardsError) throw deleteFlashcardsError;
 
@@ -92,9 +91,11 @@ export function FolderActions({
         if (notificationError) throw notificationError;
       }
 
-      // Invalidate queries to refresh the UI
-      await queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-      await queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
+      // Force refresh all relevant queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['flashcards'] }),
+        queryClient.invalidateQueries({ queryKey: ['favorite-folders'] })
+      ]);
 
       toast({
         title: "Success",
