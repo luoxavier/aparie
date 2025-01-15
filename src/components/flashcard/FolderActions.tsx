@@ -47,18 +47,22 @@ export function FolderActions({
 
     try {
       // Get all users who have this folder in their favorites or as recipients
-      const { data: favoritesData } = await supabase
+      const { data: favoritesData, error: favoritesError } = await supabase
         .from('favorite_folders')
         .select('user_id')
         .eq('creator_id', creatorId)
         .eq('playlist_name', playlistName);
 
-      const { data: recipientsData } = await supabase
+      if (favoritesError) throw favoritesError;
+
+      const { data: recipientsData, error: recipientsError } = await supabase
         .from('flashcards')
         .select('recipient_id')
         .eq('creator_id', creatorId)
         .eq('playlist_name', playlistName)
         .not('recipient_id', 'is', null);
+
+      if (recipientsError) throw recipientsError;
 
       // Combine unique user IDs
       const affectedUsers = new Set([
@@ -85,17 +89,17 @@ export function FolderActions({
       if (deleteFavoritesError) throw deleteFavoritesError;
 
       // Send notifications to affected users
-      const notifications = Array.from(affectedUsers).map(userId => ({
-        recipient_id: userId,
-        sender_id: user.id,
-        type: 'folder_deleted',
-        content: {
-          message: `The playlist "${playlistName}" has been deleted by the owner.`,
-          playlistName: playlistName
-        }
-      }));
+      if (affectedUsers.size > 0) {
+        const notifications = Array.from(affectedUsers).map(userId => ({
+          recipient_id: userId,
+          sender_id: user.id,
+          type: 'folder_deleted',
+          content: {
+            message: `The playlist "${playlistName}" has been deleted by the owner.`,
+            playlistName: playlistName
+          }
+        }));
 
-      if (notifications.length > 0) {
         const { error: notificationError } = await supabase
           .from('notifications')
           .insert(notifications);
@@ -118,6 +122,7 @@ export function FolderActions({
         title: "Error",
         description: "Failed to delete playlist. Please try again.",
       });
+      throw error;
     }
   };
 

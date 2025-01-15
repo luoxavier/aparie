@@ -12,9 +12,13 @@ export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleDelete = async () => {
-    await onDelete();
-    setIsOpen(false);
-    setIsConfirming(false);
+    try {
+      await onDelete();
+      setIsOpen(false);
+      setIsConfirming(false);
+    } catch (error) {
+      console.error("Error in handleDelete:", error);
+    }
   };
 
   return (
