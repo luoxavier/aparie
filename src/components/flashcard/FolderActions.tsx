@@ -104,8 +104,8 @@ export function FolderActions({
       }
 
       // Invalidate queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-      queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
+      await queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      await queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
 
       toast({
         title: "Success",

@@ -4,15 +4,15 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface DeleteFolderDialogProps {
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
 }
 
 export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleDelete = () => {
-    onDelete();
+  const handleDelete = async () => {
+    await onDelete();
     setIsOpen(false);
     setIsConfirming(false);
   };
