@@ -46,14 +46,18 @@ export function FolderActions({
     if (!creatorId || !playlistName || !user?.id) return;
 
     try {
+      console.log('Deleting playlist:', playlistName);
+      
       // Delete all flashcards in this playlist
       const { error: deleteFlashcardsError } = await supabase
         .from("flashcards")
         .delete()
-        .eq('playlist_name', playlistName)
-        .or(`creator_id.eq.${creatorId},recipient_id.eq.${user.id}`);
+        .match({ playlist_name: playlistName });
 
-      if (deleteFlashcardsError) throw deleteFlashcardsError;
+      if (deleteFlashcardsError) {
+        console.error('Error deleting flashcards:', deleteFlashcardsError);
+        throw deleteFlashcardsError;
+      }
 
       // Get users who have this folder in their favorites
       const { data: favoritesData, error: favoritesError } = await supabase
