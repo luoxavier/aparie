@@ -46,11 +46,12 @@ export function FolderActions({
     if (!creatorId || !playlistName || !user?.id) return;
 
     try {
-      // Delete all flashcards in this playlist (both as creator and recipient)
+      // Delete all flashcards in this playlist
       const { error: deleteFlashcardsError } = await supabase
         .from("flashcards")
         .delete()
-        .or(`and(creator_id.eq.${creatorId},playlist_name.eq.${playlistName}),and(recipient_id.eq.${user.id},playlist_name.eq.${playlistName})`);
+        .eq('playlist_name', playlistName)
+        .or(`creator_id.eq.${creatorId},recipient_id.eq.${user.id}`);
 
       if (deleteFlashcardsError) throw deleteFlashcardsError;
 
