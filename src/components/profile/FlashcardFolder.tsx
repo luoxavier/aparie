@@ -33,6 +33,7 @@ interface FlashcardFolderProps {
   creatorId?: string;
   playlistName?: string;
   onEditSuccess?: () => void;
+  recipientCanModify?: boolean;
 }
 
 export function FlashcardFolder({ 
@@ -43,6 +44,7 @@ export function FlashcardFolder({
   creatorId,
   playlistName,
   onEditSuccess,
+  recipientCanModify = false,
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,8 +53,6 @@ export function FlashcardFolder({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
   const { handleStudy } = useStudyFolder();
-
-  const recipientCanModify = flashcards.some(card => card.recipient_can_modify);
 
   const handleFolderClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
