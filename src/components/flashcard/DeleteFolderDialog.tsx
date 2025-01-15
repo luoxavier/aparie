@@ -11,14 +11,27 @@ export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
     try {
+      e.stopPropagation();
       await onDelete();
       setIsOpen(false);
       setIsConfirming(false);
     } catch (error) {
       console.error("Error in handleDelete:", error);
+      setIsConfirming(false);
     }
+  };
+
+  const handleContinue = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsConfirming(true);
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsConfirming(false);
+    setIsOpen(false);
   };
 
   return (
@@ -36,7 +49,7 @@ export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {!isConfirming ? "Delete Playlist" : "Final Confirmation"}
@@ -48,12 +61,12 @@ export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setIsConfirming(false)}>
+          <AlertDialogCancel onClick={handleCancel}>
             Cancel
           </AlertDialogCancel>
           {!isConfirming ? (
             <AlertDialogAction 
-              onClick={() => setIsConfirming(true)}
+              onClick={handleContinue}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Continue
