@@ -97,6 +97,9 @@ export function CreateMultipleCardsForm({
     }
   };
 
+  // Show modification toggle only when creating for others or modifying existing shared playlist
+  const showModifyToggle = (!isPublic && (recipientId !== "self" || isModifying));
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center space-x-2">
@@ -122,7 +125,7 @@ export function CreateMultipleCardsForm({
         label="Playlist Name"
       />
 
-      {!isModifying && recipientId !== "self" && !isPublic && (
+      {showModifyToggle && (
         <RecipientModifyToggle
           allowRecipientModify={allowRecipientModify}
           setAllowRecipientModify={setAllowRecipientModify}

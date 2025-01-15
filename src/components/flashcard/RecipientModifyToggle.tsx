@@ -18,7 +18,7 @@ export function RecipientModifyToggle({
         onCheckedChange={(checked) => setAllowRecipientModify(checked as boolean)}
       />
       <Label htmlFor="recipient-modify" className="text-sm">
-        Allow recipient to modify these flashcards
+        Allow recipient to modify these flashcards (they cannot delete the playlist)
       </Label>
     </div>
   );
