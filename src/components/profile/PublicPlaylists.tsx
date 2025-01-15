@@ -27,7 +27,7 @@ export function PublicPlaylists() {
         .eq('is_public', true);
 
       if (searchTerm) {
-        query = query.ilike('playlist_name', `%${searchTerm}%`);
+        query = query.or(`playlist_name.ilike.%${searchTerm}%,creator.display_name.ilike.%${searchTerm}%`);
       }
 
       const { data, error } = await query;
@@ -59,7 +59,7 @@ export function PublicPlaylists() {
       <div className="relative">
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search public playlists..."
+          placeholder="Search by playlist name or creator..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-8"
