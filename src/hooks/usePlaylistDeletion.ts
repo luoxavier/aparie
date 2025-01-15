@@ -19,6 +19,20 @@ export function usePlaylistDeletion() {
     }
   };
 
+  const deleteFavorites = async (creatorId: string, playlistName: string) => {
+    console.log('Deleting favorite folders for playlist:', playlistName);
+    const { error } = await supabase
+      .from("favorite_folders")
+      .delete()
+      .eq('creator_id', creatorId)
+      .eq('playlist_name', playlistName);
+
+    if (error) {
+      console.error('Error deleting favorite folders:', error);
+      throw error;
+    }
+  };
+
   const getFavoriteUsers = async (creatorId: string, playlistName: string) => {
     const { data, error } = await supabase
       .from('favorite_folders')
@@ -28,16 +42,6 @@ export function usePlaylistDeletion() {
 
     if (error) throw error;
     return data;
-  };
-
-  const deleteFavorites = async (creatorId: string, playlistName: string) => {
-    const { error } = await supabase
-      .from("favorite_folders")
-      .delete()
-      .eq('creator_id', creatorId)
-      .eq('playlist_name', playlistName);
-
-    if (error) throw error;
   };
 
   const sendNotifications = async (
@@ -68,17 +72,17 @@ export function usePlaylistDeletion() {
     try {
       console.log('Starting playlist deletion process...');
       
-      // Step 1: Delete all flashcards
-      console.log('Step 1: Deleting flashcards...');
-      await deleteFlashcards(playlistName);
-      console.log('Flashcards deleted successfully');
-
-      // Step 2: Get users who have this folder in favorites
-      console.log('Step 2: Getting users with favorites...');
+      // Step 1: Get users who have this folder in favorites before deletion
+      console.log('Step 1: Getting users with favorites...');
       const favoritesData = await getFavoriteUsers(creatorId, playlistName);
       console.log('Found favorites for users:', favoritesData);
 
-      // Step 3: Delete from favorites
+      // Step 2: Delete all flashcards
+      console.log('Step 2: Deleting flashcards...');
+      await deleteFlashcards(playlistName);
+      console.log('Flashcards deleted successfully');
+
+      // Step 3: Delete from favorites for all users
       console.log('Step 3: Deleting favorites...');
       await deleteFavorites(creatorId, playlistName);
       console.log('Favorites deleted successfully');
