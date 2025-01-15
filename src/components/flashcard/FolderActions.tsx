@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Edit, Eye } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
+import { usePlaylistDeletion } from "@/hooks/usePlaylistDeletion";
 
 interface FolderActionsProps {
   isFavorited: boolean;
@@ -26,9 +24,8 @@ export function FolderActions({
   playlistName,
   recipientCanModify = false
 }: FolderActionsProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { deletePlaylist } = usePlaylistDeletion();
 
   const canModify = user?.id === creatorId || recipientCanModify;
 
@@ -44,77 +41,7 @@ export function FolderActions({
 
   const handleDelete = async () => {
     if (!creatorId || !playlistName || !user?.id) return;
-
-    try {
-      console.log('Deleting playlist:', playlistName);
-      
-      // Delete all flashcards in this playlist
-      const { error: deleteFlashcardsError } = await supabase
-        .from("flashcards")
-        .delete()
-        .match({ playlist_name: playlistName });
-
-      if (deleteFlashcardsError) {
-        console.error('Error deleting flashcards:', deleteFlashcardsError);
-        throw deleteFlashcardsError;
-      }
-
-      // Get users who have this folder in their favorites
-      const { data: favoritesData, error: favoritesError } = await supabase
-        .from('favorite_folders')
-        .select('user_id')
-        .eq('creator_id', creatorId)
-        .eq('playlist_name', playlistName);
-
-      if (favoritesError) throw favoritesError;
-
-      // Delete favorites
-      const { error: deleteFavoritesError } = await supabase
-        .from("favorite_folders")
-        .delete()
-        .eq('creator_id', creatorId)
-        .eq('playlist_name', playlistName);
-
-      if (deleteFavoritesError) throw deleteFavoritesError;
-
-      // Send notifications to affected users
-      if (favoritesData && favoritesData.length > 0) {
-        const notifications = favoritesData.map(({ user_id }) => ({
-          recipient_id: user_id,
-          sender_id: user.id,
-          type: 'folder_deleted',
-          content: {
-            message: `The playlist "${playlistName}" has been deleted by the owner.`,
-            playlistName: playlistName
-          }
-        }));
-
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert(notifications);
-
-        if (notificationError) throw notificationError;
-      }
-
-      // Force refresh all relevant queries
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['flashcards'] }),
-        queryClient.invalidateQueries({ queryKey: ['favorite-folders'] })
-      ]);
-
-      toast({
-        title: "Success",
-        description: "Playlist deleted successfully",
-      });
-    } catch (error) {
-      console.error("Error deleting playlist:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete playlist. Please try again.",
-      });
-      throw error;
-    }
+    await deletePlaylist(creatorId, playlistName, user.id);
   };
 
   return (
