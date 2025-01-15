@@ -8,12 +8,14 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function FeedbackDialog() {
   const [content, setContent] = useState("");
   const [type, setType] = useState<"bug" | "suggestion" | "other">("suggestion");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async () => {
     if (!content.trim() || !user) return;
@@ -54,12 +56,16 @@ export function FeedbackDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default" size="sm" className="gap-2 fixed bottom-4 right-4 shadow-lg">
+        <Button 
+          variant="default" 
+          size="sm" 
+          className={`gap-2 fixed ${isMobile ? 'bottom-20' : 'bottom-4'} right-4 shadow-lg z-10`}
+        >
           <MessageSquare className="h-4 w-4" />
           Feedback
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-[90vw] max-w-lg mx-auto">
         <DialogHeader>
           <DialogTitle>Submit Feedback</DialogTitle>
         </DialogHeader>
@@ -69,7 +75,7 @@ export function FeedbackDialog() {
             <RadioGroup
               value={type}
               onValueChange={(value: "bug" | "suggestion" | "other") => setType(value)}
-              className="flex gap-4"
+              className="flex flex-wrap gap-4"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="bug" id="bug" />
@@ -101,6 +107,7 @@ export function FeedbackDialog() {
           <Button
             onClick={handleSubmit}
             disabled={!content.trim() || isSubmitting}
+            className="w-full md:w-auto"
           >
             Submit Feedback
           </Button>

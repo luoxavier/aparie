@@ -15,9 +15,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -34,48 +36,55 @@ export default function Profile() {
   });
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="container mx-auto py-4 md:py-8 px-4 md:px-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
         <div className="flex items-center gap-4">
           {profile?.avatar_url && (
             <img
               src={profile.avatar_url}
               alt="Profile"
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
             />
           )}
           <div>
-            <h1 className="text-3xl font-bold">Profile</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Profile</h1>
             {profile?.username && (
               <span className="text-muted-foreground">(@{profile.username})</span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <NotificationsDialog />
-          <SettingsDialog />
-          <ProfileSettingsDialog />
-          <Button onClick={() => signOut()}>Sign Out</Button>
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-2">
+            <NotificationsDialog />
+            <SettingsDialog />
+            <ProfileSettingsDialog />
+          </div>
+          <Button 
+            onClick={() => signOut()}
+            className="w-full md:w-auto"
+          >
+            Sign Out
+          </Button>
         </div>
       </div>
 
       {profile?.bio && (
-        <p className="text-muted-foreground mb-8">{profile.bio}</p>
+        <p className="text-muted-foreground mb-6 md:mb-8">{profile.bio}</p>
       )}
 
       <Tabs defaultValue="flashcards" className="space-y-4">
-        <div className="flex justify-between items-center">
-          <TabsList>
+        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+          <TabsList className="flex-wrap">
             <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
             <TabsTrigger value="public">Public Playlists</TabsTrigger>
             <TabsTrigger value="friends">My Friends</TabsTrigger>
           </TabsList>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <AddFriendDialog />
             <Dialog>
               <DialogTrigger asChild>
-                <Button size="default" className="gap-2">
+                <Button size="default" className="w-full md:w-auto gap-2">
                   <Plus className="h-4 w-4" />
                   Create Cards
                 </Button>
@@ -90,22 +99,20 @@ export default function Profile() {
           </div>
         </div>
 
-        <TabsContent value="flashcards">
+        <TabsContent value="flashcards" className="mt-6">
           <FlashcardsList />
         </TabsContent>
 
-        <TabsContent value="favorites">
+        <TabsContent value="favorites" className="mt-6">
           <FavoriteFlashcards />
         </TabsContent>
 
-        <TabsContent value="public">
+        <TabsContent value="public" className="mt-6">
           <PublicPlaylists />
         </TabsContent>
 
-        <TabsContent value="friends">
-          <div className="mt-4">
-            <FriendsList />
-          </div>
+        <TabsContent value="friends" className="mt-6">
+          <FriendsList />
         </TabsContent>
       </Tabs>
 

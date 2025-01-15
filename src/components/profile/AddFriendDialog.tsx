@@ -27,12 +27,12 @@ export function AddFriendDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="default" className="gap-2">
+        <Button size="default" className="w-full md:w-auto gap-2">
           <UserPlus className="h-4 w-4" />
           Add Friend
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-[90vw] max-w-lg mx-auto">
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
           <DialogDescription>
@@ -47,6 +47,7 @@ export function AddFriendDialog() {
           <Button
             onClick={handleSendRequest}
             disabled={sendFriendRequest.isPending || !friendIdentifier}
+            className="w-full md:w-auto"
           >
             {sendFriendRequest.isPending ? "Sending..." : "Send Friend Request"}
           </Button>
