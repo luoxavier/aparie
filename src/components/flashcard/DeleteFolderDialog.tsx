@@ -14,11 +14,20 @@ export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
   const handleDelete = async (e: React.MouseEvent) => {
     try {
       e.stopPropagation();
+
+      // Call onDelete and ensure it handles both playlist and card deletion
       await onDelete();
+
+      // Close the dialog and reset confirmation state
       setIsOpen(false);
       setIsConfirming(false);
+
+      // Optionally, trigger a UI refresh here if not handled in onDelete
+      console.log("Deletion successful, UI should refresh now.");
     } catch (error) {
       console.error("Error in handleDelete:", error);
+
+      // Reset confirmation state on error
       setIsConfirming(false);
     }
   };
