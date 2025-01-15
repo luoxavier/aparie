@@ -28,7 +28,7 @@ export function FlashcardsList() {
             username
           )
         `)
-        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id},is_public.eq.true`);
+        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
 
       if (error) throw error;
 
