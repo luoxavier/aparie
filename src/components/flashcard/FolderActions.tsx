@@ -46,31 +46,7 @@ export function FolderActions({
     if (!creatorId || !playlistName || !user?.id) return;
 
     try {
-      // Get all users who have this folder in their favorites or as recipients
-      const { data: favoritesData, error: favoritesError } = await supabase
-        .from('favorite_folders')
-        .select('user_id')
-        .eq('creator_id', creatorId)
-        .eq('playlist_name', playlistName);
-
-      if (favoritesError) throw favoritesError;
-
-      const { data: recipientsData, error: recipientsError } = await supabase
-        .from('flashcards')
-        .select('recipient_id')
-        .eq('creator_id', creatorId)
-        .eq('playlist_name', playlistName)
-        .not('recipient_id', 'is', null);
-
-      if (recipientsError) throw recipientsError;
-
-      // Combine unique user IDs
-      const affectedUsers = new Set([
-        ...(favoritesData?.map(f => f.user_id) || []),
-        ...(recipientsData?.map(r => r.recipient_id).filter(Boolean) || [])
-      ]);
-
-      // Delete flashcards
+      // Delete flashcards first
       const { error: deleteFlashcardsError } = await supabase
         .from("flashcards")
         .delete()
@@ -78,6 +54,15 @@ export function FolderActions({
         .eq('playlist_name', playlistName);
 
       if (deleteFlashcardsError) throw deleteFlashcardsError;
+
+      // Get users who have this folder in their favorites
+      const { data: favoritesData, error: favoritesError } = await supabase
+        .from('favorite_folders')
+        .select('user_id')
+        .eq('creator_id', creatorId)
+        .eq('playlist_name', playlistName);
+
+      if (favoritesError) throw favoritesError;
 
       // Delete favorites
       const { error: deleteFavoritesError } = await supabase
@@ -89,9 +74,9 @@ export function FolderActions({
       if (deleteFavoritesError) throw deleteFavoritesError;
 
       // Send notifications to affected users
-      if (affectedUsers.size > 0) {
-        const notifications = Array.from(affectedUsers).map(userId => ({
-          recipient_id: userId,
+      if (favoritesData && favoritesData.length > 0) {
+        const notifications = favoritesData.map(({ user_id }) => ({
+          recipient_id: user_id,
           sender_id: user.id,
           type: 'folder_deleted',
           content: {
