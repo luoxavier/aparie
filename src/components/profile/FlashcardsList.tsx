@@ -22,6 +22,7 @@ export function FlashcardsList() {
           front,
           back,
           is_public,
+          recipient_can_modify,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
             username
@@ -39,6 +40,8 @@ export function FlashcardsList() {
             creatorId: card.creator_id,
             playlistName: card.playlist_name,
             creator: card.creator,
+            recipientCanModify: card.recipient_can_modify,
+            isRecipient: card.recipient_id === user.id,
             flashcards: []
           };
         }
@@ -68,6 +71,7 @@ export function FlashcardsList() {
           showCreator={true}
           creatorId={playlist.creatorId}
           playlistName={playlist.playlistName}
+          recipientCanModify={playlist.recipientCanModify && playlist.isRecipient}
         />
       ))}
     </div>
