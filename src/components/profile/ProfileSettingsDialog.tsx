@@ -7,24 +7,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export function ProfileSettingsDialog() {
   const { user, signOut } = useAuth();
   const [bio, setBio] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
+
+  // Fetch user streak data
+  const { data: streakData } = useQuery({
+    queryKey: ['streak', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_streaks')
+        .select('current_streak, highest_streak')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -129,6 +134,19 @@ export function ProfileSettingsDialog() {
           <DialogTitle>Profile Settings</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {streakData && (
+            <div className="bg-muted p-4 rounded-lg space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Current Streak</span>
+                <span className="text-lg font-bold">{streakData.current_streak} days</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Highest Streak</span>
+                <span className="text-lg font-bold">{streakData.highest_streak} days</span>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Profile Picture</Label>
             <div className="flex items-center gap-4">
@@ -152,9 +170,17 @@ export function ProfileSettingsDialog() {
             />
           </div>
 
+          <Button 
+            variant="destructive" 
+            className="w-full"
+            onClick={() => signOut()}
+          >
+            Log Out
+          </Button>
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive">Delete Account</Button>
+              <Button variant="destructive" className="w-full">Delete Account</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>

@@ -14,12 +14,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Plus } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Plus, UserPlus, Bell } from "lucide-react";
 
 export default function Profile() {
-  const { user, signOut } = useAuth();
-  const isMobile = useIsMobile();
+  const { user } = useAuth();
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -53,18 +51,24 @@ export default function Profile() {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <NotificationsDialog />
-            <SettingsDialog />
-            <ProfileSettingsDialog />
-          </div>
-          <Button 
-            onClick={() => signOut()}
-            className="w-full md:w-auto"
-          >
-            Sign Out
-          </Button>
+        <div className="flex items-center gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="ghost">
+                <Plus className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Create New Flashcards</DialogTitle>
+              </DialogHeader>
+              <CreateMultipleCards />
+            </DialogContent>
+          </Dialog>
+          <NotificationsDialog />
+          <AddFriendDialog />
+          <SettingsDialog />
+          <ProfileSettingsDialog />
         </div>
       </div>
 
@@ -73,31 +77,11 @@ export default function Profile() {
       )}
 
       <Tabs defaultValue="flashcards" className="space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-            <TabsTrigger value="favorites">Favorites</TabsTrigger>
-            <TabsTrigger value="public">Public Playlists</TabsTrigger>
-            <TabsTrigger value="friends">My Friends</TabsTrigger>
-          </TabsList>
-          <div className="flex flex-wrap items-center gap-2">
-            <AddFriendDialog />
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="default" className="w-full md:w-auto gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Cards
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Create New Flashcards</DialogTitle>
-                </DialogHeader>
-                <CreateMultipleCards />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+        <TabsList>
+          <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
+          <TabsTrigger value="favorites">Favorites</TabsTrigger>
+          <TabsTrigger value="public">Public Playlists</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="flashcards" className="mt-6">
           <FlashcardsList />
@@ -109,10 +93,6 @@ export default function Profile() {
 
         <TabsContent value="public" className="mt-6">
           <PublicPlaylists />
-        </TabsContent>
-
-        <TabsContent value="friends" className="mt-6">
-          <FriendsList />
         </TabsContent>
       </Tabs>
 

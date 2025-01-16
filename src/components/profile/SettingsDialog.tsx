@@ -9,6 +9,12 @@ import { useEffect, useState } from "react";
 export function SettingsDialog() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => 
+    localStorage.getItem('soundEnabled') === 'true'
+  );
+  const [vibrationEnabled, setVibrationEnabled] = useState(() => 
+    localStorage.getItem('vibrationEnabled') === 'true'
+  );
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -25,6 +31,22 @@ export function SettingsDialog() {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle("dark");
+  };
+
+  // Handle sound toggle
+  const handleSoundToggle = (checked: boolean) => {
+    setSoundEnabled(checked);
+    localStorage.setItem('soundEnabled', checked.toString());
+  };
+
+  // Handle vibration toggle
+  const handleVibrationToggle = (checked: boolean) => {
+    setVibrationEnabled(checked);
+    localStorage.setItem('vibrationEnabled', checked.toString());
+    if (checked) {
+      // Test vibration
+      navigator.vibrate?.(200);
+    }
   };
 
   if (!mounted) {
@@ -53,6 +75,22 @@ export function SettingsDialog() {
               id="dark-mode"
               checked={theme === "dark"}
               onCheckedChange={handleThemeToggle}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="sound-enabled">Sound Effects</Label>
+            <Switch
+              id="sound-enabled"
+              checked={soundEnabled}
+              onCheckedChange={handleSoundToggle}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="vibration-enabled">Vibration</Label>
+            <Switch
+              id="vibration-enabled"
+              checked={vibrationEnabled}
+              onCheckedChange={handleVibrationToggle}
             />
           </div>
         </div>
