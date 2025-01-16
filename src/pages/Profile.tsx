@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Users, Bell, PlusCircle, User } from "lucide-react";
+import { PlusCircle, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -99,7 +99,6 @@ export default function Profile() {
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="cards">Cards</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
-            <TabsTrigger value="friends">My Friends</TabsTrigger>
             <TabsTrigger value="public">Public</TabsTrigger>
           </TabsList>
 
@@ -109,13 +108,6 @@ export default function Profile() {
 
           <TabsContent value="favorites" className="mt-6">
             <FavoriteFlashcards />
-          </TabsContent>
-
-          <TabsContent value="friends" className="mt-6">
-            <div className="mb-4">
-              <AddFriendDialog />
-            </div>
-            <FriendsList />
           </TabsContent>
 
           <TabsContent value="public" className="mt-6">
