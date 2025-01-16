@@ -7,13 +7,12 @@ import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
-import { ProfileSettingsDialog } from "@/components/profile/ProfileSettingsDialog";
 import { FeedbackDialog } from "@/components/profile/FeedbackDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Users, Bell, PlusCircle, Settings } from "lucide-react";
+import { Users, Bell, PlusCircle } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -33,28 +32,28 @@ export default function Profile() {
   });
 
   return (
-    <div className="container mx-auto py-4 md:py-8 px-4 md:px-8">
+    <div className="container mx-auto py-4 px-4 max-w-7xl">
       <div className="flex flex-col space-y-6">
         {/* Profile Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {profile?.avatar_url && (
               <img
                 src={profile.avatar_url}
                 alt="Profile"
-                className="w-16 h-16 rounded-full object-cover"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
               />
             )}
             <div>
-              <h1 className="text-2xl font-bold">Profile</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">Profile</h1>
               {profile?.username && (
-                <span className="text-muted-foreground">(@{profile.username})</span>
+                <span className="text-sm sm:text-base text-muted-foreground">(@{profile.username})</span>
               )}
             </div>
           </div>
           
           {/* Action Icons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -69,9 +68,6 @@ export default function Profile() {
               </DialogContent>
             </Dialog>
 
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => document.getElementById('notifications-dialog-trigger')?.click()}>
-              <Bell className="h-5 w-5" />
-            </Button>
             <NotificationsDialog />
             
             <AddFriendDialog>
@@ -85,12 +81,12 @@ export default function Profile() {
         </div>
 
         {profile?.bio && (
-          <p className="text-muted-foreground">{profile.bio}</p>
+          <p className="text-sm sm:text-base text-muted-foreground">{profile.bio}</p>
         )}
 
         {/* Main Content */}
         <Tabs defaultValue="cards" className="w-full">
-          <TabsList className="w-full justify-start">
+          <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="cards">Cards</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
             <TabsTrigger value="public">Public</TabsTrigger>
