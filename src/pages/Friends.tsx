@@ -1,5 +1,5 @@
 import { FriendsList } from "@/components/profile/FriendsList";
-import PrivateRoute from "@/components/PrivateRoute";
+import { PrivateRoute } from "@/components/PrivateRoute";
 
 export default function Friends() {
   return (
