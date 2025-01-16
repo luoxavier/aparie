@@ -1,5 +1,4 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
@@ -13,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { Users, Bell, PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -35,25 +35,33 @@ export default function Profile() {
     <div className="container mx-auto py-4 px-4 max-w-7xl">
       <div className="flex flex-col space-y-6">
         {/* Profile Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {profile?.avatar_url && (
-              <img
-                src={profile.avatar_url}
-                alt="Profile"
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
-              />
-            )}
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold">Profile</h1>
-              {profile?.username && (
-                <span className="text-sm sm:text-base text-muted-foreground">(@{profile.username})</span>
+        <div className="flex flex-col space-y-4">
+          {/* Top Section with Avatar and Settings */}
+          <div className="flex justify-between items-start w-full">
+            <div className="flex items-center gap-4">
+              {profile?.avatar_url && (
+                <img
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
+                />
               )}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold">Profile</h1>
+                {profile?.username && (
+                  <span className="text-sm sm:text-base text-muted-foreground">(@{profile.username})</span>
+                )}
+              </div>
             </div>
+            
+            {/* Settings in top right */}
+            <SettingsDialog />
           </div>
-          
-          {/* Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+
+          {/* Action Buttons Below Profile */}
+          <div className="flex justify-start items-center gap-2 sm:gap-4">
+            <AddFriendDialog />
+            <NotificationsDialog />
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -67,16 +75,6 @@ export default function Profile() {
                 <CreateMultipleCards />
               </DialogContent>
             </Dialog>
-
-            <NotificationsDialog />
-            
-            <AddFriendDialog>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Users className="h-5 w-5" />
-              </Button>
-            </AddFriendDialog>
-
-            <SettingsDialog />
           </div>
         </div>
 
