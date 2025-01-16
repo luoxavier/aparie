@@ -11,12 +11,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { PlusCircle, User, Users } from "lucide-react";
+import { LogOut, PlusCircle, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const { data: profile } = useQuery({
@@ -32,6 +32,11 @@ export default function Profile() {
       return data;
     },
   });
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
@@ -76,6 +81,14 @@ export default function Profile() {
               onClick={() => navigate('/profile/edit')}
             >
               <User className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full text-destructive hover:text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
             </Button>
             <Dialog>
               <DialogTrigger asChild>
