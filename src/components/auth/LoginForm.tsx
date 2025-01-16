@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function LoginForm() {
   const [identifier, setIdentifier] = useState("");
@@ -15,19 +16,39 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
+      // Clear any existing session first
+      await supabase.auth.signOut();
+      
+      // Attempt to sign in
       await signIn(identifier, password);
       navigate("/profile");
     } catch (error: any) {
       console.error("Error signing in:", error);
       
-      const isInvalidCredentials = error.message?.includes("Invalid login credentials") ||
-                                 error.error?.message?.includes("Invalid login credentials");
+      // Check for specific error types
+      const isRefreshTokenError = 
+        error.message?.includes('refresh_token_not_found') || 
+        error.message?.includes('Invalid Refresh Token') ||
+        error.status === 400;
       
-      if (isInvalidCredentials) {
+      const isInvalidCredentials = 
+        error.message?.includes("Invalid login credentials") ||
+        error.error?.message?.includes("Invalid login credentials");
+
+      if (isRefreshTokenError) {
+        // Clear the session and show appropriate message
+        await supabase.auth.signOut();
         toast({
-          title: "Incorrect password",
-          description: "Do you need a flashcard to help you remember your password?",
+          title: "Session expired",
+          description: "Please sign in again to continue",
+          variant: "destructive",
+        });
+      } else if (isInvalidCredentials) {
+        toast({
+          title: "Incorrect credentials",
+          description: "Please check your email/username and password",
           variant: "destructive",
         });
       } else {
