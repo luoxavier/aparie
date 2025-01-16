@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FriendCard } from "./FriendCard";
+import { FriendSearchInput } from "./FriendSearchInput";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
 import { Profile } from "@/types/database";
 
 type FriendConnection = {
@@ -9,14 +12,30 @@ type FriendConnection = {
   user_id: string;
   friend: Profile;
   user: Profile;
+  interaction_count?: number;
 };
 
 export function FriendsList() {
   const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+      return profile;
+    },
+    enabled: !!user?.id,
+  });
 
   const { data: friends } = useQuery({
     queryKey: ['friends', user?.id],
     queryFn: async () => {
+      // First get friend connections
       const { data: connections, error } = await supabase
         .from('friend_connections')
         .select(`
@@ -44,29 +63,84 @@ export function FriendsList() {
       
       if (error) throw error;
 
-      // Create a Map to store unique friends by their ID
-      const uniqueFriendsMap = new Map<string, Profile>();
+      // Get interaction counts from flashcards
+      const { data: flashcardInteractions } = await supabase
+        .from('flashcards')
+        .select('creator_id, recipient_id')
+        .or(`creator_id.eq.${user?.id},recipient_id.eq.${user?.id}`);
+
+      // Create a Map to store unique friends by their ID with interaction counts
+      const uniqueFriendsMap = new Map<string, Profile & { interaction_count: number }>();
 
       (connections as FriendConnection[]).forEach(connection => {
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend ? connection.user : connection.friend;
         
-        // Only add if not already in the map
         if (!uniqueFriendsMap.has(friendProfile.id)) {
-          uniqueFriendsMap.set(friendProfile.id, friendProfile);
+          // Count interactions
+          const interactionCount = (flashcardInteractions || []).filter(
+            interaction => 
+              (interaction.creator_id === friendProfile.id && interaction.recipient_id === user?.id) ||
+              (interaction.creator_id === user?.id && interaction.recipient_id === friendProfile.id)
+          ).length;
+
+          uniqueFriendsMap.set(friendProfile.id, {
+            ...friendProfile,
+            interaction_count: interactionCount
+          });
         }
       });
 
-      // Convert Map values back to array
-      return Array.from(uniqueFriendsMap.values());
+      // Convert Map values back to array and sort by interaction count
+      return Array.from(uniqueFriendsMap.values())
+        .sort((a, b) => (b.interaction_count || 0) - (a.interaction_count || 0));
     },
+    enabled: !!user?.id,
+  });
+
+  const filteredFriends = friends?.filter(friend => {
+    const searchTerm = searchQuery.toLowerCase();
+    return (
+      friend.display_name?.toLowerCase().includes(searchTerm) ||
+      friend.username?.toLowerCase().includes(searchTerm)
+    );
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {friends?.map((friend) => (
-        <FriendCard key={friend.id} friend={friend} />
-      ))}
+    <div className="space-y-6">
+      {/* Profile Section */}
+      {currentUser && (
+        <div className="flex items-center space-x-4 p-4 bg-background border rounded-lg">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={currentUser.avatar_url || ""} />
+            <AvatarFallback>
+              {(currentUser.display_name || currentUser.username || "?").charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-xl font-semibold">{currentUser.display_name || currentUser.username}</h2>
+            <p className="text-sm text-muted-foreground">Online</p>
+          </div>
+        </div>
+      )}
+
+      {/* Search Bar */}
+      <FriendSearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search friends..."
+      />
+
+      {/* Friends List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredFriends?.map((friend) => (
+          <FriendCard 
+            key={friend.id} 
+            friend={friend} 
+            interactionCount={friend.interaction_count}
+          />
+        ))}
+      </div>
     </div>
   );
 }
