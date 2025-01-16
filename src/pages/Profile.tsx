@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
+import { FriendsList } from "@/components/profile/FriendsList";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
@@ -60,7 +61,6 @@ export default function Profile() {
 
           {/* Action Buttons Below Profile */}
           <div className="flex justify-start items-center gap-2 sm:gap-4">
-            <AddFriendDialog />
             <NotificationsDialog />
             <Dialog>
               <DialogTrigger asChild>
@@ -87,6 +87,7 @@ export default function Profile() {
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="cards">Cards</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="friends">My Friends</TabsTrigger>
             <TabsTrigger value="public">Public</TabsTrigger>
           </TabsList>
 
@@ -96,6 +97,13 @@ export default function Profile() {
 
           <TabsContent value="favorites" className="mt-6">
             <FavoriteFlashcards />
+          </TabsContent>
+
+          <TabsContent value="friends" className="mt-6">
+            <div className="mb-4">
+              <AddFriendDialog />
+            </div>
+            <FriendsList />
           </TabsContent>
 
           <TabsContent value="public" className="mt-6">
