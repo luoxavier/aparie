@@ -26,6 +26,8 @@ export function NotificationsDialog() {
   const { data: notifications } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('notifications')
         .select(`
@@ -37,12 +39,21 @@ export function NotificationsDialog() {
             avatar_url
           )
         `)
-        .eq('recipient_id', user?.id)
+        .eq('recipient_id', user.id)
         .eq('read', false)
-        .neq('sender_id', user?.id) // Filter out self-notifications
+        .neq('sender_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch notifications",
+          variant: "destructive",
+        });
+        return [];
+      }
+
       return data.map(notification => ({
         ...notification,
         sender: {
@@ -54,9 +65,12 @@ export function NotificationsDialog() {
         content: notification.content as NotificationContent
       }));
     },
+    enabled: !!user?.id, // Only run query if user is authenticated
   });
 
   const markAsRead = async (notificationId: string) => {
+    if (!user?.id) return;
+
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
