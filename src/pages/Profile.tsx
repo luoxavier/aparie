@@ -69,6 +69,9 @@ export default function Profile() {
               </DialogContent>
             </Dialog>
 
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => document.getElementById('notifications-dialog-trigger')?.click()}>
+              <Bell className="h-5 w-5" />
+            </Button>
             <NotificationsDialog />
             
             <AddFriendDialog>
