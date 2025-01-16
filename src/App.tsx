@@ -1,67 +1,39 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/contexts/AuthContext";
+
+// Pages
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import Profile from "@/pages/Profile";
-import ProfileEdit from "@/pages/ProfileEdit";
-import PrivateRoute from "@/components/PrivateRoute";
+import Friends from "@/pages/Friends";
 import Study from "@/pages/Study";
 import StudyFolder from "@/pages/StudyFolder";
+import ProfileEdit from "@/pages/ProfileEdit";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <Profile />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile/edit"
-                element={
-                  <PrivateRoute>
-                    <ProfileEdit />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/study"
-                element={
-                  <PrivateRoute>
-                    <Study />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/study/:folderId"
-                element={
-                  <PrivateRoute>
-                    <StudyFolder />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-            <Toaster />
-          </ThemeProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/study" element={<Study />} />
+            <Route path="/study/:folderId" element={<StudyFolder />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
+          </Routes>
+          <Toaster />
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 }
 
