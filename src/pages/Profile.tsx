@@ -7,21 +7,17 @@ import { FriendsList } from "@/components/profile/FriendsList";
 import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
-import { FeedbackDialog } from "@/components/profile/FeedbackDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { Users, Bell, PlusCircle, User, Image, MessageSquare } from "lucide-react";
+import { Users, Bell, PlusCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -36,70 +32,6 @@ export default function Profile() {
       return data;
     },
   });
-
-  const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}-${Math.random()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('profile_pictures')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile_pictures')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully",
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update profile picture",
-      });
-    }
-  };
-
-  const handleStatusUpdate = async (status: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ bio: status })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Status updated successfully",
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update status",
-      });
-    }
-  };
 
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
@@ -117,50 +49,39 @@ export default function Profile() {
                 />
               )}
               <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <User className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    <DropdownMenuItem className="flex flex-col items-start gap-2 h-auto">
-                      <Label className="text-sm font-medium">Profile Picture</Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProfilePictureUpload}
-                        className="w-full"
-                      />
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex flex-col items-start gap-2 h-auto">
-                      <Label className="text-sm font-medium">Status</Label>
-                      <Textarea
-                        placeholder="Set your status..."
-                        defaultValue={profile?.bio || ""}
-                        onChange={(e) => handleStatusUpdate(e.target.value)}
-                        className="min-h-[80px] w-full"
-                      />
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
                 {profile?.username && (
                   <span className="text-sm sm:text-base text-muted-foreground">(@{profile.username})</span>
                 )}
               </div>
             </div>
             
-            {/* Settings in top right */}
             <SettingsDialog />
           </div>
 
           {/* Action Buttons Below Profile */}
           <div className="flex justify-start items-center gap-2 sm:gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full"
+              onClick={() => navigate('/friends')}
+            >
+              <Users className="h-5 w-5" />
+            </Button>
             <NotificationsDialog />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full"
+              onClick={() => navigate('/profile/edit')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button className="rounded-full flex items-center gap-2 bg-primary hover:bg-primary/90">
                   <PlusCircle className="h-5 w-5" />
+                  <span className="hidden sm:inline">Create Cards</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl">
@@ -172,10 +93,6 @@ export default function Profile() {
             </Dialog>
           </div>
         </div>
-
-        {profile?.bio && (
-          <p className="text-sm sm:text-base text-muted-foreground">{profile.bio}</p>
-        )}
 
         {/* Main Content */}
         <Tabs defaultValue="cards" className="w-full">
@@ -205,10 +122,6 @@ export default function Profile() {
             <PublicPlaylists />
           </TabsContent>
         </Tabs>
-      </div>
-
-      <div className="fixed bottom-4 right-4">
-        <FeedbackDialog />
       </div>
     </div>
   );
