@@ -1,5 +1,5 @@
 import { FriendsList } from "@/components/profile/FriendsList";
-import { PrivateRoute } from "@/components/PrivateRoute";
+import PrivateRoute from "@/components/PrivateRoute";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -16,10 +16,10 @@ export default function Friends() {
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/profile")}
           >
             <Home className="h-4 w-4" />
-            Return to Home
+            Return to Profile
           </Button>
         </div>
       </div>
