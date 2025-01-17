@@ -130,11 +130,16 @@ const Study = () => {
           <div className="space-y-4 md:space-y-6">
             {currentDeck.length > 0 && (
               <Flashcard
-                front={currentDeck[currentCardIndex].front}
-                back={currentDeck[currentCardIndex].back}
-                otherAnswers={getOtherAnswers(currentDeck[currentCardIndex])}
-                onResult={handleCardResult}
-                onNext={handleNextCard}
+                flashcard={{
+                  id: currentDeck[currentCardIndex].id.toString(),
+                  front: currentDeck[currentCardIndex].front,
+                  back: currentDeck[currentCardIndex].back,
+                  creator_id: currentDeck[currentCardIndex].id.toString()
+                }}
+                onAnswer={(answer) => {
+                  handleCardResult(answer === currentDeck[currentCardIndex].back);
+                  handleNextCard();
+                }}
               />
             )}
             <div className="text-center text-sm md:text-base text-muted-foreground">

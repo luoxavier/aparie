@@ -13,6 +13,8 @@ interface FlashcardType {
   id: string;
   front: string;
   back: string;
+  creator_id: string;
+  playlist_name?: string;
 }
 
 export function StudySession({ 
@@ -39,11 +41,11 @@ export function StudySession({
       )}
 
       <Flashcard
-        front={currentCard.front}
-        back={currentCard.back}
-        otherAnswers={getOtherAnswers(currentCard)}
-        onResult={onResult}
-        onNext={onNext}
+        flashcard={currentCard}
+        onAnswer={(answer) => {
+          onResult(answer === currentCard.back);
+          onNext();
+        }}
       />
     </>
   );

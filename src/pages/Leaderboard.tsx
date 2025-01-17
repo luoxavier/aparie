@@ -9,7 +9,7 @@ export default function Leaderboard() {
         .from('user_streaks')
         .select(`
           *,
-          profiles:id(username, display_name, avatar_url)
+          profile:user_id(username, display_name, avatar_url)
         `)
         .order('total_points', { ascending: false })
         .limit(100);
@@ -32,7 +32,7 @@ export default function Leaderboard() {
               <span className="text-xl font-bold">{index + 1}</span>
               <div className="flex flex-col">
                 <span className="font-medium">
-                  {entry.profiles?.display_name || entry.profiles?.username}
+                  {entry.profile?.display_name || entry.profile?.username}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {entry.total_points} points
