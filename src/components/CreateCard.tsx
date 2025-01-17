@@ -10,9 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 interface CreateCardProps {
   recipientId?: string;
   onSave?: (front: string, back: string) => void;
+  flashcardId?: string;
 }
 
-export function CreateCard({ recipientId, onSave }: CreateCardProps) {
+export function CreateCard({ recipientId, onSave, flashcardId }: CreateCardProps) {
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
   const { user } = useAuth();
