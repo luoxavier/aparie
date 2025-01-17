@@ -3,7 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier, signUpWithEmail, signOut as authSignOut } from "@/services/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleAuthError = async (error: any) => {
     console.error('Auth error:', error);
@@ -37,13 +38,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       setSession(null);
       setUser(null);
-      navigate('/login');
       
-      toast({
-        title: "Session expired",
-        description: "Please sign in again to continue",
-        variant: "destructive",
-      });
+      // Only navigate if we're not already on the login page
+      if (location.pathname !== '/login') {
+        navigate('/login');
+        
+        toast({
+          title: "Session expired",
+          description: "Please sign in again to continue",
+          variant: "destructive",
+        });
+      }
     } else {
       toast({
         title: "Authentication error",
@@ -88,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, location.pathname]);
 
   const value = {
     session,
