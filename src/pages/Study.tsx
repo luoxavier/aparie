@@ -13,10 +13,9 @@ interface Flashcard {
 export default function Study() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { flashcards, folderName, creatorName } = location.state || { 
+  const { flashcards, folderName } = location.state || { 
     flashcards: [], 
-    folderName: "Untitled",
-    creatorName: ""
+    folderName: "Untitled"
   };
 
   const [selectedMode, setSelectedMode] = useState<"normal" | "infinite" | null>(null);
@@ -37,9 +36,7 @@ export default function Study() {
       <div className="container max-w-md mx-auto py-8 px-4">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold">{folderName}</h1>
-          {creatorName && (
-            <p className="text-sm text-muted-foreground mt-1">Created by {creatorName}</p>
-          )}
+          <p className="text-sm text-muted-foreground mt-1">Created by user</p>
         </div>
 
         <div className="space-y-4">
