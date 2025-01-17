@@ -30,6 +30,20 @@ export default function ProfileEdit() {
     },
   });
 
+  const { data: streakData } = useQuery({
+    queryKey: ['streaks', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_streaks')
+        .select('current_streak, highest_streak')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   useEffect(() => {
     if (profile?.bio) {
       setBio(profile.bio);
@@ -183,11 +197,11 @@ export default function ProfileEdit() {
           <h2 className="text-lg font-semibold mb-4">Your Streaks</h2>
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium">Current Streak</span>
-            <span className="text-lg font-bold">{streakData.current_streak} days</span>
+            <span className="text-lg font-bold">{streakData?.current_streak || 0} days</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium">Highest Streak</span>
-            <span className="text-lg font-bold">{streakData.highest_streak} days</span>
+            <span className="text-lg font-bold">{streakData?.highest_streak || 0} days</span>
           </div>
         </div>
       </div>
