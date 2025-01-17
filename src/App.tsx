@@ -1,40 +1,27 @@
-import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "./contexts/AuthContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { Routes, Route } from "react-router-dom";
-import Home from "@/pages/Home";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/contexts/AuthContext";
+import PrivateRoute from "@/components/PrivateRoute";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
+import Signup from "@/pages/Signup";
 import Profile from "@/pages/Profile";
-import FriendProfile from "@/pages/FriendProfile";
+import ProfileEdit from "@/pages/ProfileEdit";
+import Friends from "@/pages/Friends";
+import Study from "@/pages/Study";
 import StudyFolder from "@/pages/StudyFolder";
-import CreateFlashcard from "@/pages/CreateFlashcard";
-import EditFlashcard from "@/pages/EditFlashcard";
-import SharedWithMe from "@/pages/SharedWithMe";
-import Leaderboard from "@/pages/Leaderboard";
-import Feedback from "@/pages/Feedback";
-import { PrivateRoute } from "@/components/PrivateRoute";
-import "./App.css";
+import FriendProfile from "@/pages/FriendProfile";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Home />
-                </PrivateRoute>
-              }
-            />
+            <Route path="/signup" element={<Signup />} />
             <Route
               path="/profile"
               element={
@@ -44,7 +31,7 @@ function App() {
               }
             />
             <Route
-              path="/profile/:userId"
+              path="/profile/:id"
               element={
                 <PrivateRoute>
                   <FriendProfile />
@@ -52,58 +39,42 @@ function App() {
               }
             />
             <Route
-              path="/study-folder"
+              path="/profile/edit"
+              element={
+                <PrivateRoute>
+                  <ProfileEdit />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/friends"
+              element={
+                <PrivateRoute>
+                  <Friends />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/study"
+              element={
+                <PrivateRoute>
+                  <Study />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/study/:creatorId/:playlistName"
               element={
                 <PrivateRoute>
                   <StudyFolder />
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/create-flashcard"
-              element={
-                <PrivateRoute>
-                  <CreateFlashcard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/edit-flashcard/:id"
-              element={
-                <PrivateRoute>
-                  <EditFlashcard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/shared"
-              element={
-                <PrivateRoute>
-                  <SharedWithMe />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/leaderboard"
-              element={
-                <PrivateRoute>
-                  <Leaderboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/feedback"
-              element={
-                <PrivateRoute>
-                  <Feedback />
-                </PrivateRoute>
-              }
-            />
           </Routes>
           <Toaster />
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
