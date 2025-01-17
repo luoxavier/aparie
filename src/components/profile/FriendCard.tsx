@@ -20,10 +20,9 @@ import { User, Send } from "lucide-react";
 
 interface FriendCardProps {
   friend: Profile;
-  interactionCount?: number;
 }
 
-export function FriendCard({ friend, interactionCount = 0 }: FriendCardProps) {
+export function FriendCard({ friend }: FriendCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -61,7 +60,7 @@ export function FriendCard({ friend, interactionCount = 0 }: FriendCardProps) {
         <div className="flex-1">
           <p className="font-medium">{friend.display_name || friend.username}</p>
           <p className="text-sm text-muted-foreground">
-            {interactionCount} interaction{interactionCount !== 1 ? 's' : ''}
+            Online
           </p>
         </div>
         <DropdownMenu>
