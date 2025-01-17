@@ -59,9 +59,11 @@ export function FriendCard({ friend }: FriendCardProps) {
         </Avatar>
         <div className="flex-1">
           <p className="font-medium">{friend.display_name || friend.username}</p>
-          <p className="text-sm text-muted-foreground">
-            {friend.status || "Online"}
-          </p>
+          {friend.status && (
+            <p className="text-sm text-muted-foreground">
+              {friend.status}
+            </p>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger className="focus:outline-none">

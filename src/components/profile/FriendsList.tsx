@@ -101,7 +101,9 @@ export function FriendsList() {
           </Avatar>
           <div>
             <h2 className="text-xl font-semibold">{currentUser.display_name || currentUser.username}</h2>
-            <p className="text-sm text-muted-foreground">{currentUser.status || "Online"}</p>
+            {currentUser.status && (
+              <p className="text-sm text-muted-foreground">{currentUser.status}</p>
+            )}
           </div>
         </div>
       )}
