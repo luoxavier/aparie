@@ -22,7 +22,13 @@ export function useStudyFolder() {
     creatorName?: string
   ) => {
     if (flashcards.length > 0) {
-      navigate(`/study/${flashcards[0].creator_id}/${title}`);
+      navigate("/study-folder", {
+        state: {
+          flashcards,
+          folderName: title,
+          creatorName
+        }
+      });
     }
   };
 
