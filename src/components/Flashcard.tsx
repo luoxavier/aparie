@@ -44,11 +44,13 @@ export const Flashcard = ({
     const { error: streakError } = await supabase
       .from('user_streaks')
       .update({ 
-        total_points: supabase.sql`total_points + ${points}`,
-        weekly_points: supabase.sql`weekly_points + ${points}`,
-        monthly_points: supabase.sql`monthly_points + ${points}`
+        total_points: points,
+        weekly_points: points,
+        monthly_points: points
       })
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select()
+      .single();
 
     if (streakError) {
       console.error('Error updating streak points:', streakError);
@@ -65,8 +67,7 @@ export const Flashcard = ({
         points: points,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'playlist_name,creator_id,user_id',
-        ignoreDuplicates: false
+        onConflict: 'playlist_name,creator_id,user_id'
       });
 
     if (leaderboardError) {
