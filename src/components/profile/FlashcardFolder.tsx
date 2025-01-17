@@ -32,7 +32,6 @@ interface FlashcardFolderProps {
   showCreator?: boolean;
   creatorId?: string;
   playlistName?: string;
-  onEditSuccess?: () => void;
   recipientCanModify?: boolean;
 }
 
@@ -43,7 +42,6 @@ export function FlashcardFolder({
   showCreator = true,
   creatorId,
   playlistName,
-  onEditSuccess,
   recipientCanModify = false,
 }: FlashcardFolderProps) {
   const { user } = useAuth();
@@ -64,7 +62,6 @@ export function FlashcardFolder({
     queryClient.invalidateQueries({ queryKey: ['flashcards'] });
     queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
     setIsDialogOpen(false);
-    onEditSuccess?.();
     toast({
       title: "Success",
       description: "Flashcards updated successfully",

@@ -21,7 +21,7 @@ export function useStudyFolder() {
     title: string,
     creatorName?: string
   ) => {
-    navigate('/study-folder', { 
+    navigate('/study', { 
       state: { 
         flashcards, 
         folderName: title,
