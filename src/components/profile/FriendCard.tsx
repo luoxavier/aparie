@@ -60,7 +60,7 @@ export function FriendCard({ friend }: FriendCardProps) {
         <div className="flex-1">
           <p className="font-medium">{friend.display_name || friend.username}</p>
           <p className="text-sm text-muted-foreground">
-            Online
+            {friend.status || "Online"}
           </p>
         </div>
         <DropdownMenu>

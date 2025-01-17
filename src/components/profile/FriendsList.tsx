@@ -12,7 +12,6 @@ type FriendConnection = {
   user_id: string;
   friend: Profile;
   user: Profile;
-  interaction_count?: number;
 };
 
 export function FriendsList() {
@@ -35,7 +34,6 @@ export function FriendsList() {
   const { data: friends } = useQuery({
     queryKey: ['friends', user?.id],
     queryFn: async () => {
-      // First get friend connections
       const { data: connections, error } = await supabase
         .from('friend_connections')
         .select(`
@@ -46,6 +44,7 @@ export function FriendsList() {
             display_name,
             username,
             avatar_url,
+            status,
             created_at,
             updated_at
           ),
@@ -54,6 +53,7 @@ export function FriendsList() {
             display_name,
             username,
             avatar_url,
+            status,
             created_at,
             updated_at
           )
@@ -63,37 +63,19 @@ export function FriendsList() {
       
       if (error) throw error;
 
-      // Get interaction counts from flashcards
-      const { data: flashcardInteractions } = await supabase
-        .from('flashcards')
-        .select('creator_id, recipient_id')
-        .or(`creator_id.eq.${user?.id},recipient_id.eq.${user?.id}`);
-
-      // Create a Map to store unique friends by their ID with interaction counts
-      const uniqueFriendsMap = new Map<string, Profile & { interaction_count: number }>();
+      // Create a Map to store unique friends
+      const uniqueFriendsMap = new Map<string, Profile>();
 
       (connections as FriendConnection[]).forEach(connection => {
         const isFriend = connection.friend_id === user?.id;
         const friendProfile = isFriend ? connection.user : connection.friend;
         
         if (!uniqueFriendsMap.has(friendProfile.id)) {
-          // Count interactions
-          const interactionCount = (flashcardInteractions || []).filter(
-            interaction => 
-              (interaction.creator_id === friendProfile.id && interaction.recipient_id === user?.id) ||
-              (interaction.creator_id === user?.id && interaction.recipient_id === friendProfile.id)
-          ).length;
-
-          uniqueFriendsMap.set(friendProfile.id, {
-            ...friendProfile,
-            interaction_count: interactionCount
-          });
+          uniqueFriendsMap.set(friendProfile.id, friendProfile);
         }
       });
 
-      // Convert Map values back to array and sort by interaction count
-      return Array.from(uniqueFriendsMap.values())
-        .sort((a, b) => (b.interaction_count || 0) - (a.interaction_count || 0));
+      return Array.from(uniqueFriendsMap.values());
     },
     enabled: !!user?.id,
   });
@@ -119,7 +101,7 @@ export function FriendsList() {
           </Avatar>
           <div>
             <h2 className="text-xl font-semibold">{currentUser.display_name || currentUser.username}</h2>
-            <p className="text-sm text-muted-foreground">Online</p>
+            <p className="text-sm text-muted-foreground">{currentUser.status || "Online"}</p>
           </div>
         </div>
       )}
@@ -136,8 +118,7 @@ export function FriendsList() {
         {filteredFriends?.map((friend) => (
           <FriendCard 
             key={friend.id} 
-            friend={friend} 
-            interactionCount={friend.interaction_count}
+            friend={friend}
           />
         ))}
       </div>
