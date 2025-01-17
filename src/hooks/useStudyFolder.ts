@@ -19,15 +19,9 @@ export function useStudyFolder() {
   const handleStudy = (
     flashcards: Flashcard[],
     title: string,
-    creatorName?: string
+    creatorId: string
   ) => {
-    navigate('/study-folder', { 
-      state: { 
-        flashcards, 
-        folderName: title,
-        creatorName
-      } 
-    });
+    navigate(`/study/${creatorId}/${encodeURIComponent(title)}`);
   };
 
   return { handleStudy };
