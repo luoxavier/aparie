@@ -1,20 +1,22 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { CreateFlashcardButton } from "@/components/profile/CreateFlashcardButton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
-import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
-import { ProfileSettingsDialog } from "@/components/profile/ProfileSettingsDialog";
 import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
+import { FriendsList } from "@/components/profile/FriendsList";
+import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
+import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
+import { SettingsDialog } from "@/components/profile/SettingsDialog";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { PlusCircle, User, Users } from "lucide-react";
+import { LogOut, PlusCircle, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const { data: profile } = useQuery({
@@ -31,69 +33,100 @@ export default function Profile() {
     },
   });
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt="Profile"
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="h-6 w-6 text-gray-500" />
+      <div className="flex flex-col space-y-6">
+        {/* Profile Header */}
+        <div className="flex flex-col space-y-4">
+          {/* Top Section with Avatar and Settings */}
+          <div className="flex justify-between items-start w-full">
+            <div className="flex items-center gap-4">
+              {profile?.avatar_url && (
+                <img
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
+                />
+              )}
+              <div className="flex items-center gap-2">
+                {profile?.username && (
+                  <span className="text-sm sm:text-base text-muted-foreground">(@{profile.username})</span>
+                )}
+              </div>
             </div>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold">{profile?.display_name || 'Loading...'}</h1>
-            <p className="text-sm text-gray-500">@{profile?.username || 'username'}</p>
+            
+            <SettingsDialog />
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => navigate('/profile/edit')}
-            >
-              <User className="h-5 w-5" />
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="rounded-full flex items-center gap-2 bg-primary hover:bg-primary/90">
-                  <PlusCircle className="h-5 w-5" />
-                  Create Cards
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Cards</DialogTitle>
-                </DialogHeader>
-                <CreateMultipleCards />
-              </DialogContent>
-            </Dialog>
-            <NotificationsDialog />
-            <Button
-              variant="ghost"
-              size="icon"
+
+          {/* Action Buttons Below Profile */}
+          <div className="flex justify-start items-center gap-2 sm:gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
               className="rounded-full"
               onClick={() => navigate('/friends')}
             >
               <Users className="h-5 w-5" />
             </Button>
+            <NotificationsDialog />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full"
+              onClick={() => navigate('/profile/edit')}
+            >
+              <User className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full text-destructive hover:text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="rounded-full flex items-center gap-2 bg-primary hover:bg-primary/90">
+                  <PlusCircle className="h-5 w-5" />
+                  <span className="hidden sm:inline">Create Cards</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Create New Flashcards</DialogTitle>
+                </DialogHeader>
+                <CreateMultipleCards />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-6">
-        <div className="space-y-6">
-          <FlashcardsList />
-        </div>
-        <div className="space-y-6">
-          <FavoriteFlashcards />
-          <PublicPlaylists />
-        </div>
+        {/* Main Content */}
+        <Tabs defaultValue="cards" className="w-full">
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="cards">Cards</TabsTrigger>
+            <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="public">Public</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="cards" className="mt-6">
+            <FlashcardsList />
+          </TabsContent>
+
+          <TabsContent value="favorites" className="mt-6">
+            <FavoriteFlashcards />
+          </TabsContent>
+
+          <TabsContent value="public" className="mt-6">
+            <PublicPlaylists />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
