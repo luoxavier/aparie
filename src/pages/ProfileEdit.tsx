@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,14 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Edit, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 export default function ProfileEdit() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [bio, setBio] = useState("");
-  const [initialBio, setInitialBio] = useState("");
+  const initialBioRef = useRef("");
+  const hasUnsavedChanges = useRef(false);
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -47,14 +48,41 @@ export default function ProfileEdit() {
   useEffect(() => {
     if (profile?.bio) {
       setBio(profile.bio);
-      setInitialBio(profile.bio);
+      initialBioRef.current = profile.bio;
     }
   }, [profile]);
 
-  // Only update bio when component unmounts or window unloads if it has changed
+  const handleBioUpdate = async () => {
+    if (!user || !hasUnsavedChanges.current) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ bio })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      initialBioRef.current = bio;
+      hasUnsavedChanges.current = false;
+      toast({
+        title: "Success",
+        description: "Bio updated successfully",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update bio",
+      });
+    }
+  };
+
+  // Update bio only when leaving the page
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (bio !== initialBio) {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges.current) {
         handleBioUpdate();
       }
     };
@@ -63,11 +91,11 @@ export default function ProfileEdit() {
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (bio !== initialBio) {
+      if (hasUnsavedChanges.current) {
         handleBioUpdate();
       }
     };
-  }, [bio, initialBio]);
+  }, [bio]);
 
   const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -104,32 +132,6 @@ export default function ProfileEdit() {
         variant: "destructive",
         title: "Error",
         description: "Failed to update profile picture",
-      });
-    }
-  };
-
-  const handleBioUpdate = async () => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ bio })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setInitialBio(bio);
-      toast({
-        title: "Success",
-        description: "Bio updated successfully",
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update bio",
       });
     }
   };
@@ -190,7 +192,10 @@ export default function ProfileEdit() {
           <Textarea
             placeholder="Tell us about yourself..."
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={(e) => {
+              setBio(e.target.value);
+              hasUnsavedChanges.current = e.target.value !== initialBioRef.current;
+            }}
             className="min-h-[120px]"
           />
         </div>
