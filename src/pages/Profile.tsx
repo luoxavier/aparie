@@ -7,14 +7,14 @@ import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { LogOut, PlusCircle, User, Users } from "lucide-react";
+import { PenLine, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Profile() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const { data: profile } = useQuery({
@@ -30,11 +30,6 @@ export default function Profile() {
       return data;
     },
   });
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
-  };
 
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
@@ -82,9 +77,9 @@ export default function Profile() {
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="rounded-full flex items-center gap-2 bg-primary hover:bg-primary/90">
-                  <PlusCircle className="h-5 w-5" />
-                  <span className="hidden sm:inline">Create Cards</span>
+                <Button className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all">
+                  <PenLine className="h-5 w-5 mr-2" />
+                  <span>Create Cards</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl">
@@ -100,10 +95,10 @@ export default function Profile() {
         {/* Main Content */}
         <Tabs defaultValue="cards" className="w-full">
           <div className="flex justify-center w-full">
-            <TabsList className="justify-center">
-              <TabsTrigger value="cards">Cards</TabsTrigger>
-              <TabsTrigger value="favorites">Favorites</TabsTrigger>
-              <TabsTrigger value="public">Public</TabsTrigger>
+            <TabsList className="w-full max-w-2xl px-4">
+              <TabsTrigger value="cards" className="flex-1 px-8">Cards</TabsTrigger>
+              <TabsTrigger value="favorites" className="flex-1 px-8">Favorites</TabsTrigger>
+              <TabsTrigger value="public" className="flex-1 px-8">Public</TabsTrigger>
             </TabsList>
           </div>
 
@@ -119,18 +114,6 @@ export default function Profile() {
             <PublicPlaylists />
           </TabsContent>
         </Tabs>
-
-        {/* Logout Button */}
-        <div className="flex justify-center pt-6">
-          <Button
-            variant="outline"
-            className="w-full max-w-[200px] flex items-center gap-2"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-            Logout
-          </Button>
-        </div>
       </div>
     </div>
   );
