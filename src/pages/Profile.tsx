@@ -3,17 +3,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
-import { FriendsList } from "@/components/profile/FriendsList";
-import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { LogOut, PlusCircle, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -82,14 +80,6 @@ export default function Profile() {
             >
               <User className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-destructive hover:text-destructive"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="rounded-full flex items-center gap-2 bg-primary hover:bg-primary/90">
@@ -109,11 +99,13 @@ export default function Profile() {
 
         {/* Main Content */}
         <Tabs defaultValue="cards" className="w-full">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="cards">Cards</TabsTrigger>
-            <TabsTrigger value="favorites">Favorites</TabsTrigger>
-            <TabsTrigger value="public">Public</TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center w-full">
+            <TabsList className="justify-center">
+              <TabsTrigger value="cards">Cards</TabsTrigger>
+              <TabsTrigger value="favorites">Favorites</TabsTrigger>
+              <TabsTrigger value="public">Public</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="cards" className="mt-6">
             <FlashcardsList />
@@ -127,6 +119,18 @@ export default function Profile() {
             <PublicPlaylists />
           </TabsContent>
         </Tabs>
+
+        {/* Logout Button */}
+        <div className="flex justify-center pt-6">
+          <Button
+            variant="outline"
+            className="w-full max-w-[200px] flex items-center gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5" />
+            Logout
+          </Button>
+        </div>
       </div>
     </div>
   );
