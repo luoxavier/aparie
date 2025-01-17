@@ -13,6 +13,7 @@ interface FlashcardType {
   id: string;
   front: string;
   back: string;
+  creator_id: string;
 }
 
 export function StudyMode({ deck, onExit }: StudyModeProps) {
