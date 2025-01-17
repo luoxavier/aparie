@@ -7,6 +7,7 @@ import { StudyProgress } from "@/components/study/StudyProgress";
 import { Button } from "@/components/ui/button";
 import { StudyControls } from "@/components/study/StudyControls";
 import { Home } from "lucide-react";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 interface Flashcard {
   id: string;
@@ -166,6 +167,7 @@ export default function StudyFolder() {
           />
         </>
       )}
+      <ReturnHomeButton />
     </div>
   );
 }

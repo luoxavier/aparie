@@ -21,13 +21,9 @@ export function useStudyFolder() {
     title: string,
     creatorName?: string
   ) => {
-    navigate('/study-folder', { 
-      state: { 
-        flashcards, 
-        folderName: title,
-        creatorName
-      } 
-    });
+    if (flashcards.length > 0) {
+      navigate(`/study/${flashcards[0].creator_id}/${title}`);
+    }
   };
 
   return { handleStudy };

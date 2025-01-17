@@ -9,6 +9,9 @@ import { FolderNameInput } from "./FolderNameInput";
 import { RecipientModifyToggle } from "./RecipientModifyToggle";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 interface Flashcard {
   id?: string;
@@ -56,15 +59,43 @@ export function CreateMultipleCardsForm({
   const [allowRecipientModify, setAllowRecipientModify] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const { data: friends = [] } = useFriendsList();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    
+    // Validate cards
+    if (cards.some(card => !card.front.trim() || !card.back.trim())) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all card fields",
+      });
+      return;
+    }
+
+    // Validate playlist name
+    if (!playlistName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a playlist name",
+      });
+      return;
+    }
+
+    await onSubmit({
       recipientId,
       playlistName,
       cards,
       allowRecipientModify,
       isPublic
+    });
+
+    // Show success toast
+    toast({
+      title: "Success",
+      description: isModifying ? "Playlist updated successfully!" : "Flashcards created successfully!",
     });
   };
 

@@ -16,6 +16,11 @@ export function StudyControls({
 }: StudyControlsProps) {
   const navigate = useNavigate();
 
+  const handleExit = () => {
+    navigate("/");
+    onExit();
+  };
+
   return (
     <div className="fixed bottom-4 left-0 right-0 px-4 space-y-2 max-w-md mx-auto">
       <Button
@@ -28,7 +33,7 @@ export function StudyControls({
       </Button>
       <Button
         variant="outline"
-        onClick={onExit}
+        onClick={handleExit}
         className="w-full"
       >
         Return Home
