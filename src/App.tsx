@@ -1,37 +1,79 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
-
-// Pages
+import PrivateRoute from "@/components/PrivateRoute";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import Profile from "@/pages/Profile";
+import ProfileEdit from "@/pages/ProfileEdit";
 import Friends from "@/pages/Friends";
 import Study from "@/pages/Study";
 import StudyFolder from "@/pages/StudyFolder";
-import ProfileEdit from "@/pages/ProfileEdit";
+import FriendProfile from "@/pages/FriendProfile";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
+      <AuthProvider>
+        <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/profile" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/study" element={<Study />} />
-            <Route path="/study/:folderId" element={<StudyFolder />} />
-            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile/:id"
+              element={
+                <PrivateRoute>
+                  <FriendProfile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile/edit"
+              element={
+                <PrivateRoute>
+                  <ProfileEdit />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/friends"
+              element={
+                <PrivateRoute>
+                  <Friends />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/study"
+              element={
+                <PrivateRoute>
+                  <Study />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/study/:creatorId/:playlistName"
+              element={
+                <PrivateRoute>
+                  <StudyFolder />
+                </PrivateRoute>
+              }
+            />
           </Routes>
           <Toaster />
-        </AuthProvider>
-      </Router>
+        </Router>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
