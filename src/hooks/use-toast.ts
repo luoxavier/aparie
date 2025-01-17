@@ -6,7 +6,6 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -53,12 +52,20 @@ interface State {
   toasts: ToasterToast[]
 }
 
+const calculateDuration = (content: string | undefined): number => {
+  if (!content) return 2000;
+  const duration = Math.min(Math.max(content.length * 50, 2000), 7000);
+  return duration;
+}
+
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, content?: string) => {
   if (toastTimeouts.has(toastId)) {
     return
   }
+
+  const duration = calculateDuration(content);
 
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
@@ -66,7 +73,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, duration + 900) // 200ms for pop up + duration + 700ms for fade out
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -93,10 +100,11 @@ export const reducer = (state: State, action: Action): State => {
       // ! Side effects ! - This could be extracted into a dismissToast() action,
       // but I'll keep it here for simplicity
       if (toastId) {
-        addToRemoveQueue(toastId)
+        const toast = state.toasts.find((t) => t.id === toastId);
+        addToRemoveQueue(toastId, toast?.description?.toString())
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
+          addToRemoveQueue(toast.id, toast.description?.toString())
         })
       }
 
