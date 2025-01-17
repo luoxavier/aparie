@@ -217,51 +217,6 @@ export type Database = {
           },
         ]
       }
-      playlist_leaderboards: {
-        Row: {
-          created_at: string
-          creator_id: string
-          id: string
-          playlist_name: string
-          points: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          creator_id: string
-          id?: string
-          playlist_name: string
-          points?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          creator_id?: string
-          id?: string
-          playlist_name?: string
-          points?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "playlist_leaderboards_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "playlist_leaderboards_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       playlist_permissions: {
         Row: {
           can_modify: boolean
@@ -314,7 +269,6 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
-          status: string | null
           updated_at: string
           username: string | null
         }
@@ -324,7 +278,6 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
-          status?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -334,7 +287,6 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
-          status?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -382,11 +334,8 @@ export type Database = {
           highest_streak: number | null
           id: string
           last_activity_date: string | null
-          monthly_points: number | null
-          total_points: number | null
           updated_at: string
           user_id: string
-          weekly_points: number | null
         }
         Insert: {
           created_at?: string
@@ -394,11 +343,8 @@ export type Database = {
           highest_streak?: number | null
           id?: string
           last_activity_date?: string | null
-          monthly_points?: number | null
-          total_points?: number | null
           updated_at?: string
           user_id: string
-          weekly_points?: number | null
         }
         Update: {
           created_at?: string
@@ -406,11 +352,8 @@ export type Database = {
           highest_streak?: number | null
           id?: string
           last_activity_date?: string | null
-          monthly_points?: number | null
-          total_points?: number | null
           updated_at?: string
           user_id?: string
-          weekly_points?: number | null
         }
         Relationships: [
           {

@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface FlashcardProps {
   front: string;
@@ -12,79 +10,31 @@ interface FlashcardProps {
   otherAnswers: string[];
   onResult: (correct: boolean) => void;
   onNext: () => void;
-  creatorId?: string;
-  playlistName?: string;
 }
 
-export const Flashcard = ({ 
-  front, 
-  back, 
-  otherAnswers, 
-  onResult, 
-  onNext,
-  creatorId,
-  playlistName 
-}: FlashcardProps) => {
-  const { user } = useAuth();
+export const Flashcard = ({ front, back, otherAnswers, onResult, onNext }: FlashcardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [answers, setAnswers] = useState<string[]>([]);
   const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
+    // Filter out any answers that match the correct answer
     const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
+    // Take only the first 3 unique wrong answers
     const selectedWrongAnswers = uniqueAnswers.slice(0, 3);
+    // Combine with correct answer and shuffle
     const allAnswers = [back, ...selectedWrongAnswers];
     setAnswers(shuffle(allAnswers));
   }, [back, otherAnswers]);
 
-  const updatePoints = async (points: number) => {
-    if (!user?.id || !creatorId || !playlistName) return;
-
-    // Update user_streaks total points using raw increment
-    const { error: streakError } = await supabase
-      .from('user_streaks')
-      .update({ 
-        total_points: points,
-        weekly_points: points,
-        monthly_points: points
-      })
-      .eq('user_id', user.id)
-      .select()
-      .single();
-
-    if (streakError) {
-      console.error('Error updating streak points:', streakError);
-      return;
-    }
-
-    // Update or insert playlist leaderboard entry
-    const { error: leaderboardError } = await supabase
-      .from('playlist_leaderboards')
-      .upsert({
-        playlist_name: playlistName,
-        creator_id: creatorId,
-        user_id: user.id,
-        points: points,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'playlist_name,creator_id,user_id',
-        ignoreDuplicates: false
-      });
-
-    if (leaderboardError) {
-      console.error('Error updating leaderboard:', leaderboardError);
-    }
-  };
-
-  const handleAnswer = async (selectedAnswer: string) => {
+  const handleAnswer = (selectedAnswer: string) => {
     const isCorrect = selectedAnswer === back;
     setShowNotification(true);
     
     if (isCorrect) {
-      await updatePoints(10); // Award 10 points for correct answer
       toast({
         title: "Correct! 🎉",
-        description: "Great job! +10 points! Moving to next card...",
+        description: "Great job! Moving to next card...",
         variant: "default",
       });
     } else {
@@ -97,6 +47,7 @@ export const Flashcard = ({
     
     onResult(isCorrect);
     
+    // Show notification for 1 second before moving to next card
     setTimeout(() => {
       setShowNotification(false);
       setIsFlipped(false);

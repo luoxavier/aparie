@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { User } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,6 @@ export function ProfileSettingsDialog() {
   const { user, signOut } = useAuth();
   const [bio, setBio] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch user streak data
@@ -31,28 +30,6 @@ export function ProfileSettingsDialog() {
       return data;
     },
   });
-
-  // Fetch current profile data
-  const { data: profile } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('bio')
-        .eq('id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Update bio state when profile data is loaded
-  useEffect(() => {
-    if (profile?.bio) {
-      setBio(profile.bio);
-    }
-  }, [profile]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -145,15 +122,8 @@ export function ProfileSettingsDialog() {
     }
   };
 
-  const handleDialogClose = (open: boolean) => {
-    if (!open && bio !== profile?.bio) {
-      handleBioUpdate();
-    }
-    setIsOpen(open);
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleDialogClose}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
           <User className="h-5 w-5" />
@@ -226,6 +196,9 @@ export function ProfileSettingsDialog() {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+        <DialogFooter>
+          <Button onClick={handleBioUpdate}>Save Changes</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

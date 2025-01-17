@@ -23,9 +23,7 @@ export function LoginForm() {
       
       // Attempt to sign in
       await signIn(identifier, password);
-      
-      // After successful sign in, navigate to the profile page
-      navigate("/");
+      navigate("/profile");
     } catch (error: any) {
       console.error("Error signing in:", error);
       

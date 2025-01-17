@@ -1,5 +1,4 @@
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 
 interface FriendSearchInputProps {
   value: string;
@@ -13,15 +12,11 @@ export function FriendSearchInput({
   placeholder = "Enter friend's username or display name" 
 }: FriendSearchInputProps) {
   return (
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      <Input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="pl-9"
-      />
-    </div>
+    <Input
+      type="text"
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
   );
 }
