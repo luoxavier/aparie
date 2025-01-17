@@ -9,7 +9,7 @@ import Profile from "@/pages/Profile";
 import ProfileEdit from "@/pages/ProfileEdit";
 import Friends from "@/pages/Friends";
 import Study from "@/pages/Study";
-import StudyFolder from "@/pages/StudyFolder";
+import StudyMode from "@/pages/StudyMode";
 import FriendProfile from "@/pages/FriendProfile";
 
 const queryClient = new QueryClient();
@@ -66,7 +66,7 @@ function App() {
               path="/study/:creatorId/:playlistName"
               element={
                 <PrivateRoute>
-                  <StudyFolder />
+                  <StudyMode />
                 </PrivateRoute>
               }
             />
