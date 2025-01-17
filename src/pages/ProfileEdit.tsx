@@ -1,4 +1,3 @@
-import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,12 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, Edit, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 export default function ProfileEdit() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [bio, setBio] = useState("");
+  const [initialBio, setInitialBio] = useState("");
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -27,19 +30,28 @@ export default function ProfileEdit() {
     },
   });
 
-  const { data: streakData } = useQuery({
-    queryKey: ['streak', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_streaks')
-        .select('current_streak, highest_streak')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  useEffect(() => {
+    if (profile?.bio) {
+      setBio(profile.bio);
+      setInitialBio(profile.bio);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (bio !== initialBio) {
+        await handleBioUpdate();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (bio !== initialBio) {
+        handleBioUpdate();
+      }
+    };
+  }, [bio, initialBio]);
 
   const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -80,7 +92,7 @@ export default function ProfileEdit() {
     }
   };
 
-  const handleBioUpdate = async (bio: string) => {
+  const handleBioUpdate = async () => {
     if (!user) return;
 
     try {
@@ -91,6 +103,7 @@ export default function ProfileEdit() {
 
       if (error) throw error;
 
+      setInitialBio(bio);
       toast({
         title: "Success",
         description: "Bio updated successfully",
@@ -132,20 +145,27 @@ export default function ProfileEdit() {
 
       <div className="space-y-6">
         <div className="flex flex-col items-center space-y-4">
-          {profile?.avatar_url && (
-            <img
-              src={profile.avatar_url}
-              alt="Profile"
-              className="w-24 h-24 rounded-full object-cover"
-            />
-          )}
-          <div className="w-full max-w-sm">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePictureUpload}
-              className="w-full"
-            />
+          <div className="relative">
+            {profile?.avatar_url && (
+              <img
+                src={profile.avatar_url}
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover"
+              />
+            )}
+            <label 
+              htmlFor="profile-picture" 
+              className="absolute bottom-0 right-0 p-1 bg-primary hover:bg-primary/90 rounded-full cursor-pointer shadow-lg hover:shadow-xl transition-all"
+            >
+              <Edit className="h-4 w-4 text-primary-foreground" />
+              <Input
+                id="profile-picture"
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureUpload}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
 
@@ -153,25 +173,23 @@ export default function ProfileEdit() {
           <h2 className="text-lg font-semibold">About Me</h2>
           <Textarea
             placeholder="Tell us about yourself..."
-            defaultValue={profile?.bio || ""}
-            onChange={(e) => handleBioUpdate(e.target.value)}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
             className="min-h-[120px]"
           />
         </div>
 
-        {streakData && (
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <h2 className="text-lg font-semibold mb-4">Your Streaks</h2>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Current Streak</span>
-              <span className="text-lg font-bold">{streakData.current_streak} days</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Highest Streak</span>
-              <span className="text-lg font-bold">{streakData.highest_streak} days</span>
-            </div>
+        <div className="bg-muted p-4 rounded-lg space-y-2">
+          <h2 className="text-lg font-semibold mb-4">Your Streaks</h2>
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Current Streak</span>
+            <span className="text-lg font-bold">{streakData.current_streak} days</span>
           </div>
-        )}
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Highest Streak</span>
+            <span className="text-lg font-bold">{streakData.highest_streak} days</span>
+          </div>
+        </div>
       </div>
       <ReturnHomeButton />
     </div>
