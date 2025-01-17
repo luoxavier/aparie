@@ -33,6 +33,7 @@ interface FlashcardFolderProps {
   creatorId?: string;
   playlistName?: string;
   recipientCanModify?: boolean;
+  onEditSuccess?: () => void;
 }
 
 export function FlashcardFolder({ 
@@ -43,6 +44,7 @@ export function FlashcardFolder({
   creatorId,
   playlistName,
   recipientCanModify = false,
+  onEditSuccess,
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -66,6 +68,7 @@ export function FlashcardFolder({
       title: "Success",
       description: "Flashcards updated successfully",
     });
+    if (onEditSuccess) onEditSuccess();
   };
 
   return (
