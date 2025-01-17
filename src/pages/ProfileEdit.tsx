@@ -65,10 +65,6 @@ export default function ProfileEdit() {
 
       initialBioRef.current = bio;
       hasUnsavedChanges.current = false;
-      toast({
-        title: "Success",
-        description: "Bio updated successfully",
-      });
     } catch (error) {
       console.error('Error:', error);
       toast({
