@@ -113,8 +113,8 @@ export const Flashcard = ({
     }
   };
 
-  // Calculate glow intensity based on streak, maxing out at 10
-  const glowIntensity = Math.min(streak * 0.1, 1);
+  // Calculate glow intensity based on streak, maxing out at 10, doubled for more intensity
+  const glowIntensity = Math.min(streak * 0.2, 2);
   const glowColor = "155, 135, 245"; // Theme color in RGB format
 
   return (
@@ -126,17 +126,22 @@ export const Flashcard = ({
         className="relative w-full rounded-xl shadow-lg"
         animate={{
           scale: selectedAnswer ? (isCorrect ? 1.05 : 0.95) : 1,
-          boxShadow: streak > 0 
-            ? `0 0 ${20 * glowIntensity}px rgba(${glowColor}, ${glowIntensity})`
-            : selectedAnswer && !isCorrect
-              ? "0 0 20px rgba(255, 0, 0, 0.3)"
-              : "none"
         }}
         transition={{ duration: 0.3 }}
       >
-        <div className="w-full rounded-xl bg-white p-6 min-h-[16rem] flex items-center justify-center">
+        <motion.div 
+          className="w-full rounded-xl bg-white p-6 min-h-[16rem] flex items-center justify-center"
+          animate={{
+            boxShadow: streak > 0 
+              ? `inset 0 0 ${40 * glowIntensity}px rgba(${glowColor}, ${glowIntensity})`
+              : selectedAnswer && !isCorrect
+                ? "inset 0 0 20px rgba(255, 0, 0, 0.3)"
+                : "none"
+          }}
+          transition={{ duration: 0.3 }}
+        >
           <p className="text-2xl font-semibold text-gray-800 text-center">{front}</p>
-        </div>
+        </motion.div>
         
         <div className="mt-4 grid grid-cols-1 gap-4">
           {answers.map((answer, index) => (
