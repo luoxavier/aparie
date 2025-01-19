@@ -106,9 +106,6 @@ export function CreateMultipleCards({
         if (formData.recipientId && formData.recipientId !== "self" && formData.recipientId !== user.id) {
           await sendNotification(formData.recipientId, formData.playlistName);
         }
-
-        // Call onComplete to close the dialog
-        onComplete?.();
       }
 
       // Show success toast
@@ -116,6 +113,9 @@ export function CreateMultipleCards({
         title: "Success",
         description: isModifying ? "Playlist updated successfully!" : "Flashcards created successfully!",
       });
+
+      // Close the dialog by calling onComplete
+      onComplete?.();
     } catch (error) {
       console.error("Error handling flashcards:", error);
       toast({
