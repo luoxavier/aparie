@@ -14,6 +14,7 @@ interface FlashcardProps {
   onNext: () => void;
   creatorId?: string;
   playlistName?: string;
+  streak?: number;
 }
 
 export const Flashcard = ({ 
@@ -23,7 +24,8 @@ export const Flashcard = ({
   onResult, 
   onNext,
   creatorId,
-  playlistName 
+  playlistName,
+  streak = 0
 }: FlashcardProps) => {
   const { user } = useAuth();
   const [isFlipped, setIsFlipped] = useState(false);
@@ -111,6 +113,10 @@ export const Flashcard = ({
     }
   };
 
+  // Calculate glow intensity based on streak, maxing out at 10
+  const glowIntensity = Math.min(streak * 0.1, 1);
+  const glowColor = "155, 135, 245"; // Theme color in RGB format
+
   return (
     <div 
       className="w-full max-w-sm mx-auto perspective-1000"
@@ -124,7 +130,9 @@ export const Flashcard = ({
             ? (isCorrect
               ? "0 0 20px rgba(0, 255, 0, 0.3)"
               : "0 0 20px rgba(255, 0, 0, 0.3)")
-            : "none"
+            : streak > 0 
+              ? `0 0 ${20 * glowIntensity}px rgba(${glowColor}, ${glowIntensity})`
+              : "none"
         }}
         transition={{ duration: 0.3 }}
       >

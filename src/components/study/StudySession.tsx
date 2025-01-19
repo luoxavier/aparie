@@ -29,22 +29,13 @@ export function StudySession({
   };
 
   return (
-    <>
-      {streak > 0 && (
-        <div className="text-center mb-4">
-          <span className="inline-block bg-primary text-white px-4 py-2 rounded-full">
-            🔥 Streak: {streak}
-          </span>
-        </div>
-      )}
-
-      <Flashcard
-        front={currentCard.front}
-        back={currentCard.back}
-        otherAnswers={getOtherAnswers(currentCard)}
-        onResult={onResult}
-        onNext={onNext}
-      />
-    </>
+    <Flashcard
+      front={currentCard.front}
+      back={currentCard.back}
+      otherAnswers={getOtherAnswers(currentCard)}
+      onResult={onResult}
+      onNext={onNext}
+      streak={streak}
+    />
   );
 }
