@@ -128,10 +128,8 @@ export const Flashcard = ({
         }}
         transition={{ duration: 0.3 }}
       >
-        <div className="w-full rounded-xl bg-white p-6 min-h-[16rem]">
-          <div className="flex items-center justify-center text-center h-full">
-            <p className="text-2xl font-semibold text-gray-800">{front}</p>
-          </div>
+        <div className="w-full rounded-xl bg-white p-6 min-h-[16rem] flex items-center justify-center">
+          <p className="text-2xl font-semibold text-gray-800 text-center">{front}</p>
         </div>
         
         <div className="mt-4 grid grid-cols-1 gap-4">
