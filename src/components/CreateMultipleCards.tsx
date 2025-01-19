@@ -106,11 +106,23 @@ export function CreateMultipleCards({
         if (formData.recipientId && formData.recipientId !== "self" && formData.recipientId !== user.id) {
           await sendNotification(formData.recipientId, formData.playlistName);
         }
+
+        // Call onComplete to close the dialog
+        onComplete?.();
       }
 
-      onComplete?.();
+      // Show success toast
+      toast({
+        title: "Success",
+        description: isModifying ? "Playlist updated successfully!" : "Flashcards created successfully!",
+      });
     } catch (error) {
       console.error("Error handling flashcards:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save flashcards. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
