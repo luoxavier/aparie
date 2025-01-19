@@ -70,6 +70,7 @@ export default function Study() {
     <StudyMode 
       deck={flashcards}
       onExit={() => navigate("/profile")}
+      mode={selectedMode}
     />
   );
 }

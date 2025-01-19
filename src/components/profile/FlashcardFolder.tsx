@@ -8,8 +8,8 @@ import { FolderInfo } from "./folder/FolderInfo";
 import { FolderFavoriteButton } from "./folder/FolderFavoriteButton";
 import { ModifyFolderDialog } from "./folder/ModifyFolderDialog";
 import { useFavoriteFolder } from "@/hooks/useFavoriteFolder";
-import { useStudyFolder } from "@/hooks/useStudyFolder";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Creator {
   display_name: string;
@@ -48,15 +48,21 @@ export function FlashcardFolder({
 }: FlashcardFolderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
-  const { handleStudy } = useStudyFolder();
 
   const handleFolderClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
-      handleStudy(flashcards, title, subtitle || user?.email);
+      navigate('/study-folder', {
+        state: {
+          flashcards,
+          folderName: title,
+          creatorName: subtitle || user?.email
+        }
+      });
     }
   };
 
@@ -100,7 +106,13 @@ export function FlashcardFolder({
           }}
           onStudyClick={(e) => {
             e.stopPropagation();
-            handleStudy(flashcards, title, subtitle || user?.email);
+            navigate('/study-folder', {
+              state: {
+                flashcards,
+                folderName: title,
+                creatorName: subtitle || user?.email
+              }
+            });
           }}
           onEditClick={() => setIsDialogOpen(true)}
           onExpandClick={() => setShowCards(!showCards)}
