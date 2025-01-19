@@ -126,12 +126,10 @@ export const Flashcard = ({
         className="relative w-full rounded-xl shadow-lg"
         animate={{
           scale: selectedAnswer ? (isCorrect ? 1.05 : 0.95) : 1,
-          boxShadow: selectedAnswer
-            ? (isCorrect
-              ? "0 0 20px rgba(0, 255, 0, 0.3)"
-              : "0 0 20px rgba(255, 0, 0, 0.3)")
-            : streak > 0 
-              ? `0 0 ${20 * glowIntensity}px rgba(${glowColor}, ${glowIntensity})`
+          boxShadow: streak > 0 
+            ? `0 0 ${20 * glowIntensity}px rgba(${glowColor}, ${glowIntensity})`
+            : selectedAnswer && !isCorrect
+              ? "0 0 20px rgba(255, 0, 0, 0.3)"
               : "none"
         }}
         transition={{ duration: 0.3 }}
