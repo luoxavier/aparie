@@ -7,6 +7,7 @@ import { StudyProgress } from "@/components/study/StudyProgress";
 interface StudyModeProps {
   deck: FlashcardType[];
   onExit: () => void;
+  mode: "normal" | "infinite" | null;
 }
 
 interface FlashcardType {
@@ -16,12 +17,13 @@ interface FlashcardType {
   creator_id: string;
 }
 
-export function StudyMode({ deck, onExit }: StudyModeProps) {
+export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [mistakes, setMistakes] = useState<FlashcardType[]>([]);
   const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
   const [currentReviewMistakes, setCurrentReviewMistakes] = useState<FlashcardType[]>([]);
+  const [infiniteCycles, setInfiniteCycles] = useState(0);
 
   const handleCardResult = (correct: boolean) => {
     const currentCard = isReviewingMistakes ? currentReviewMistakes[currentCardIndex] : deck[currentCardIndex];
@@ -63,8 +65,13 @@ export function StudyMode({ deck, onExit }: StudyModeProps) {
     } else if (currentCardIndex < deck.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
     } else {
-      onExit();
-      setCurrentCardIndex(0);
+      if (mode === "infinite") {
+        setCurrentCardIndex(0);
+        setInfiniteCycles(infiniteCycles + 1);
+      } else {
+        onExit();
+        setCurrentCardIndex(0);
+      }
     }
   };
 
@@ -84,7 +91,7 @@ export function StudyMode({ deck, onExit }: StudyModeProps) {
         onClick={onExit}
         className="mb-4"
       >
-        ← Back to Folders
+        ← Back to Study Menu
       </Button>
       
       <StudySession
@@ -98,7 +105,8 @@ export function StudyMode({ deck, onExit }: StudyModeProps) {
       <StudyProgress
         currentIndex={currentCardIndex}
         totalCards={currentCards.length}
-        mode={null}
+        mode={mode}
+        infiniteCycles={infiniteCycles}
       />
 
       <StudyControls
