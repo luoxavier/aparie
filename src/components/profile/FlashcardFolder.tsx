@@ -56,7 +56,7 @@ export function FlashcardFolder({
 
   const handleFolderClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
-      navigate('/study-folder', {
+      navigate('/study-menu', {
         state: {
           flashcards,
           folderName: title,
@@ -106,7 +106,7 @@ export function FlashcardFolder({
           }}
           onStudyClick={(e) => {
             e.stopPropagation();
-            navigate('/study-folder', {
+            navigate('/study-menu', {
               state: {
                 flashcards,
                 folderName: title,

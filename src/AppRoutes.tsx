@@ -6,7 +6,7 @@ import Profile from "@/pages/Profile";
 import ProfileEdit from "@/pages/ProfileEdit";
 import Friends from "@/pages/Friends";
 import FriendProfile from "@/pages/FriendProfile";
-import StudyFolder from "@/pages/StudyFolder";
+import Study from "@/pages/Study";
 
 export function AppRoutes() {
   return (
@@ -54,10 +54,10 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/study-folder"
+        path="/study-menu"
         element={
           <PrivateRoute>
-            <StudyFolder />
+            <Study />
           </PrivateRoute>
         }
       />
