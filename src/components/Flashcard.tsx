@@ -28,7 +28,8 @@ export const Flashcard = ({
   const { user } = useAuth();
   const [isFlipped, setIsFlipped] = useState(false);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [showNotification, setShowNotification] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
   useEffect(() => {
     const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
@@ -40,7 +41,6 @@ export const Flashcard = ({
   const updatePoints = async (points: number) => {
     if (!user?.id || !creatorId || !playlistName) return;
 
-    // Update user_streaks total points using raw increment
     const { error: streakError } = await supabase
       .from('user_streaks')
       .update({ 
@@ -57,7 +57,6 @@ export const Flashcard = ({
       return;
     }
 
-    // Update or insert playlist leaderboard entry
     const { error: leaderboardError } = await supabase
       .from('playlist_leaderboards')
       .upsert({
@@ -76,86 +75,92 @@ export const Flashcard = ({
     }
   };
 
-  const handleAnswer = async (selectedAnswer: string) => {
-    const isCorrect = selectedAnswer === back;
-    setShowNotification(true);
+  const handleAnswer = async (answer: string) => {
+    setSelectedAnswer(answer);
+    const correct = answer === back;
+    setIsCorrect(correct);
     
-    if (isCorrect) {
-      await updatePoints(10); // Award 10 points for correct answer
+    if (correct) {
+      await updatePoints(10);
       toast({
         title: "Correct! 🎉",
-        description: "Great job! +10 points! Moving to next card...",
+        description: "+10 points!",
         variant: "default",
       });
+      setTimeout(() => {
+        setSelectedAnswer(null);
+        setIsCorrect(null);
+        onResult(true);
+        onNext();
+      }, 1000);
     } else {
       toast({
         title: "Incorrect",
-        description: `The correct answer was: ${back}`,
+        description: `The correct answer is: ${back}`,
         variant: "destructive",
       });
+      onResult(false);
     }
-    
-    onResult(isCorrect);
-    
-    setTimeout(() => {
-      setShowNotification(false);
-      setIsFlipped(false);
-      onNext();
-    }, 1000);
   };
 
-  if (showNotification) {
-    return (
-      <div className="w-full max-w-sm mx-auto min-h-[16rem] flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="text-center"
-        >
-          {/* Notification content is handled by toast */}
-        </motion.div>
-      </div>
-    );
-  }
+  const handleScreenClick = () => {
+    if (selectedAnswer && !isCorrect) {
+      setSelectedAnswer(null);
+      setIsCorrect(null);
+      onNext();
+    }
+  };
 
   return (
-    <div className="w-full max-w-sm mx-auto perspective-1000">
+    <div 
+      className="w-full max-w-sm mx-auto perspective-1000"
+      onClick={handleScreenClick}
+    >
       <motion.div
-        className={`relative w-full cursor-pointer rounded-xl shadow-lg transition-all duration-500 preserve-3d ${
-          isFlipped ? "rotate-y-180" : ""
-        }`}
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.6 }}
+        className="relative w-full rounded-xl shadow-lg"
+        animate={{
+          scale: selectedAnswer ? (isCorrect ? 1.05 : 0.95) : 1,
+          boxShadow: selectedAnswer
+            ? (isCorrect
+              ? "0 0 20px rgba(0, 255, 0, 0.3)"
+              : "0 0 20px rgba(255, 0, 0, 0.3)")
+            : "none"
+        }}
+        transition={{ duration: 0.3 }}
       >
-        <div
-          className={`absolute w-full backface-hidden rounded-xl bg-white p-6 flex items-center justify-center text-center min-h-[16rem] ${
-            isFlipped ? "hidden" : ""
-          }`}
-          onClick={() => setIsFlipped(true)}
-        >
-          <p className="text-2xl font-semibold text-gray-800">{front}</p>
-        </div>
-        <div
-          className={`absolute w-full backface-hidden rounded-xl bg-primary p-6 flex flex-col items-center justify-center rotate-y-180 min-h-[16rem] ${
-            !isFlipped ? "hidden" : ""
-          }`}
-        >
-          <div className="grid grid-cols-1 gap-4 w-full">
-            {answers.map((answer, index) => (
-              <Button
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAnswer(answer);
-                }}
-                variant="secondary"
-                className="w-full text-left py-4 h-auto"
-              >
-                {answer}
-              </Button>
-            ))}
+        <div className="w-full rounded-xl bg-white p-6 min-h-[16rem]">
+          <div className="flex items-center justify-center text-center h-full">
+            <p className="text-2xl font-semibold text-gray-800">{front}</p>
           </div>
+        </div>
+        
+        <div className="mt-4 grid grid-cols-1 gap-4">
+          {answers.map((answer, index) => (
+            <Button
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!selectedAnswer) {
+                  handleAnswer(answer);
+                }
+              }}
+              variant={
+                selectedAnswer
+                  ? answer === back
+                    ? "default"
+                    : answer === selectedAnswer
+                    ? "destructive"
+                    : "secondary"
+                  : "secondary"
+              }
+              className={`w-full text-left py-4 h-auto transition-colors ${
+                selectedAnswer && answer === back ? "bg-green-500 hover:bg-green-600" : ""
+              }`}
+              disabled={!!selectedAnswer}
+            >
+              {answer}
+            </Button>
+          ))}
         </div>
       </motion.div>
     </div>

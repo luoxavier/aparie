@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { StudySession } from "@/components/study/StudySession";
 import { StudyControls } from "@/components/study/StudyControls";
 import { StudyProgress } from "@/components/study/StudyProgress";
+import { shuffle } from "@/lib/utils";
 
 interface StudyModeProps {
   deck: FlashcardType[];
@@ -23,13 +24,18 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
   const [mistakes, setMistakes] = useState<FlashcardType[]>([]);
   const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
   const [currentReviewMistakes, setCurrentReviewMistakes] = useState<FlashcardType[]>([]);
-  const [infiniteCycles, setInfiniteCycles] = useState(0);
+  const [shuffledDeck, setShuffledDeck] = useState(() => shuffle([...deck]));
+  const [score, setScore] = useState(0);
+  const [showScore, setShowScore] = useState(false);
 
   const handleCardResult = (correct: boolean) => {
-    const currentCard = isReviewingMistakes ? currentReviewMistakes[currentCardIndex] : deck[currentCardIndex];
+    const currentCard = isReviewingMistakes 
+      ? currentReviewMistakes[currentCardIndex] 
+      : shuffledDeck[currentCardIndex];
     
     if (correct) {
       setStreak(streak + 1);
+      setScore(score + 1);
       if (isReviewingMistakes) {
         setCurrentReviewMistakes(prev => prev.filter(card => card.id !== currentCard.id));
       }
@@ -55,34 +61,68 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
         setCurrentCardIndex(currentCardIndex + 1);
       } else {
         if (currentReviewMistakes.length === 0) {
-          setIsReviewingMistakes(false);
-          setCurrentCardIndex(0);
-          setMistakes([]);
+          setShowScore(true);
         } else {
           setCurrentCardIndex(0);
+          setCurrentReviewMistakes([...currentReviewMistakes]);
         }
       }
-    } else if (currentCardIndex < deck.length - 1) {
+    } else if (currentCardIndex < shuffledDeck.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
     } else {
-      if (mode === "infinite") {
-        setCurrentCardIndex(0);
-        setInfiniteCycles(infiniteCycles + 1);
+      if (mistakes.length > 0) {
+        startReviewMode();
       } else {
-        onExit();
-        setCurrentCardIndex(0);
+        setShowScore(true);
       }
     }
   };
 
-  const handleReviewMistakes = () => {
+  const startReviewMode = () => {
     setIsReviewingMistakes(true);
     setCurrentReviewMistakes([...mistakes]);
     setCurrentCardIndex(0);
+    setMistakes([]);
   };
 
-  const currentCards = isReviewingMistakes ? currentReviewMistakes : deck;
+  const restartStudy = () => {
+    setShuffledDeck(shuffle([...deck]));
+    setCurrentCardIndex(0);
+    setStreak(0);
+    setMistakes([]);
+    setIsReviewingMistakes(false);
+    setCurrentReviewMistakes([]);
+    setScore(0);
+    setShowScore(false);
+  };
+
+  const currentCards = isReviewingMistakes ? currentReviewMistakes : shuffledDeck;
   const currentCard = currentCards[currentCardIndex];
+
+  if (showScore) {
+    return (
+      <div className="space-y-4 text-center">
+        <h2 className="text-3xl font-bold mb-8">
+          Final Score: {score}/{deck.length}
+        </h2>
+        <div className="space-y-4">
+          <Button 
+            onClick={restartStudy}
+            className="w-full"
+          >
+            Study Again
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={onExit}
+            className="w-full"
+          >
+            Return to Menu
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -94,24 +134,26 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
         ← Back to Study Menu
       </Button>
       
-      <StudySession
-        currentCard={currentCard}
-        deck={deck}
-        onResult={handleCardResult}
-        onNext={handleNextCard}
-        streak={streak}
-      />
+      {currentCard && (
+        <StudySession
+          currentCard={currentCard}
+          deck={deck}
+          onResult={handleCardResult}
+          onNext={handleNextCard}
+          streak={streak}
+        />
+      )}
 
       <StudyProgress
         currentIndex={currentCardIndex}
         totalCards={currentCards.length}
         mode={mode}
-        infiniteCycles={infiniteCycles}
+        isReviewMode={isReviewingMistakes}
       />
 
       <StudyControls
         onExit={onExit}
-        onReviewMistakes={handleReviewMistakes}
+        onReviewMistakes={startReviewMode}
         mistakesCount={mistakes.length}
         isReviewingMistakes={isReviewingMistakes}
       />
