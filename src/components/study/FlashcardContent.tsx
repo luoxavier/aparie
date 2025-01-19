@@ -18,7 +18,8 @@ export function FlashcardContent({
   streak,
   onClick
 }: FlashcardContentProps) {
-  const glowIntensity = Math.min(streak * 0.2, 1);
+  // Calculate glow intensity based on streak, maxing out at 10
+  const glowIntensity = Math.min(streak * 0.1, 1);
 
   return (
     <motion.div
