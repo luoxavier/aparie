@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { vibrate } from "@/utils/sound";
 
 interface Flashcard {
   id?: string;
@@ -63,6 +64,7 @@ export function CreateMultipleCardsForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    vibrate('button');
     
     // Validate cards
     if (cards.some(card => !card.front.trim() || !card.back.trim())) {
@@ -91,15 +93,10 @@ export function CreateMultipleCardsForm({
       allowRecipientModify,
       isPublic
     });
-
-    // Show success toast
-    toast({
-      title: "Success",
-      description: isModifying ? "Playlist updated successfully!" : "Flashcards created successfully!",
-    });
   };
 
   const addCard = () => {
+    vibrate('button');
     setCards([...cards, { front: "", back: "" }]);
   };
 
@@ -110,6 +107,7 @@ export function CreateMultipleCardsForm({
   };
 
   const removeCard = (index: number) => {
+    vibrate('button');
     const newCards = cards.filter((_, i) => i !== index);
     setCards(newCards);
   };
@@ -182,7 +180,7 @@ export function CreateMultipleCardsForm({
       </Button>
 
       <Button type="submit" className="w-full">
-        {isModifying ? "Update Playlist" : "Create Flashcards"}
+        {isModifying ? "Save and Close" : "Create and Close"}
       </Button>
     </form>
   );
