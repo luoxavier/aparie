@@ -4,11 +4,12 @@ import { StudySession } from "@/components/study/StudySession";
 import { StudyControls } from "@/components/study/StudyControls";
 import { StudyProgress } from "@/components/study/StudyProgress";
 import { shuffle } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface StudyModeProps {
   deck: FlashcardType[];
   onExit: () => void;
-  mode: "normal" | "infinite" | null;
+  mode: "normal" | "infinite" | "mastery" | null;
 }
 
 interface FlashcardType {
@@ -43,6 +44,14 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
       }
     } else {
       setStreak(0);
+      if (mode === "mastery") {
+        setPerfectCycles(0);
+        toast({
+          title: "Mistake made!",
+          description: "Perfect cycle streak reset. Keep practicing!",
+          variant: "destructive",
+        });
+      }
       if (!mistakes.find(card => card.id === currentCard.id)) {
         setMistakes([...mistakes, currentCard]);
       }
@@ -63,7 +72,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
         setCurrentCardIndex(currentCardIndex + 1);
       } else {
         if (currentReviewMistakes.length === 0) {
-          if (mode === "infinite") {
+          if (mode === "infinite" || mode === "mastery") {
             startNewCycle();
           } else {
             setShowScore(true);
@@ -83,6 +92,29 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
           setPerfectCycles(0);
         }
         startNewCycle();
+      } else if (mode === "mastery") {
+        if (mistakes.length === 0) {
+          const newPerfectCycles = perfectCycles + 1;
+          setPerfectCycles(newPerfectCycles);
+          if (newPerfectCycles >= 3) {
+            toast({
+              title: "Mastery Achieved! 🎉",
+              description: "Congratulations! You've completed 3 perfect cycles!",
+              variant: "default",
+            });
+            setShowScore(true);
+          } else {
+            toast({
+              title: `Perfect Cycle ${newPerfectCycles}/3! 🌟`,
+              description: "Keep going! You're doing great!",
+              variant: "default",
+            });
+            startNewCycle();
+          }
+        } else {
+          setPerfectCycles(0);
+          startNewCycle();
+        }
       } else if (mistakes.length > 0) {
         startReviewMode();
       } else {
@@ -128,7 +160,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="space-y-4 text-center max-w-md mx-auto">
           <h2 className="text-3xl font-bold mb-8">
-            Final Score: {score}/{deck.length}
+            {mode === "mastery" ? "Mastery Complete! 🎉" : `Final Score: ${score}/${deck.length}`}
           </h2>
           <div className="space-y-4">
             <Button 

@@ -1,7 +1,7 @@
 interface StudyProgressProps {
   currentIndex: number;
   totalCards: number;
-  mode: "normal" | "infinite" | null;
+  mode: "normal" | "infinite" | "mastery" | null;
   isReviewMode?: boolean;
   infiniteCycles?: number;
   perfectCycles?: number;
@@ -26,6 +26,12 @@ export function StudyProgress({
         <div className="space-y-1">
           <p className="text-primary font-medium">Infinite Mode</p>
           <p>Cycle {infiniteCycles + 1} - Perfect Cycles: {perfectCycles}</p>
+          <p>{currentIndex + 1}/{totalCards}</p>
+        </div>
+      ) : mode === "mastery" ? (
+        <div className="space-y-1">
+          <p className="text-primary font-medium">Mastery Mode</p>
+          <p>Perfect Cycles: {perfectCycles}/3</p>
           <p>{currentIndex + 1}/{totalCards}</p>
         </div>
       ) : (

@@ -18,7 +18,7 @@ export default function Study() {
     folderName: "Untitled"
   };
 
-  const [selectedMode, setSelectedMode] = useState<"normal" | "infinite" | null>(null);
+  const [selectedMode, setSelectedMode] = useState<"normal" | "infinite" | "mastery" | null>(null);
 
   if (!flashcards.length) {
     return (
@@ -53,6 +53,13 @@ export default function Study() {
               onClick={() => setSelectedMode("infinite")}
             >
               Infinite Mode
+            </Button>
+            <Button 
+              className="w-full h-16 text-lg"
+              variant="default"
+              onClick={() => setSelectedMode("mastery")}
+            >
+              Mastery Mode
             </Button>
             <Button
               variant="outline"
