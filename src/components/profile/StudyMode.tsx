@@ -27,6 +27,8 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
   const [shuffledDeck, setShuffledDeck] = useState(() => shuffle([...deck]));
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
+  const [infiniteCycles, setInfiniteCycles] = useState(0);
+  const [perfectCycles, setPerfectCycles] = useState(0);
 
   const handleCardResult = (correct: boolean) => {
     const currentCard = isReviewingMistakes 
@@ -61,7 +63,11 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
         setCurrentCardIndex(currentCardIndex + 1);
       } else {
         if (currentReviewMistakes.length === 0) {
-          setShowScore(true);
+          if (mode === "infinite") {
+            startNewCycle();
+          } else {
+            setShowScore(true);
+          }
         } else {
           setCurrentCardIndex(0);
           setCurrentReviewMistakes([...currentReviewMistakes]);
@@ -70,12 +76,28 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
     } else if (currentCardIndex < shuffledDeck.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
     } else {
-      if (mistakes.length > 0) {
+      if (mode === "infinite") {
+        if (mistakes.length === 0) {
+          setPerfectCycles(prev => prev + 1);
+        } else {
+          setPerfectCycles(0);
+        }
+        startNewCycle();
+      } else if (mistakes.length > 0) {
         startReviewMode();
       } else {
         setShowScore(true);
       }
     }
+  };
+
+  const startNewCycle = () => {
+    setInfiniteCycles(prev => prev + 1);
+    setShuffledDeck(shuffle([...deck]));
+    setCurrentCardIndex(0);
+    setStreak(0);
+    setMistakes([]);
+    setScore(0);
   };
 
   const startReviewMode = () => {
@@ -94,6 +116,8 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
     setCurrentReviewMistakes([]);
     setScore(0);
     setShowScore(false);
+    setInfiniteCycles(0);
+    setPerfectCycles(0);
   };
 
   const currentCards = isReviewingMistakes ? currentReviewMistakes : shuffledDeck;
@@ -151,6 +175,8 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
         totalCards={currentCards.length}
         mode={mode}
         isReviewMode={isReviewingMistakes}
+        infiniteCycles={infiniteCycles}
+        perfectCycles={perfectCycles}
       />
 
       <StudyControls
