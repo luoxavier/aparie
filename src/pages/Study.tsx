@@ -8,19 +8,22 @@ interface Flashcard {
   id: string;
   front: string;
   back: string;
+  creator_id?: string;
+  playlist_name?: string;
 }
 
 export default function Study() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { flashcards, folderName } = location.state || { 
+  const { flashcards, folderName, creatorName } = location.state || { 
     flashcards: [], 
-    folderName: "Untitled"
+    folderName: "Untitled",
+    creatorName: "Unknown"
   };
 
   const [selectedMode, setSelectedMode] = useState<"normal" | "infinite" | "mastery" | null>(null);
 
-  if (!flashcards.length) {
+  if (!flashcards?.length) {
     return (
       <div className="container max-w-md mx-auto py-8 px-4">
         <div className="text-center">
@@ -37,7 +40,7 @@ export default function Study() {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold">{folderName}</h1>
-            <p className="text-sm text-muted-foreground mt-1">Created by user</p>
+            <p className="text-sm text-muted-foreground mt-1">Created by {creatorName}</p>
           </div>
 
           <div className="space-y-4">
