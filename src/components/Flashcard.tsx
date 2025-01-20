@@ -36,50 +36,37 @@ export const Flashcard = ({
   const [maintainStreak, setMaintainStreak] = useState(true);
 
   useEffect(() => {
-    const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
-    const selectedWrongAnswers = uniqueAnswers.slice(0, 3);
-    const allAnswers = [back, ...selectedWrongAnswers];
-    setAnswers(shuffle(allAnswers));
-  }, [back, otherAnswers]);
+    if (!answers.length) {
+      const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
+      const selectedWrongAnswers = uniqueAnswers.slice(0, 3);
+      const allAnswers = [back, ...selectedWrongAnswers];
+      setAnswers(shuffle(allAnswers));
+    }
+  }, [back, otherAnswers, answers.length]);
 
-  const updatePoints = async (points: number) => {
+  const updateLeaderboard = async (points: number) => {
     if (!user?.id || !creatorId || !playlistName) return;
 
-    const { error: streakError } = await supabase
-      .from('user_streaks')
-      .update({ 
-        total_points: points,
-        weekly_points: points,
-        monthly_points: points
-      })
-      .eq('user_id', user.id)
-      .select()
-      .single();
+    try {
+      const { error } = await supabase.rpc(
+        'update_leaderboard_score',
+        {
+          user_id_param: user.id,
+          playlist_name_param: playlistName,
+          creator_id_param: creatorId,
+          score: points
+        }
+      );
 
-    if (streakError) {
-      console.error('Error updating streak points:', streakError);
-      return;
-    }
-
-    const { error: leaderboardError } = await supabase
-      .from('playlist_leaderboards')
-      .upsert({
-        playlist_name: playlistName,
-        creator_id: creatorId,
-        user_id: user.id,
-        points: points,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'playlist_name,creator_id,user_id',
-        ignoreDuplicates: false
-      });
-
-    if (leaderboardError) {
-      console.error('Error updating leaderboard:', leaderboardError);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating leaderboard:', error);
     }
   };
 
   const handleAnswer = async (answer: string) => {
+    if (selectedAnswer) return; // Prevent multiple answers
+    
     setSelectedAnswer(answer);
     const correct = answer === back;
     setIsCorrect(correct);
@@ -87,18 +74,17 @@ export const Flashcard = ({
     if (correct) {
       playSound('correct');
       vibrate('correct');
-      await updatePoints(10);
+      await updateLeaderboard(10);
       toast({
         title: "Correct! 🎉",
         description: "+10 points!",
-        variant: "default",
       });
       setTimeout(() => {
         setSelectedAnswer(null);
         setIsCorrect(null);
         onResult(true);
         onNext();
-      }, 300);
+      }, 1000);
     } else {
       playSound('incorrect');
       vibrate('incorrect');
@@ -127,8 +113,8 @@ export const Flashcard = ({
   const incorrectGlowIntensity = 1.25;
 
   // Theme-matching pastel colors in RGB format
-  const correctGlowColor = "134, 239, 172"; // Softer green that matches theme
-  const incorrectGlowColor = "252, 165, 165"; // Softer red that matches theme
+  const correctGlowColor = "134, 239, 172";
+  const incorrectGlowColor = "252, 165, 165";
 
   return (
     <div 

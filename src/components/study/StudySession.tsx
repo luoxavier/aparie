@@ -13,6 +13,8 @@ interface FlashcardType {
   id: string;
   front: string;
   back: string;
+  creator_id?: string;
+  playlist_name?: string;
 }
 
 export function StudySession({ 
@@ -35,6 +37,8 @@ export function StudySession({
       otherAnswers={getOtherAnswers(currentCard)}
       onResult={onResult}
       onNext={onNext}
+      creatorId={currentCard.creator_id}
+      playlistName={currentCard.playlist_name}
       streak={streak}
     />
   );
