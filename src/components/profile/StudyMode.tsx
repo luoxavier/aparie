@@ -5,6 +5,7 @@ import { StudyControls } from "@/components/study/StudyControls";
 import { StudyProgress } from "@/components/study/StudyProgress";
 import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { playSound, vibrate } from "@/utils/sound";
 
 interface StudyModeProps {
   deck: FlashcardType[];
@@ -97,6 +98,8 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
           const newPerfectCycles = perfectCycles + 1;
           setPerfectCycles(newPerfectCycles);
           if (newPerfectCycles >= 3) {
+            playSound('complete');
+            vibrate('complete');
             toast({
               title: "Mastery Achieved! 🎉",
               description: "Congratulations! You've completed 3 perfect cycles!",

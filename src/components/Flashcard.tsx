@@ -5,6 +5,7 @@ import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { playSound, vibrate } from "@/utils/sound";
 
 interface FlashcardProps {
   front: string;
@@ -84,6 +85,8 @@ export const Flashcard = ({
     setIsCorrect(correct);
     
     if (correct) {
+      playSound('correct');
+      vibrate('correct');
       await updatePoints(10);
       toast({
         title: "Correct! 🎉",
@@ -97,6 +100,8 @@ export const Flashcard = ({
         onNext();
       }, 300);
     } else {
+      playSound('incorrect');
+      vibrate('incorrect');
       setMaintainStreak(false);
       toast({
         title: "Incorrect",
@@ -159,6 +164,7 @@ export const Flashcard = ({
               key={index}
               onClick={(e) => {
                 e.stopPropagation();
+                vibrate('button');
                 if (!selectedAnswer) {
                   handleAnswer(answer);
                 }
