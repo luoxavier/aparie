@@ -94,7 +94,7 @@ export const Flashcard = ({
         setIsCorrect(null);
         onResult(true);
         onNext();
-      }, 300); // Updated animation time to 300ms
+      }, 300);
     } else {
       toast({
         title: "Incorrect",
@@ -113,9 +113,13 @@ export const Flashcard = ({
     }
   };
 
-  // Calculate glow intensity based on streak, maxing out at 10
-  const glowIntensity = Math.min(streak, 10);
-  const glowColor = "155, 135, 245"; // Theme color in RGB format
+  // Calculate glow intensity based on streak
+  const baseCorrectGlowIntensity = 0.75;
+  const streakBonus = Math.min(streak, 10) * 0.25;
+  const correctGlowIntensity = Math.min(baseCorrectGlowIntensity + streakBonus, 1.0);
+  const incorrectGlowIntensity = 1.25;
+
+  // Theme-matching pastel colors in RGB format
   const correctGlowColor = "134, 239, 172"; // Softer green that matches theme
   const incorrectGlowColor = "252, 165, 165"; // Softer red that matches theme
 
@@ -136,10 +140,10 @@ export const Flashcard = ({
           animate={{
             boxShadow: selectedAnswer
               ? isCorrect
-                ? `inset 0 0 20px rgba(${correctGlowColor}, 0.5)`
-                : `inset 0 0 20px rgba(${incorrectGlowColor}, 0.5)`
+                ? `inset 0 0 20px rgba(${correctGlowColor}, ${correctGlowIntensity})`
+                : `inset 0 0 20px rgba(${incorrectGlowColor}, ${incorrectGlowIntensity})`
               : streak > 0
-                ? `inset 0 0 20px rgba(${glowColor}, ${glowIntensity / 10})`
+                ? `inset 0 0 20px rgba(155, 135, 245, ${streak / 10})`
                 : "none"
           }}
           transition={{ duration: 0.3 }}
