@@ -32,6 +32,7 @@ export const Flashcard = ({
   const [answers, setAnswers] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [maintainStreak, setMaintainStreak] = useState(true);
 
   useEffect(() => {
     const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
@@ -96,6 +97,7 @@ export const Flashcard = ({
         onNext();
       }, 300);
     } else {
+      setMaintainStreak(false);
       toast({
         title: "Incorrect",
         description: `The correct answer is: ${back}`,
@@ -142,8 +144,8 @@ export const Flashcard = ({
               ? isCorrect
                 ? `inset 0 0 20px rgba(${correctGlowColor}, ${correctGlowIntensity})`
                 : `inset 0 0 20px rgba(${incorrectGlowColor}, ${incorrectGlowIntensity})`
-              : streak > 0
-                ? `inset 0 0 20px rgba(155, 135, 245, ${streak / 10})`
+              : streak > 0 && maintainStreak
+                ? `inset 0 0 20px rgba(${correctGlowColor}, ${correctGlowIntensity})`
                 : "none"
           }}
           transition={{ duration: 0.3 }}
