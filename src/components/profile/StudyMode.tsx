@@ -101,24 +101,26 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
 
   if (showScore) {
     return (
-      <div className="space-y-4 text-center max-w-md mx-auto">
-        <h2 className="text-3xl font-bold mb-8">
-          Final Score: {score}/{deck.length}
-        </h2>
-        <div className="space-y-4">
-          <Button 
-            onClick={restartStudy}
-            className="w-full"
-          >
-            Study Again
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={onExit}
-            className="w-full"
-          >
-            Return to Menu
-          </Button>
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="space-y-4 text-center max-w-md mx-auto">
+          <h2 className="text-3xl font-bold mb-8">
+            Final Score: {score}/{deck.length}
+          </h2>
+          <div className="space-y-4">
+            <Button 
+              onClick={restartStudy}
+              className="w-full"
+            >
+              Study Again
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={onExit}
+              className="w-full"
+            >
+              Return to Menu
+            </Button>
+          </div>
         </div>
       </div>
     );
