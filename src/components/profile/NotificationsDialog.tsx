@@ -13,6 +13,7 @@ import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationsList } from "./NotificationsList";
+import { useCallback, useState } from "react";
 
 interface NotificationContent {
   playlistName?: string;
@@ -22,8 +23,9 @@ interface NotificationContent {
 export function NotificationsDialog() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const { data: notifications } = useQuery({
+  const { data: notifications, refetch } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -65,10 +67,10 @@ export function NotificationsDialog() {
         content: notification.content as NotificationContent
       }));
     },
-    enabled: !!user?.id, // Only run query if user is authenticated
+    enabled: !!user?.id,
   });
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = useCallback(async (notificationId: string) => {
     if (!user?.id) return;
 
     const { error } = await supabase
@@ -82,13 +84,15 @@ export function NotificationsDialog() {
         description: "Failed to mark notification as read",
         variant: "destructive",
       });
+    } else {
+      refetch();
     }
-  };
+  }, [user?.id, toast, refetch]);
 
   const totalNotifications = notifications?.length || 0;
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
