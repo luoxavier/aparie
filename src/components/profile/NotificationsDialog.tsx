@@ -25,67 +25,79 @@ export function NotificationsDialog() {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data: notifications, refetch } = useQuery({
+  const { data: notifications, refetch, isError, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          sender:profiles!notifications_sender_id_fkey (
-            id,
-            display_name,
-            username,
-            avatar_url
-          )
-        `)
-        .eq('recipient_id', user.id)
-        .eq('read', false)
-        .neq('sender_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching notifications:', error);
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select(`
+            *,
+            sender:profiles!notifications_sender_id_fkey (
+              id,
+              display_name,
+              username,
+              avatar_url
+            )
+          `)
+          .eq('recipient_id', user.id)
+          .eq('read', false)
+          .neq('sender_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching notifications:', error);
+          throw error;
+        }
+
+        return data.map(notification => ({
+          ...notification,
+          sender: {
+            ...notification.sender,
+            display_name: notification.sender.username 
+              ? `${notification.sender.display_name} (@${notification.sender.username})`
+              : notification.sender.display_name
+          },
+          content: notification.content as NotificationContent
+        }));
+      } catch (error: any) {
+        console.error('Error in notifications query:', error);
         toast({
-          title: "Error",
-          description: "Failed to fetch notifications",
+          title: "Error loading notifications",
+          description: "Please try again later",
           variant: "destructive",
         });
-        return [];
+        throw error;
       }
-
-      return data.map(notification => ({
-        ...notification,
-        sender: {
-          ...notification.sender,
-          display_name: notification.sender.username 
-            ? `${notification.sender.display_name} (@${notification.sender.username})`
-            : notification.sender.display_name
-        },
-        content: notification.content as NotificationContent
-      }));
     },
     enabled: !!user?.id,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const markAsRead = useCallback(async (notificationId: string) => {
     if (!user?.id) return;
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', notificationId);
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+      
+      await refetch();
+    } catch (error: any) {
+      console.error('Error marking notification as read:', error);
       toast({
         title: "Error",
         description: "Failed to mark notification as read",
         variant: "destructive",
       });
-    } else {
-      refetch();
     }
   }, [user?.id, toast, refetch]);
 
@@ -111,14 +123,24 @@ export function NotificationsDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {notifications && notifications.length > 0 && (
+          {isLoading && (
+            <p className="text-center text-muted-foreground">Loading notifications...</p>
+          )}
+
+          {isError && (
+            <p className="text-center text-red-500">
+              Failed to load notifications. Please try again later.
+            </p>
+          )}
+
+          {!isLoading && !isError && notifications && notifications.length > 0 && (
             <NotificationsList 
               notifications={notifications}
               onMarkAsRead={markAsRead}
             />
           )}
 
-          {totalNotifications === 0 && (
+          {!isLoading && !isError && totalNotifications === 0 && (
             <p className="text-center text-muted-foreground">No new notifications</p>
           )}
         </div>
