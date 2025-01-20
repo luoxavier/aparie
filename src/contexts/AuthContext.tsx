@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       error.status === 400;
     
     if (isRefreshTokenError) {
-      // Clear the session and redirect to login
+      // Clear the session completely
       await supabase.auth.signOut();
       setSession(null);
       setUser(null);
@@ -79,6 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         if (_event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed successfully');
+        } else if (_event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          if (location.pathname !== '/login') {
+            navigate('/login');
+          }
         }
         
         setSession(newSession);
