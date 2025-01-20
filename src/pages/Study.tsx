@@ -33,44 +33,48 @@ export default function Study() {
 
   if (!selectedMode) {
     return (
-      <div className="container max-w-md mx-auto py-8 px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">{folderName}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Created by user</p>
-        </div>
+      <div className="container mx-auto py-6 px-4 sm:px-6">
+        <div className="max-w-md mx-auto">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold">{folderName}</h1>
+            <p className="text-sm text-muted-foreground mt-1">Created by user</p>
+          </div>
 
-        <div className="space-y-4">
-          <Button 
-            className="w-full h-24 text-xl"
-            onClick={() => setSelectedMode("normal")}
-          >
-            Study Mode
-          </Button>
-          <Button 
-            className="w-full h-24 text-xl"
-            variant="secondary"
-            onClick={() => setSelectedMode("infinite")}
-          >
-            Infinite Mode
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/profile")}
-            className="w-full mt-4 flex items-center justify-center gap-2"
-          >
-            <Home className="h-4 w-4" />
-            Return Home
-          </Button>
+          <div className="space-y-4">
+            <Button 
+              className="w-full h-16 text-lg"
+              onClick={() => setSelectedMode("normal")}
+            >
+              Study Mode
+            </Button>
+            <Button 
+              className="w-full h-16 text-lg"
+              variant="secondary"
+              onClick={() => setSelectedMode("infinite")}
+            >
+              Infinite Mode
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/profile")}
+              className="w-full mt-4 flex items-center justify-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Return Home
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <StudyMode 
-      deck={flashcards}
-      onExit={() => navigate("/profile")}
-      mode={selectedMode}
-    />
+    <div className="container mx-auto max-w-2xl py-6 px-4 sm:px-6">
+      <StudyMode 
+        deck={flashcards}
+        onExit={() => navigate("/profile")}
+        mode={selectedMode}
+      />
+    </div>
   );
 }

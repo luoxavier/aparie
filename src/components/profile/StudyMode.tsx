@@ -101,7 +101,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
 
   if (showScore) {
     return (
-      <div className="space-y-4 text-center">
+      <div className="space-y-4 text-center max-w-md mx-auto">
         <h2 className="text-3xl font-bold mb-8">
           Final Score: {score}/{deck.length}
         </h2>
@@ -125,7 +125,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-md mx-auto">
       <Button 
         variant="outline" 
         onClick={onExit}
