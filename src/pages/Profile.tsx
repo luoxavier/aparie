@@ -13,12 +13,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
+import { Progress } from "@/components/ui/progress";
 
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,13 +33,29 @@ export default function Profile() {
     },
   });
 
+  const { data: userStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['user-stats', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_streaks')
+        .select('level, xp, next_level_xp')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleNavigate = useCallback((path: string) => {
     navigate(path);
   }, [navigate]);
 
-  if (isLoading) {
+  if (profileLoading || statsLoading) {
     return <div className="container mx-auto py-4 px-4 max-w-7xl">Loading...</div>;
   }
+
+  const xpProgress = userStats ? (userStats.xp / userStats.next_level_xp) * 100 : 0;
 
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
@@ -47,26 +64,39 @@ export default function Profile() {
         <div className="flex flex-col space-y-4">
           {/* Top Section with Avatar and Settings */}
           <div className="flex justify-between items-start w-full">
-            <div className="flex items-center gap-4">
-              {profile?.avatar_url && (
-                <img
-                  src={profile.avatar_url}
-                  alt="Profile"
-                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
-                />
-              )}
-              <div className="flex items-center gap-2">
-                {profile?.username && (
-                  <span className="text-sm sm:text-base text-muted-foreground">(@{profile.username})</span>
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center gap-4">
+                {profile?.avatar_url && (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Profile"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
+                  />
                 )}
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold">{profile?.display_name}</span>
+                    {profile?.username && (
+                      <span className="text-sm text-muted-foreground">(@{profile.username})</span>
+                    )}
+                  </div>
+                  {userStats && (
+                    <div className="flex flex-col gap-1 w-full max-w-[200px]">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium">Level {userStats.level}</span>
+                        <span className="text-muted-foreground">{userStats.xp}/{userStats.next_level_xp} XP</span>
+                      </div>
+                      <Progress value={xpProgress} className="h-2" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            
             <SettingsDialog />
           </div>
 
           {/* Action Buttons Below Profile */}
-          <div className="flex justify-start items-center gap-2 sm:gap-4">
+          <div className="flex justify-start items-center gap-2 sm:gap-4 mt-6">
             <Button 
               variant="ghost" 
               size="icon" 
