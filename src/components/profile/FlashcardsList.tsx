@@ -7,7 +7,7 @@ import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
 export function FlashcardsList() {
   const { user } = useAuth();
 
-  const { data: flashcards = [], isLoading } = useQuery({
+  const { data: flashcards = [], isLoading, error } = useQuery({
     queryKey: ['flashcards', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -30,9 +30,12 @@ export function FlashcardsList() {
         `)
         .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching flashcards:", error);
+        throw error;
+      }
 
-      // Group flashcards by playlist_name
+      // Group flashcards by playlist_name and creator_id
       const groupedFlashcards = data.reduce((acc: any, card) => {
         const key = `${card.creator_id}-${card.playlist_name}`;
         if (!acc[key]) {
@@ -52,9 +55,28 @@ export function FlashcardsList() {
       return Object.values(groupedFlashcards);
     },
     enabled: !!user,
+    staleTime: 1000 * 60, // Cache for 1 minute
+    retry: 3,
   });
 
-  if (isLoading) return <div>Loading flashcards...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-32 bg-gray-200 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error in FlashcardsList:", error);
+    return (
+      <div className="text-center text-red-500">
+        Error loading flashcards. Please try again later.
+      </div>
+    );
+  }
 
   if (!flashcards.length) {
     return <EmptyFlashcardsState />;
