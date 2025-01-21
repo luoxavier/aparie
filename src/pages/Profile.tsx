@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -26,11 +27,30 @@ export default function Profile() {
         .from('profiles')
         .select('username, avatar_url, bio, display_name')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      if (!data) {
+        toast({
+          title: "Profile not found",
+          description: "Please try logging out and back in",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       return data;
     },
+    retry: 1,
   });
 
   const { data: userStats, isLoading: statsLoading } = useQuery({
@@ -40,11 +60,41 @@ export default function Profile() {
         .from('user_streaks')
         .select('level, xp, next_level_xp')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user stats:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load user stats",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      if (!data) {
+        // Create default stats if none exist
+        const defaultStats = {
+          level: 1,
+          xp: 0,
+          next_level_xp: 100
+        };
+
+        const { error: insertError } = await supabase
+          .from('user_streaks')
+          .insert([{ user_id: user?.id, ...defaultStats }]);
+
+        if (insertError) {
+          console.error('Error creating user stats:', insertError);
+          throw insertError;
+        }
+
+        return defaultStats;
+      }
+
       return data;
     },
+    retry: 1,
   });
 
   const handleNavigate = useCallback((path: string) => {
@@ -53,6 +103,10 @@ export default function Profile() {
 
   if (profileLoading || statsLoading) {
     return <div className="container mx-auto py-4 px-4 max-w-7xl">Loading...</div>;
+  }
+
+  if (!profile) {
+    return <div className="container mx-auto py-4 px-4 max-w-7xl">Profile not found</div>;
   }
 
   const xpProgress = userStats ? (userStats.xp / userStats.next_level_xp) * 100 : 0;
