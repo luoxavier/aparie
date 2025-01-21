@@ -12,13 +12,12 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback } from "react";
 
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,14 +30,6 @@ export default function Profile() {
       return data;
     },
   });
-
-  const handleNavigate = useCallback((path: string) => {
-    navigate(path);
-  }, [navigate]);
-
-  if (isLoading) {
-    return <div className="container mx-auto py-4 px-4 max-w-7xl">Loading...</div>;
-  }
 
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
@@ -71,7 +62,7 @@ export default function Profile() {
               variant="ghost" 
               size="icon" 
               className="rounded-full"
-              onClick={() => handleNavigate('/friends')}
+              onClick={() => navigate('/friends')}
             >
               <Users className="h-5 w-5" />
             </Button>
@@ -80,15 +71,13 @@ export default function Profile() {
               variant="ghost" 
               size="icon" 
               className="rounded-full"
-              onClick={() => handleNavigate('/profile/edit')}
+              onClick={() => navigate('/profile/edit')}
             >
               <User className="h-5 w-5" />
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button 
-                  className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
-                >
+                <Button className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all">
                   <PenLine className="h-5 w-5 mr-2" />
                   <span>Create Cards</span>
                 </Button>

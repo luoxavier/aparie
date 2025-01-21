@@ -91,6 +91,7 @@ export function CreateMultipleCards({
           existingCards,
           formData.isPublic
         );
+        // Call onSave directly without navigating
         onSave?.();
       } else {
         await handleCreation(
@@ -101,16 +102,19 @@ export function CreateMultipleCards({
           formData.isPublic
         );
         
+        // Send notification only when creating a new playlist for a recipient
         if (formData.recipientId && formData.recipientId !== "self" && formData.recipientId !== user.id) {
           await sendNotification(formData.recipientId, formData.playlistName);
         }
       }
 
+      // Show success toast
       toast({
         title: "Success",
         description: isModifying ? "Playlist updated successfully!" : "Flashcards created successfully!",
       });
 
+      // Close the dialog by calling onComplete
       onComplete?.();
     } catch (error) {
       console.error("Error handling flashcards:", error);
