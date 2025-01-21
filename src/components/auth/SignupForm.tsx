@@ -39,11 +39,25 @@ export function SignupForm() {
       // Check username first
       await checkExistingUsername(username);
       
-      // Attempt signup - the service will handle the case of existing email
+      // Attempt signup
       await signUp(email, password, username, username);
+      
+      toast({
+        title: "Account created",
+        description: "Welcome to the app! You can now sign in.",
+      });
+      
       navigate("/profile");
-    } catch (error) {
-      handleSignupError(error);
+    } catch (error: any) {
+      if (error?.message?.includes('User already registered') || error?.body?.includes('user_already_exists')) {
+        toast({
+          variant: "destructive",
+          title: "Account already exists",
+          description: "This email is already registered. Please try logging in instead.",
+        });
+      } else {
+        handleSignupError(error);
+      }
     } finally {
       setLoading(false);
     }
