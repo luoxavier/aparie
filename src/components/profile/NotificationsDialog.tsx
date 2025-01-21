@@ -52,30 +52,36 @@ export function NotificationsDialog() {
           throw error;
         }
 
+        if (!data) return [];
+
         return data.map(notification => ({
           ...notification,
           sender: {
             ...notification.sender,
-            display_name: notification.sender.username 
+            display_name: notification.sender?.username 
               ? `${notification.sender.display_name} (@${notification.sender.username})`
-              : notification.sender.display_name
+              : notification.sender?.display_name || 'Unknown User'
           },
           content: notification.content as NotificationContent
         }));
       } catch (error: any) {
         console.error('Error in notifications query:', error);
-        toast({
-          title: "Error loading notifications",
-          description: "Please try again later",
-          variant: "destructive",
-        });
+        // Check if it's an authentication error
+        if (error.message?.includes('JWT')) {
+          // Refresh the session
+          const { data: session } = await supabase.auth.getSession();
+          if (!session) {
+            throw new Error('Session expired. Please log in again.');
+          }
+        }
         throw error;
       }
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isOpen, // Only fetch when dialog is open
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 1000 * 60, // 1 minute
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -104,8 +110,15 @@ export function NotificationsDialog() {
 
   const totalNotifications = notifications?.length || 0;
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      refetch(); // Refresh notifications when dialog opens
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -133,9 +146,18 @@ export function NotificationsDialog() {
           )}
 
           {isError && (
-            <p className="text-center text-red-500">
-              Failed to load notifications. Please try again later.
-            </p>
+            <div className="text-center space-y-4">
+              <p className="text-red-500">
+                Failed to load notifications
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => refetch()}
+                className="mx-auto"
+              >
+                Try Again
+              </Button>
+            </div>
           )}
 
           {!isLoading && !isError && notifications && notifications.length > 0 && (
