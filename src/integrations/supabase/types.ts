@@ -382,11 +382,14 @@ export type Database = {
           highest_streak: number | null
           id: string
           last_activity_date: string | null
+          level: number | null
           monthly_points: number | null
+          next_level_xp: number | null
           total_points: number | null
           updated_at: string
           user_id: string
           weekly_points: number | null
+          xp: number | null
         }
         Insert: {
           created_at?: string
@@ -394,11 +397,14 @@ export type Database = {
           highest_streak?: number | null
           id?: string
           last_activity_date?: string | null
+          level?: number | null
           monthly_points?: number | null
+          next_level_xp?: number | null
           total_points?: number | null
           updated_at?: string
           user_id: string
           weekly_points?: number | null
+          xp?: number | null
         }
         Update: {
           created_at?: string
@@ -406,11 +412,14 @@ export type Database = {
           highest_streak?: number | null
           id?: string
           last_activity_date?: string | null
+          level?: number | null
           monthly_points?: number | null
+          next_level_xp?: number | null
           total_points?: number | null
           updated_at?: string
           user_id?: string
           weekly_points?: number | null
+          xp?: number | null
         }
         Relationships: [
           {
@@ -427,11 +436,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_user_xp: {
+        Args: {
+          user_id_param: string
+          xp_amount: number
+        }
+        Returns: undefined
+      }
+      calculate_next_level_xp: {
+        Args: {
+          current_level: number
+        }
+        Returns: number
+      }
       get_user_email_from_identifier: {
         Args: {
           identifier: string
         }
         Returns: string
+      }
+      update_leaderboard_score: {
+        Args: {
+          user_id_param: string
+          playlist_name_param: string
+          creator_id_param: string
+          score: number
+        }
+        Returns: undefined
       }
     }
     Enums: {
