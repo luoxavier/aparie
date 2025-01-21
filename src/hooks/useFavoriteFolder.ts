@@ -10,14 +10,19 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const checkFavoriteStatus = async (retryCount = 0) => {
+  const checkFavoriteStatus = async () => {
     if (!userId || !creatorId || !playlistName) return;
 
     try {
-      // Verify user session is valid
+      // First verify the session is valid
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error("Session error:", sessionError);
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        return;
+      }
+
+      if (!session) {
+        console.log('No active session');
         return;
       }
 
@@ -31,12 +36,6 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
 
       if (error) {
         console.error('Error checking favorite status:', error);
-        
-        // Implement exponential backoff for retries
-        if (retryCount < 3) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          setTimeout(() => checkFavoriteStatus(retryCount + 1), delay);
-        }
         return;
       }
 
@@ -50,6 +49,11 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
     if (user?.id) {
       checkFavoriteStatus();
     }
+
+    return () => {
+      // Cleanup function
+      setIsFavorited(false);
+    };
   }, [userId, creatorId, playlistName, user?.id]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
@@ -57,7 +61,7 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
     if (!userId || !creatorId || !playlistName) return;
 
     try {
-      // Verify user session is valid
+      // Verify session is valid before proceeding
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
         toast({
