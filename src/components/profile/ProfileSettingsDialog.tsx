@@ -17,34 +17,69 @@ export function ProfileSettingsDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch user streak data
+  // Fetch user streak data with error handling
   const { data: streakData } = useQuery({
     queryKey: ['streak', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_streaks')
-        .select('current_streak, highest_streak')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('user_streaks')
+          .select('current_streak, highest_streak')
+          .eq('user_id', user?.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error fetching streak data:', error);
+          throw error;
+        }
+        return data;
+      } catch (error: any) {
+        if (error.message?.includes('JWT')) {
+          const { data: session } = await supabase.auth.getSession();
+          if (!session) {
+            await signOut();
+            throw new Error('Session expired. Please log in again.');
+          }
+        }
+        throw error;
+      }
     },
+    enabled: !!user?.id && isOpen,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Fetch current profile data
-  const { data: profile } = useQuery({
+  // Fetch current profile data with error handling
+  const { data: profile, isError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('bio')
-        .eq('id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('bio')
+          .eq('id', user?.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error fetching profile:', error);
+          throw error;
+        }
+        return data;
+      } catch (error: any) {
+        if (error.message?.includes('JWT')) {
+          const { data: session } = await supabase.auth.getSession();
+          if (!session) {
+            await signOut();
+            throw new Error('Session expired. Please log in again.');
+          }
+        }
+        throw error;
+      }
     },
+    enabled: !!user?.id && isOpen,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 1000 * 60, // Cache for 1 minute
   });
 
   // Update bio state when profile data is loaded
@@ -113,8 +148,20 @@ export function ProfileSettingsDialog() {
         title: "Bio updated",
         description: "Your bio has been updated successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating bio:', error);
+      if (error.message?.includes('JWT')) {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session) {
+          await signOut();
+          toast({
+            variant: "destructive",
+            title: "Session expired",
+            description: "Please log in again.",
+          });
+          return;
+        }
+      }
       toast({
         variant: "destructive",
         title: "Error",
@@ -164,67 +211,75 @@ export function ProfileSettingsDialog() {
           <DialogTitle>Profile Settings</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {streakData && (
-            <div className="bg-muted p-4 rounded-lg space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Current Streak</span>
-                <span className="text-lg font-bold">{streakData.current_streak} days</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Highest Streak</span>
-                <span className="text-lg font-bold">{streakData.highest_streak} days</span>
-              </div>
+          {isError ? (
+            <div className="text-center text-red-500">
+              Failed to load profile data. Please try again later.
             </div>
+          ) : (
+            <>
+              {streakData && (
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Current Streak</span>
+                    <span className="text-lg font-bold">{streakData.current_streak} days</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Highest Streak</span>
+                    <span className="text-lg font-bold">{streakData.highest_streak} days</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={isUploading}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Tell us about yourself..."
+                />
+              </div>
+
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                onClick={() => signOut()}
+              >
+                Log Out
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full">Delete Account</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAccount}>Delete Account</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           )}
-
-          <div className="space-y-2">
-            <Label>Profile Picture</Label>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={isUploading}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us about yourself..."
-            />
-          </div>
-
-          <Button 
-            variant="destructive" 
-            className="w-full"
-            onClick={() => signOut()}
-          >
-            Log Out
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full">Delete Account</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAccount}>Delete Account</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </DialogContent>
     </Dialog>

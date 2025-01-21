@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,33 +16,71 @@ export default function ProfileEdit() {
   const [bio, setBio] = useState("");
   const initialBioRef = useRef("");
   const hasUnsavedChanges = useRef(false);
+  const queryClient = useQueryClient();
 
-  const { data: profile } = useQuery({
+  // Enhanced profile query with error handling and retry logic
+  const { data: profile, isError: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, avatar_url, bio, display_name')
-        .eq('id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, avatar_url, bio, display_name')
+          .eq('id', user?.id)
+          .single();
+        
+        if (error) {
+          // Check for JWT errors
+          if (error.message?.includes('JWT')) {
+            const { data: session } = await supabase.auth.getSession();
+            if (!session) {
+              await signOut();
+              throw new Error('Session expired. Please log in again.');
+            }
+          }
+          throw error;
+        }
+        return data;
+      } catch (error: any) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
     },
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!user?.id,
   });
 
-  const { data: streakData } = useQuery({
+  // Enhanced streaks query with error handling
+  const { data: streakData, isError: streakError } = useQuery({
     queryKey: ['streaks', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_streaks')
-        .select('current_streak, highest_streak')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('user_streaks')
+          .select('current_streak, highest_streak')
+          .eq('user_id', user?.id)
+          .single();
+        
+        if (error) {
+          if (error.message?.includes('JWT')) {
+            const { data: session } = await supabase.auth.getSession();
+            if (!session) {
+              await signOut();
+              throw new Error('Session expired. Please log in again.');
+            }
+          }
+          throw error;
+        }
+        return data;
+      } catch (error: any) {
+        console.error('Streak fetch error:', error);
+        throw error;
+      }
     },
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!user?.id,
   });
 
   useEffect(() => {
@@ -61,10 +99,30 @@ export default function ProfileEdit() {
         .update({ bio })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('JWT')) {
+          const { data: session } = await supabase.auth.getSession();
+          if (!session) {
+            await signOut();
+            toast({
+              variant: "destructive",
+              title: "Session expired",
+              description: "Please log in again.",
+            });
+            return;
+          }
+        }
+        throw error;
+      }
 
       initialBioRef.current = bio;
       hasUnsavedChanges.current = false;
+      
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast({
+        title: "Success",
+        description: "Bio updated successfully",
+      });
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -133,9 +191,32 @@ export default function ProfileEdit() {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+      });
+    }
   };
+
+  if (profileError || streakError) {
+    return (
+      <div className="container mx-auto py-4 px-4 max-w-2xl">
+        <div className="text-center space-y-4">
+          <p className="text-red-500">Failed to load profile data. Please try again later.</p>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['profile'] })}>
+            Retry
+          </Button>
+          <ReturnHomeButton />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-4 px-4 max-w-2xl">
