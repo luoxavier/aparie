@@ -75,6 +75,7 @@ export function NotificationsDialog() {
     enabled: !!user?.id,
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 1000 * 60, // 1 minute
   });
 
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -124,7 +125,11 @@ export function NotificationsDialog() {
         </DialogHeader>
         <div className="space-y-4">
           {isLoading && (
-            <p className="text-center text-muted-foreground">Loading notifications...</p>
+            <div className="space-y-4 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-gray-200 rounded-lg" />
+              ))}
+            </div>
           )}
 
           {isError && (
