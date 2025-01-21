@@ -2,20 +2,25 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useFavoriteFolder(userId?: string, creatorId?: string, playlistName?: string) {
   const [isFavorited, setIsFavorited] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    checkFavoriteStatus();
-  }, [userId, creatorId, playlistName]);
-
-  const checkFavoriteStatus = async () => {
+  const checkFavoriteStatus = async (retryCount = 0) => {
     if (!userId || !creatorId || !playlistName) return;
 
     try {
+      // Verify user session is valid
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error("Session error:", sessionError);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('favorite_folders')
         .select('*')
@@ -24,18 +29,45 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
         .eq('playlist_name', playlistName)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking favorite status:', error);
+        
+        // Implement exponential backoff for retries
+        if (retryCount < 3) {
+          const delay = Math.pow(2, retryCount) * 1000;
+          setTimeout(() => checkFavoriteStatus(retryCount + 1), delay);
+        }
+        return;
+      }
+
       setIsFavorited(!!data);
     } catch (error) {
-      console.error('Error checking favorite status:', error);
+      console.error('Error in checkFavoriteStatus:', error);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      checkFavoriteStatus();
+    }
+  }, [userId, creatorId, playlistName, user?.id]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!userId || !creatorId || !playlistName) return;
 
     try {
+      // Verify user session is valid
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast({
+          title: "Authentication Error",
+          description: "Please sign in again to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (isFavorited) {
         const { error } = await supabase
           .from('favorite_folders')
@@ -47,8 +79,8 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
         if (error) throw error;
         setIsFavorited(false);
         toast({
-          title: "Playlist removed from favorites",
-          description: "The playlist has been removed from your favorites.",
+          title: "Success",
+          description: "Playlist removed from favorites",
         });
       } else {
         const { error } = await supabase
@@ -62,16 +94,18 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
         if (error) throw error;
         setIsFavorited(true);
         toast({
-          title: "Playlist added to favorites",
-          description: "The playlist has been added to your favorites.",
+          title: "Success",
+          description: "Playlist added to favorites",
         });
       }
+      
+      // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['favorite-folders'] });
     } catch (error) {
       console.error('Error toggling favorite:', error);
       toast({
         title: "Error",
-        description: "There was an error updating your favorites.",
+        description: "Failed to update favorites. Please try again.",
         variant: "destructive",
       });
     }
