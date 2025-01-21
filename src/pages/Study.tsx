@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { StudyMode } from "@/components/profile/StudyMode";
 import { Home } from "lucide-react";
@@ -15,6 +15,7 @@ interface Flashcard {
 export default function Study() {
   const location = useLocation();
   const navigate = useNavigate();
+  const params = useParams();
   const { flashcards, folderName, creatorName } = location.state || { 
     flashcards: [], 
     folderName: "Untitled",
@@ -82,7 +83,7 @@ export default function Study() {
     <div className="container mx-auto max-w-2xl py-6 px-4 sm:px-6">
       <StudyMode 
         deck={flashcards}
-        onExit={() => navigate("/profile")}
+        onExit={() => setSelectedMode(null)}
         mode={selectedMode}
       />
     </div>

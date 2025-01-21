@@ -61,6 +61,14 @@ export function AppRoutes() {
           </PrivateRoute>
         }
       />
+      <Route
+        path="/study-playlist/:creatorId/:playlistName"
+        element={
+          <PrivateRoute>
+            <Study />
+          </PrivateRoute>
+        }
+      />
     </Routes>
   );
 }
