@@ -130,7 +130,7 @@ export function CreateMultipleCardsForm({
   const showModifyToggle = (!isPublic && (recipientId !== "self" || isModifying));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-3xl mx-auto p-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center space-x-2">
         <Switch
           id="public-playlist"
@@ -168,32 +168,20 @@ export function CreateMultipleCardsForm({
         </>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-        <CreateCardForm
-          cards={cards}
-          onUpdateCard={updateCard}
-          onRemoveCard={removeCard}
-          onKeyPress={handleKeyPress}
-        />
+      <CreateCardForm
+        cards={cards}
+        onUpdateCard={updateCard}
+        onRemoveCard={removeCard}
+        onKeyPress={handleKeyPress}
+      />
 
-        <div className="mt-4 space-y-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={addCard}
-            className="w-full sm:w-auto"
-          >
-            Add Another Card
-          </Button>
+      <Button type="button" variant="outline" onClick={addCard}>
+        Add Another Card
+      </Button>
 
-          <Button 
-            type="submit" 
-            className="w-full"
-          >
-            {isModifying ? "Save" : "Create"}
-          </Button>
-        </div>
-      </div>
+      <Button type="submit" className="w-full">
+        {isModifying ? "Save and Close" : "Create and Close"}
+      </Button>
     </form>
   );
 }
