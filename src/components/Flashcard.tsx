@@ -37,10 +37,16 @@ export const Flashcard = ({
 
   useEffect(() => {
     if (!answers.length) {
+      // Filter out any instances of the correct answer from otherAnswers
       const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
+      
+      // Take up to 3 wrong answers
       const selectedWrongAnswers = uniqueAnswers.slice(0, 3);
-      const allAnswers = [back, ...selectedWrongAnswers];
-      setAnswers(shuffle(allAnswers));
+      
+      // Always include the correct answer and shuffle with wrong answers
+      const allAnswers = shuffle([back, ...selectedWrongAnswers]);
+      
+      setAnswers(allAnswers);
     }
   }, [back, otherAnswers, answers.length]);
 
