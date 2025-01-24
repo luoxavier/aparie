@@ -21,8 +21,8 @@ function App() {
       <Router>
         <AuthProvider>
           <AppRoutes />
-          <FeedbackDialog />
           <Toaster />
+          <FeedbackDialog />
         </AuthProvider>
       </Router>
     </QueryClientProvider>
