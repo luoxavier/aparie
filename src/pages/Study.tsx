@@ -24,12 +24,16 @@ export default function Study() {
 
   const [selectedMode, setSelectedMode] = useState<"normal" | "infinite" | "mastery" | null>(null);
 
+  const handleHomeClick = () => {
+    navigate("/");
+  };
+
   if (!flashcards?.length) {
     return (
       <div className="container max-w-md mx-auto py-8 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">No flashcards found</h1>
-          <Button onClick={() => navigate("/profile")}>Return to Profile</Button>
+          <Button onClick={handleHomeClick}>Return to Profile</Button>
         </div>
       </div>
     );
@@ -67,7 +71,7 @@ export default function Study() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate("/profile")}
+              onClick={handleHomeClick}
               className="w-full mt-4 flex items-center justify-center gap-2"
             >
               <Home className="h-4 w-4" />
