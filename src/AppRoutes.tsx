@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { PrivateRoute } from "./components/PrivateRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Home from "./pages/Profile";
+import Profile from "./pages/Profile";
 import Study from "./pages/Study";
 import StudyMode from "./pages/StudyMode";
 import Friends from "./pages/Friends";
@@ -19,7 +19,7 @@ export default function AppRoutes() {
         path="/"
         element={
           <PrivateRoute>
-            <Home />
+            <Profile />
           </PrivateRoute>
         }
       />
