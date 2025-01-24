@@ -80,7 +80,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
           }
         } else {
           setCurrentCardIndex(0);
-          setCurrentReviewMistakes([...currentReviewMistakes]);
+          setCurrentReviewMistakes(shuffle([...currentReviewMistakes]));
         }
       }
     } else if (currentCardIndex < shuffledDeck.length - 1) {
@@ -137,7 +137,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
 
   const startReviewMode = () => {
     setIsReviewingMistakes(true);
-    setCurrentReviewMistakes([...mistakes]);
+    setCurrentReviewMistakes(shuffle([...mistakes]));
     setCurrentCardIndex(0);
     setMistakes([]);
   };

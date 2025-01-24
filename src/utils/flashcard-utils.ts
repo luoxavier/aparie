@@ -8,37 +8,22 @@ export const generateAnswerOptions = (
   deck: Flashcard[],
   mistakes: Flashcard[] = []
 ) => {
-  // Always include the correct answer
+  // Get the correct answer
   const correctAnswer = currentCard.back;
   
-  // Get all unique answers from the deck excluding the current card's answer
-  const allPossibleAnswers = [...new Set(
-    deck
-      .filter(card => card.back !== correctAnswer)
-      .map(card => card.back)
-  )];
+  // Get all possible wrong answers from the deck (excluding current card's answer)
+  const wrongAnswers = deck
+    .filter(card => card.back !== correctAnswer)
+    .map(card => card.back);
   
-  // Get unique mistake answers excluding the current card's answer
-  const mistakeAnswers = [...new Set(
-    mistakes
-      .map(card => card.back)
-      .filter(answer => answer !== correctAnswer)
-  )];
-  
-  // If we have less than 3 other possible answers total, return all available answers
-  if (allPossibleAnswers.length < 3) {
-    return [...new Set([correctAnswer, ...allPossibleAnswers])]
+  // If we don't have enough wrong answers, return all unique answers
+  if (wrongAnswers.length < 3) {
+    return [...new Set([correctAnswer, ...wrongAnswers])]
       .sort(() => Math.random() - 0.5);
   }
   
-  // Create a pool of wrong answers, prioritizing mistakes
-  const wrongAnswersPool = [
-    ...mistakeAnswers,
-    ...allPossibleAnswers.filter(answer => !mistakeAnswers.includes(answer))
-  ];
-  
-  // Randomly select 3 wrong answers
-  const selectedWrongAnswers = wrongAnswersPool
+  // Shuffle wrong answers and take 3
+  const selectedWrongAnswers = [...wrongAnswers]
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
   
