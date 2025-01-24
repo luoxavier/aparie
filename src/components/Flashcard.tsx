@@ -85,12 +85,13 @@ export const Flashcard = ({
         title: "Correct! 🎉",
         description: "+10 points!",
       });
+      // Use a consistent animation duration of 500ms
       setTimeout(() => {
         setSelectedAnswer(null);
         setIsCorrect(null);
         onResult(true);
         onNext();
-      }, 1000);
+      }, 500);
     } else {
       playSound('incorrect');
       vibrate('incorrect');
