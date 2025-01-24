@@ -1,16 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithIdentifier, signUpWithEmail, signOut as authSignOut } from "@/services/auth";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signIn: (identifier: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, username: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateStreak: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,46 +17,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleAuthError = async (error: any) => {
-    console.error('Auth error:', error);
-    
-    const isRefreshTokenError = 
-      error.message?.includes('refresh_token_not_found') || 
-      error.message?.includes('Invalid Refresh Token') ||
-      error.status === 400;
-    
-    if (isRefreshTokenError) {
-      // Clear the session and user state
-      await supabase.auth.signOut();
-      setSession(null);
-      setUser(null);
-      
-      if (location.pathname !== '/login') {
-        navigate('/login');
-        toast({
-          title: "Session expired",
-          description: "Please sign in again to continue",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "Authentication error",
-        description: "There was a problem with your session. Please try signing in again.",
-        variant: "destructive",
-      });
-    }
-    setLoading(false);
-  };
 
   useEffect(() => {
-    const initSession = async () => {
+    const initializeAuth = async () => {
       try {
-        // Clear any existing invalid session first
+        // Clear any existing sessions first
         const currentSession = await supabase.auth.getSession();
         if (currentSession.error) {
           await supabase.auth.signOut();
@@ -70,57 +34,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          handleAuthError(error);
+          console.error('Error getting session:', error);
           return;
         }
-        
+
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
+          // Update streak when user logs in
+          await updateUserStreak();
         }
-        setLoading(false);
+
       } catch (error) {
-        handleAuthError(error);
+        console.error('Error in auth initialization:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    initSession();
+    initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      try {
-        if (_event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed successfully');
-        } else if (_event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-          if (location.pathname !== '/login') {
-            navigate('/login');
-          }
-        }
-        
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setLoading(false);
-      } catch (error) {
-        handleAuthError(error);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log('Auth state changed:', event);
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      if (event === 'SIGNED_IN') {
+        // Update streak when user signs in
+        await updateUserStreak();
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast, location.pathname]);
+  }, [navigate]);
+
+  const updateUserStreak = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_streaks')
+        .update({ last_activity_date: new Date().toISOString() })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating streak:', error);
+        return;
+      }
+
+      // Fetch updated streak data
+      const { data: streakData } = await supabase
+        .from('user_streaks')
+        .select('current_streak, highest_streak')
+        .eq('user_id', user.id)
+        .single();
+
+      if (streakData) {
+        toast({
+          title: `Daily Streak: ${streakData.current_streak} days`,
+          description: streakData.current_streak > 1 
+            ? "Keep up the great work!" 
+            : "Welcome back! Start your streak!",
+        });
+      }
+    } catch (error) {
+      console.error('Error in updateUserStreak:', error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setSession(null);
+      navigate('/login');
+      
+      toast({
+        title: "Signed out successfully",
+        description: "Come back tomorrow to keep your streak!",
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: "Please try again",
+      });
+    }
+  };
 
   const value = {
-    session,
     user,
-    signIn: signInWithIdentifier,
-    signUp: signUpWithEmail,
-    signOut: authSignOut,
+    session,
+    signOut,
+    updateStreak: updateUserStreak,
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return null; // or a loading spinner
   }
 
   return (
@@ -133,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

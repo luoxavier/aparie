@@ -6,6 +6,7 @@ import { StudyProgress } from "@/components/study/StudyProgress";
 import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { playSound, vibrate } from "@/utils/sound";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StudyModeProps {
   deck: FlashcardType[];
@@ -21,6 +22,7 @@ interface FlashcardType {
 }
 
 export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
+  const { updateStreak } = useAuth();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [mistakes, setMistakes] = useState<FlashcardType[]>([]);
@@ -31,6 +33,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
   const [showScore, setShowScore] = useState(false);
   const [infiniteCycles, setInfiniteCycles] = useState(0);
   const [perfectCycles, setPerfectCycles] = useState(0);
+  const [hasUpdatedStreak, setHasUpdatedStreak] = useState(false);
 
   const handleCardResult = (correct: boolean) => {
     const currentCard = isReviewingMistakes 
@@ -126,6 +129,14 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
     }
   };
 
+  const handleStudyComplete = async () => {
+    if (!hasUpdatedStreak) {
+      await updateStreak();
+      setHasUpdatedStreak(true);
+    }
+    setShowScore(true);
+  };
+
   const startNewCycle = () => {
     setInfiniteCycles(prev => prev + 1);
     setShuffledDeck(shuffle([...deck]));
@@ -153,6 +164,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
     setShowScore(false);
     setInfiniteCycles(0);
     setPerfectCycles(0);
+    setHasUpdatedStreak(false);
   };
 
   const currentCards = isReviewingMistakes ? currentReviewMistakes : shuffledDeck;
