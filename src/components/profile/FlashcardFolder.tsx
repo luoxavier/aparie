@@ -23,6 +23,7 @@ interface Flashcard {
   creator_id: string;
   creator: Creator;
   recipient_can_modify?: boolean;
+  is_public?: boolean;
 }
 
 interface FlashcardFolderProps {
@@ -53,6 +54,9 @@ export function FlashcardFolder({
   const [showCards, setShowCards] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
+
+  // Check if any flashcard in the playlist is public
+  const isPublic = flashcards.some(card => card.is_public);
 
   const handleFolderClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
@@ -120,6 +124,7 @@ export function FlashcardFolder({
           playlistName={playlistName}
           isExpanded={showCards}
           recipientCanModify={recipientCanModify}
+          isPublic={isPublic}
         />
       </div>
 
