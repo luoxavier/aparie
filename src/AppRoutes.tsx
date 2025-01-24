@@ -30,6 +30,14 @@ export function AppRoutes() {
         }
       />
       <Route
+        path="/profile/:id"
+        element={
+          <PrivateRoute>
+            <FriendProfile />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/profile/edit"
         element={
           <PrivateRoute>
