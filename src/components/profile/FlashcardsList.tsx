@@ -28,7 +28,8 @@ export function FlashcardsList() {
             username
           )
         `)
-        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`);
+        .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .eq('is_public', false); // Only fetch non-public playlists
 
       if (error) {
         console.error("Error fetching flashcards:", error);
