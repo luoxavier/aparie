@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AppRoutes from "./AppRoutes";
+import { FeedbackDialog } from "./components/profile/FeedbackDialog";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -20,6 +21,7 @@ function App() {
       <Router>
         <AuthProvider>
           <AppRoutes />
+          <FeedbackDialog />
           <Toaster />
         </AuthProvider>
       </Router>
