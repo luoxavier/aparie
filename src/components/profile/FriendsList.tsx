@@ -100,24 +100,22 @@ export function FriendsList() {
               {(currentUser.display_name || currentUser.username || "?").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-grow">
-            <div className="flex items-center gap-4">
+          <div className="flex-grow space-y-4">
+            <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold">{currentUser.display_name || currentUser.username}</h2>
               <AddFriendDialog />
             </div>
             {currentUser.status && (
               <p className="text-sm text-muted-foreground">{currentUser.status}</p>
             )}
+            <FriendSearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search friends..."
+            />
           </div>
         </div>
       )}
-
-      {/* Search Bar */}
-      <FriendSearchInput
-        value={searchQuery}
-        onChange={setSearchQuery}
-        placeholder="Search friends..."
-      />
 
       {/* Friends List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
