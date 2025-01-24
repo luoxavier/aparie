@@ -90,14 +90,14 @@ export const Flashcard = ({
         title: "Correct! 🎉",
         description: "+10 points!",
       });
-      // Use a consistent animation duration of 500ms
+      // Use a shorter animation duration of 250ms
       setTimeout(() => {
         setSelectedAnswer(null);
         setIsCorrect(null);
         setCurrentAnswers([]); // Reset answers for next card
         onResult(true);
         onNext();
-      }, 500);
+      }, 250);
     } else {
       playSound('incorrect');
       vibrate('incorrect');
