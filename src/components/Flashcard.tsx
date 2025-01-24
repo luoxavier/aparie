@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { shuffle } from "@/lib/utils";
@@ -30,25 +30,24 @@ export const Flashcard = ({
 }: FlashcardProps) => {
   const { user } = useAuth();
   const [isFlipped, setIsFlipped] = useState(false);
-  const [answers, setAnswers] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [maintainStreak, setMaintainStreak] = useState(true);
 
-  useEffect(() => {
-    if (!answers.length) {
-      // Filter out any instances of the correct answer from otherAnswers
-      const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
-      
-      // Take up to 3 wrong answers
-      const selectedWrongAnswers = uniqueAnswers.slice(0, 3);
-      
-      // Always include the correct answer and shuffle with wrong answers
-      const allAnswers = shuffle([back, ...selectedWrongAnswers]);
-      
-      setAnswers(allAnswers);
-    }
-  }, [back, otherAnswers, answers.length]);
+  // Generate fresh answers for each card
+  const generateAnswers = () => {
+    // Filter out any instances of the correct answer from otherAnswers
+    const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
+    
+    // Shuffle and take up to 3 wrong answers
+    const selectedWrongAnswers = shuffle(uniqueAnswers).slice(0, 3);
+    
+    // Always include the correct answer and shuffle with wrong answers
+    return shuffle([back, ...selectedWrongAnswers]);
+  };
+
+  // Generate answers when component mounts or when back/otherAnswers change
+  const answers = generateAnswers();
 
   const updateLeaderboard = async (points: number) => {
     if (!user?.id || !creatorId || !playlistName) return;
