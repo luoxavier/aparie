@@ -66,9 +66,7 @@ export function NotificationsDialog() {
         }));
       } catch (error: any) {
         console.error('Error in notifications query:', error);
-        // Check if it's an authentication error
         if (error.message?.includes('JWT')) {
-          // Refresh the session
           const { data: session } = await supabase.auth.getSession();
           if (!session) {
             throw new Error('Session expired. Please log in again.');
@@ -77,11 +75,11 @@ export function NotificationsDialog() {
         throw error;
       }
     },
-    enabled: !!user?.id && isOpen, // Only fetch when dialog is open
+    enabled: !!user?.id && isOpen,
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 1000 * 60, // 1 minute
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
   });
 
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -113,7 +111,7 @@ export function NotificationsDialog() {
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open) {
-      refetch(); // Refresh notifications when dialog opens
+      refetch();
     }
   };
 
@@ -138,9 +136,18 @@ export function NotificationsDialog() {
         </DialogHeader>
         <div className="space-y-4">
           {isLoading && (
-            <div className="space-y-4 animate-pulse">
+            <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded-lg" />
+                <div 
+                  key={i} 
+                  className="h-16 bg-muted animate-pulse rounded-lg flex items-center p-4"
+                >
+                  <div className="w-10 h-10 bg-muted-foreground/20 rounded-full" />
+                  <div className="ml-4 space-y-2 flex-1">
+                    <div className="h-4 bg-muted-foreground/20 rounded w-3/4" />
+                    <div className="h-3 bg-muted-foreground/20 rounded w-1/2" />
+                  </div>
+                </div>
               ))}
             </div>
           )}
