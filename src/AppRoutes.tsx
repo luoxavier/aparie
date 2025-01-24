@@ -1,14 +1,16 @@
 import { Routes, Route } from "react-router-dom";
-import { PrivateRoute } from "@/components/PrivateRoute";
-import Login from "@/pages/Login";
-import Signup from "@/pages/Signup";
-import Profile from "@/pages/Profile";
-import ProfileEdit from "@/pages/ProfileEdit";
-import Friends from "@/pages/Friends";
-import FriendProfile from "@/pages/FriendProfile";
-import Study from "@/pages/Study";
+import { PrivateRoute } from "./components/PrivateRoute";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Home from "./pages/Profile";
+import Study from "./pages/Study";
+import StudyMode from "./pages/StudyMode";
+import Friends from "./pages/Friends";
+import FriendProfile from "./pages/FriendProfile";
+import ProfileEdit from "./pages/ProfileEdit";
+import Leaderboard from "./pages/Leaderboard";
 
-export function AppRoutes() {
+export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -17,31 +19,23 @@ export function AppRoutes() {
         path="/"
         element={
           <PrivateRoute>
-            <Profile />
+            <Home />
           </PrivateRoute>
         }
       />
       <Route
-        path="/profile"
+        path="/study"
         element={
           <PrivateRoute>
-            <Profile />
+            <Study />
           </PrivateRoute>
         }
       />
       <Route
-        path="/profile/:id"
+        path="/study/:mode"
         element={
           <PrivateRoute>
-            <FriendProfile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/profile/edit"
-        element={
-          <PrivateRoute>
-            <ProfileEdit />
+            <StudyMode />
           </PrivateRoute>
         }
       />
@@ -54,7 +48,15 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/friend/:username"
+        path="/profile/edit"
+        element={
+          <PrivateRoute>
+            <ProfileEdit />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile/:id"
         element={
           <PrivateRoute>
             <FriendProfile />
@@ -62,18 +64,10 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/study-menu"
+        path="/leaderboard/:creatorId/:playlistName"
         element={
           <PrivateRoute>
-            <Study />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/study-playlist/:creatorId/:playlistName"
-        element={
-          <PrivateRoute>
-            <Study />
+            <Leaderboard />
           </PrivateRoute>
         }
       />

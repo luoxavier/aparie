@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Edit, Eye } from "lucide-react";
+import { Edit, Eye, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
 import { usePlaylistDeletion } from "@/hooks/usePlaylistDeletion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface FolderActionsProps {
   isFavorited: boolean;
@@ -16,6 +17,7 @@ interface FolderActionsProps {
   playlistName?: string;
   isExpanded?: boolean;
   recipientCanModify?: boolean;
+  isPublic?: boolean;
 }
 
 export function FolderActions({ 
@@ -24,10 +26,12 @@ export function FolderActions({
   onExpandClick,
   creatorId,
   playlistName,
-  recipientCanModify = false
+  recipientCanModify = false,
+  isPublic = false
 }: FolderActionsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { deletePlaylist } = usePlaylistDeletion();
 
@@ -41,6 +45,13 @@ export function FolderActions({
   const handleExpandClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onExpandClick(e);
+  };
+
+  const handleLeaderboardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (creatorId && playlistName) {
+      navigate(`/leaderboard/${creatorId}/${playlistName}`);
+    }
   };
 
   const handleDelete = async () => {
@@ -87,6 +98,16 @@ export function FolderActions({
       >
         <Eye className="h-4 w-4" />
       </Button>
+      {isPublic && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLeaderboardClick}
+          className="h-8"
+        >
+          <Trophy className="h-4 w-4" />
+        </Button>
+      )}
       {canModify && (
         <Button
           variant="ghost"
