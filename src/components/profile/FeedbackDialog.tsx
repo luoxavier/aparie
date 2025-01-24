@@ -22,7 +22,8 @@ export function FeedbackDialog() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      // First, save to database
+      const { error: dbError } = await supabase
         .from('user_feedback')
         .insert([
           {
@@ -32,7 +33,21 @@ export function FeedbackDialog() {
           }
         ]);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      // Then, send to Discord
+      const { error: discordError } = await supabase.functions.invoke('send-feedback-discord', {
+        body: {
+          type,
+          content: content.trim(),
+          userEmail: user.email
+        }
+      });
+
+      if (discordError) {
+        console.error('Error sending to Discord:', discordError);
+        // Don't throw here, as we still saved to DB successfully
+      }
 
       toast({
         title: "Feedback submitted",
