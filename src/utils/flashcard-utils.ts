@@ -9,40 +9,40 @@ export const generateAnswerOptions = (
   mistakes: Flashcard[] = []
 ) => {
   // Always include the correct answer
-  const options = [currentCard.back];
+  const correctAnswer = currentCard.back;
   
-  // Get all unique answers from the deck
-  const folderAnswers = [...new Set(deck.map(card => card.back))];
+  // Get all unique answers from the deck excluding the current card's answer
+  const allPossibleAnswers = [...new Set(
+    deck
+      .filter(card => card.back !== correctAnswer)
+      .map(card => card.back)
+  )];
   
-  // Remove the current card's answer from the pool
-  const availableAnswers = folderAnswers.filter(answer => answer !== currentCard.back);
+  // Get unique mistake answers excluding the current card's answer
+  const mistakeAnswers = [...new Set(
+    mistakes
+      .map(card => card.back)
+      .filter(answer => answer !== correctAnswer)
+  )];
   
-  // Prioritize mistakes if they exist
-  const mistakeAnswers = mistakes
-    .map(card => card.back)
-    .filter(answer => answer !== currentCard.back);
-  
-  // Create a pool of wrong answers, prioritizing mistakes but ensuring variety
-  let wrongAnswersPool = [
-    ...new Set([
-      ...mistakeAnswers,
-      ...availableAnswers.sort(() => Math.random() - 0.5) // Randomize the available answers
-    ])
-  ];
-  
-  // If we have less than 4 total possible answers (including the correct one),
-  // return all available unique answers
-  if (wrongAnswersPool.length < 3) {
-    const allUniqueAnswers = [...new Set([currentCard.back, ...wrongAnswersPool])];
-    return allUniqueAnswers.sort(() => Math.random() - 0.5);
+  // If we have less than 3 other possible answers total, return all available answers
+  if (allPossibleAnswers.length < 3) {
+    return [...new Set([correctAnswer, ...allPossibleAnswers])]
+      .sort(() => Math.random() - 0.5);
   }
   
-  // Take exactly 3 wrong answers and combine with correct answer
-  // Using slice to get a random subset of wrong answers
-  const wrongAnswers = wrongAnswersPool
-    .sort(() => Math.random() - 0.5) // Randomize again before slicing
+  // Create a pool of wrong answers, prioritizing mistakes
+  const wrongAnswersPool = [
+    ...mistakeAnswers,
+    ...allPossibleAnswers.filter(answer => !mistakeAnswers.includes(answer))
+  ];
+  
+  // Randomly select 3 wrong answers
+  const selectedWrongAnswers = wrongAnswersPool
+    .sort(() => Math.random() - 0.5)
     .slice(0, 3);
   
-  // Combine correct answer with wrong answers and shuffle
-  return [...options, ...wrongAnswers].sort(() => Math.random() - 0.5);
+  // Combine with correct answer and shuffle again
+  return [correctAnswer, ...selectedWrongAnswers]
+    .sort(() => Math.random() - 0.5);
 };
