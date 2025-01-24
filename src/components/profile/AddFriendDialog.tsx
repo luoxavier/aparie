@@ -27,7 +27,7 @@ export function AddFriendDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="default" className="w-full md:w-auto gap-2">
+        <Button size="sm" variant="outline" className="gap-2">
           <UserPlus className="h-4 w-4" />
           Add Friend
         </Button>

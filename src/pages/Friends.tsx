@@ -7,10 +7,7 @@ export default function Friends() {
   return (
     <PrivateRoute>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Friends</h1>
-          <AddFriendDialog />
-        </div>
+        <h1 className="text-2xl font-bold mb-6">Friends</h1>
         <FriendsList />
         <ReturnHomeButton />
       </div>

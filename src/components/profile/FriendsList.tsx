@@ -6,6 +6,7 @@ import { FriendSearchInput } from "./FriendSearchInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { Profile } from "@/types/database";
+import { AddFriendDialog } from "./AddFriendDialog";
 
 type FriendConnection = {
   friend_id: string;
@@ -99,8 +100,11 @@ export function FriendsList() {
               {(currentUser.display_name || currentUser.username || "?").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className="text-xl font-semibold">{currentUser.display_name || currentUser.username}</h2>
+          <div className="flex-grow">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-semibold">{currentUser.display_name || currentUser.username}</h2>
+              <AddFriendDialog />
+            </div>
             {currentUser.status && (
               <p className="text-sm text-muted-foreground">{currentUser.status}</p>
             )}
