@@ -16,7 +16,7 @@ import { useCallback } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 
-export default function Profile() {
+export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -73,7 +73,6 @@ export default function Profile() {
       }
 
       if (!data) {
-        // Create default stats if none exist
         const defaultStats = {
           level: 1,
           xp: 0,
@@ -117,40 +116,38 @@ export default function Profile() {
         {/* Profile Header */}
         <div className="flex flex-col space-y-4">
           {/* Top Section with Avatar and Settings */}
-          <div className="flex justify-between items-start w-full">
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center gap-4">
-                {profile?.avatar_url && (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Profile"
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
-                  />
-                )}
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold">{profile?.display_name}</span>
-                    {profile?.username && (
-                      <span className="text-sm text-muted-foreground">(@{profile.username})</span>
-                    )}
-                  </div>
-                  {userStats && (
-                    <div className="flex flex-col gap-1 w-full max-w-[200px]">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="font-medium">Level {userStats.level}</span>
-                        <span className="text-muted-foreground">{userStats.xp}/{userStats.next_level_xp} XP</span>
-                      </div>
-                      <Progress value={xpProgress} className="h-2" />
-                    </div>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              {profile?.avatar_url && (
+                <img
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              )}
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-baseline gap-2">
+                  <h1 className="text-xl font-semibold">{profile?.display_name}</h1>
+                  {profile?.username && (
+                    <span className="text-sm text-muted-foreground">@{profile.username}</span>
                   )}
                 </div>
+                {userStats && (
+                  <div className="flex flex-col gap-1 w-full min-w-[200px]">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-medium">Level {userStats.level}</span>
+                      <span className="text-muted-foreground">{userStats.xp}/{userStats.next_level_xp} XP</span>
+                    </div>
+                    <Progress value={xpProgress} className="h-2" />
+                  </div>
+                )}
               </div>
             </div>
             <SettingsDialog />
           </div>
 
-          {/* Action Buttons Below Profile */}
-          <div className="flex justify-start items-center gap-2 sm:gap-4 mt-6">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
