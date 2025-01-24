@@ -18,7 +18,7 @@ export default function FriendProfile() {
         .from('profiles')
         .select('username, avatar_url, bio, display_name, status')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -32,9 +32,21 @@ export default function FriendProfile() {
         .from('user_streaks')
         .select('level, xp, next_level_xp, current_streak, highest_streak')
         .eq('user_id', id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+
+      // Return default values if no stats found
+      if (!data) {
+        return {
+          level: 1,
+          xp: 0,
+          next_level_xp: 100,
+          current_streak: 0,
+          highest_streak: 0
+        };
+      }
+
       return data;
     },
   });
