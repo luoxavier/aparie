@@ -87,20 +87,34 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
           description: "Playlist removed from favorites",
         });
       } else {
-        const { error } = await supabase
+        // First check if the favorite already exists
+        const { data: existingFavorite } = await supabase
           .from('favorite_folders')
-          .insert({
-            user_id: userId,
-            creator_id: creatorId,
-            playlist_name: playlistName,
-          });
+          .select('*')
+          .eq('user_id', userId)
+          .eq('creator_id', creatorId)
+          .eq('playlist_name', playlistName)
+          .maybeSingle();
 
-        if (error) throw error;
-        setIsFavorited(true);
-        toast({
-          title: "Success",
-          description: "Playlist added to favorites",
-        });
+        if (!existingFavorite) {
+          const { error } = await supabase
+            .from('favorite_folders')
+            .insert({
+              user_id: userId,
+              creator_id: creatorId,
+              playlist_name: playlistName,
+            });
+
+          if (error) throw error;
+          setIsFavorited(true);
+          toast({
+            title: "Success",
+            description: "Playlist added to favorites",
+          });
+        } else {
+          // If it already exists, just update the UI state
+          setIsFavorited(true);
+        }
       }
       
       // Invalidate queries to refresh the UI
