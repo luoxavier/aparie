@@ -35,13 +35,28 @@ export function useFavoriteFolder(userId?: string, creatorId?: string, playlistN
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking favorite status:', error);
+        if (error.code === 'PGRST116') {
+          // Handle case where the record doesn't exist
+          setIsFavorited(false);
+        } else {
+          console.error('Error checking favorite status:', error);
+          toast({
+            title: "Error",
+            description: "Failed to check favorite status. Please try again.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
       setIsFavorited(!!data);
     } catch (error) {
       console.error('Error in checkFavoriteStatus:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check favorite status. Please refresh the page.",
+        variant: "destructive",
+      });
     }
   };
 
