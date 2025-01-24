@@ -18,8 +18,11 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      // Clear any existing session first
+      // First ensure we're starting with a clean session
       await supabase.auth.signOut();
+      
+      // Clear any existing session data
+      await supabase.auth.setSession(null);
       
       // Attempt to sign in
       await signIn(identifier, password);
@@ -40,8 +43,9 @@ export function LoginForm() {
         error.error?.message?.includes("Invalid login credentials");
 
       if (isRefreshTokenError) {
-        // Clear the session and show appropriate message
+        // Clear the session completely and show appropriate message
         await supabase.auth.signOut();
+        await supabase.auth.setSession(null);
         toast({
           title: "Session expired",
           description: "Please sign in again to continue",

@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isRefreshTokenError) {
       // Clear the session completely
       await supabase.auth.signOut();
+      await supabase.auth.setSession(null);
       setSession(null);
       setUser(null);
       
@@ -61,18 +62,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Initialize session
-    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
-      if (error) {
+    const initSession = async () => {
+      try {
+        // Clear any existing session first
+        await supabase.auth.setSession(null);
+        
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          handleAuthError(error);
+          return;
+        }
+        
+        if (initialSession) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+        }
+        setLoading(false);
+      } catch (error) {
         handleAuthError(error);
-        return;
       }
-      
-      if (initialSession) {
-        setSession(initialSession);
-        setUser(initialSession.user);
-      }
-      setLoading(false);
-    });
+    };
+
+    initSession();
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
