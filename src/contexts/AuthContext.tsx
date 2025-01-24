@@ -26,9 +26,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleAuthError = async (error: any) => {
     console.error('Auth error:', error);
     
-    if (error.message?.includes('refresh_token_not_found') || 
-        error.message?.includes('Invalid Refresh Token') ||
-        error.status === 400) {
+    const isRefreshTokenError = 
+      error.message?.includes('refresh_token_not_found') || 
+      error.message?.includes('Invalid Refresh Token') ||
+      error.status === 400;
+    
+    if (isRefreshTokenError) {
+      // Clear the session and user state
+      await supabase.auth.signOut();
       setSession(null);
       setUser(null);
       
@@ -53,6 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initSession = async () => {
       try {
+        // Clear any existing invalid session first
+        const currentSession = await supabase.auth.getSession();
+        if (currentSession.error) {
+          await supabase.auth.signOut();
+        }
+        
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
