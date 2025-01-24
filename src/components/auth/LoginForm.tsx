@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 export function LoginForm() {
   const [identifier, setIdentifier] = useState("");
@@ -18,40 +17,16 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      // First ensure we're starting with a clean session
-      await supabase.auth.signOut();
-      
-      // Clear any existing session data
-      await supabase.auth.setSession(null);
-      
-      // Attempt to sign in
       await signIn(identifier, password);
-      
-      // After successful sign in, navigate to the profile page
       navigate("/");
     } catch (error: any) {
       console.error("Error signing in:", error);
-      
-      // Check for specific error types
-      const isRefreshTokenError = 
-        error.message?.includes('refresh_token_not_found') || 
-        error.message?.includes('Invalid Refresh Token') ||
-        error.status === 400;
       
       const isInvalidCredentials = 
         error.message?.includes("Invalid login credentials") ||
         error.error?.message?.includes("Invalid login credentials");
 
-      if (isRefreshTokenError) {
-        // Clear the session completely and show appropriate message
-        await supabase.auth.signOut();
-        await supabase.auth.setSession(null);
-        toast({
-          title: "Session expired",
-          description: "Please sign in again to continue",
-          variant: "destructive",
-        });
-      } else if (isInvalidCredentials) {
+      if (isInvalidCredentials) {
         toast({
           title: "Incorrect credentials",
           description: "Please check your email/username and password",

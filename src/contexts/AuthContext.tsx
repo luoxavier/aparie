@@ -26,24 +26,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleAuthError = async (error: any) => {
     console.error('Auth error:', error);
     
-    // Check for refresh token errors
-    const isRefreshTokenError = 
-      error.message?.includes('refresh_token_not_found') || 
-      error.message?.includes('Invalid Refresh Token') ||
-      error.error?.message?.includes('refresh_token_not_found') ||
-      error.status === 400;
-    
-    if (isRefreshTokenError) {
-      // Clear the session completely
-      await supabase.auth.signOut();
-      await supabase.auth.setSession(null);
+    if (error.message?.includes('refresh_token_not_found') || 
+        error.message?.includes('Invalid Refresh Token') ||
+        error.status === 400) {
       setSession(null);
       setUser(null);
       
-      // Only navigate if we're not already on the login page
       if (location.pathname !== '/login') {
         navigate('/login');
-        
         toast({
           title: "Session expired",
           description: "Please sign in again to continue",
@@ -61,12 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Initialize session
     const initSession = async () => {
       try {
-        // Clear any existing session first
-        await supabase.auth.setSession(null);
-        
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -86,7 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initSession();
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       try {
         if (_event === 'TOKEN_REFRESHED') {
@@ -107,7 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
@@ -121,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut: authSignOut,
   };
 
-  // Show loading state
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
