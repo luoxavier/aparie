@@ -22,13 +22,13 @@ export const generateAnswerOptions = (
     .map(card => card.back)
     .filter(answer => answer !== currentCard.back);
   
-  // Create a pool of wrong answers, prioritizing mistakes
+  // Create a pool of wrong answers, prioritizing mistakes but ensuring variety
   let wrongAnswersPool = [
     ...new Set([
       ...mistakeAnswers,
-      ...availableAnswers
+      ...availableAnswers.sort(() => Math.random() - 0.5) // Randomize the available answers
     ])
-  ].sort(() => Math.random() - 0.5);
+  ];
   
   // If we have less than 4 total possible answers (including the correct one),
   // return all available unique answers
@@ -38,6 +38,11 @@ export const generateAnswerOptions = (
   }
   
   // Take exactly 3 wrong answers and combine with correct answer
-  const wrongAnswers = wrongAnswersPool.slice(0, 3);
+  // Using slice to get a random subset of wrong answers
+  const wrongAnswers = wrongAnswersPool
+    .sort(() => Math.random() - 0.5) // Randomize again before slicing
+    .slice(0, 3);
+  
+  // Combine correct answer with wrong answers and shuffle
   return [...options, ...wrongAnswers].sort(() => Math.random() - 0.5);
 };
