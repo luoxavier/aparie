@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 export function LoginForm() {
   const [identifier, setIdentifier] = useState("");
@@ -18,10 +17,6 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      // Clear any existing session first
-      await supabase.auth.signOut();
-      
-      // Attempt to sign in
       await signIn(identifier, password);
       navigate("/");
     } catch (error: any) {

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { checkExistingUsername } from "@/utils/auth-utils";
-import { handleSignupError } from "@/utils/auth-error-utils";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -56,7 +55,12 @@ export function SignupForm() {
           description: "This email is already registered. Please try logging in instead.",
         });
       } else {
-        handleSignupError(error);
+        console.error('Signup error:', error);
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: error.message || "An unexpected error occurred",
+        });
       }
     } finally {
       setLoading(false);

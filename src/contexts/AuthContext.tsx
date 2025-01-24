@@ -3,12 +3,15 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { signInWithIdentifier } from "@/services/auth";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   signOut: () => Promise<void>;
   updateStreak: () => Promise<void>;
+  signIn: (identifier: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string, displayName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Clear any existing sessions first
         const currentSession = await supabase.auth.getSession();
         if (currentSession.error) {
           await supabase.auth.signOut();
@@ -41,7 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
-          // Update streak when user logs in
           await updateUserStreak();
         }
 
@@ -60,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentSession?.user ?? null);
 
       if (event === 'SIGNED_IN') {
-        // Update streak when user signs in
         await updateUserStreak();
       }
     });
@@ -84,7 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Fetch updated streak data
       const { data: streakData } = await supabase
         .from('user_streaks')
         .select('current_streak, highest_streak')
@@ -127,11 +126,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signIn = async (identifier: string, password: string) => {
+    try {
+      await signInWithIdentifier(identifier, password);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const signUp = async (email: string, password: string, username: string, displayName: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            display_name: displayName,
+          },
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value = {
     user,
     session,
     signOut,
     updateStreak: updateUserStreak,
+    signIn,
+    signUp,
   };
 
   if (loading) {
