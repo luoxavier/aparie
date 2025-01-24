@@ -10,7 +10,7 @@ import FriendProfile from "./pages/FriendProfile";
 import ProfileEdit from "./pages/ProfileEdit";
 import Leaderboard from "./pages/Leaderboard";
 
-export function AppRoutes() {
+export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
