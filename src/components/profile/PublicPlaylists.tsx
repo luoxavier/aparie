@@ -19,6 +19,7 @@ export function PublicPlaylists() {
           back,
           creator_id,
           playlist_name,
+          is_public,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
             username
@@ -44,7 +45,11 @@ export function PublicPlaylists() {
             flashcards: []
           };
         }
-        acc[key].flashcards.push(card);
+        // Ensure is_public is set for each flashcard
+        acc[key].flashcards.push({
+          ...card,
+          is_public: true // Since we're only querying public flashcards
+        });
         return acc;
       }, {});
 
