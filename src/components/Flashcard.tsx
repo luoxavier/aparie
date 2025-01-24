@@ -33,20 +33,26 @@ export const Flashcard = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [maintainStreak, setMaintainStreak] = useState(true);
+  const [currentAnswers, setCurrentAnswers] = useState<string[]>([]);
 
-  // Generate fresh answers for each card
+  // Generate fresh answers for each card, but only when no answer is selected
   const generateAnswers = () => {
-    // Filter out any instances of the correct answer from otherAnswers
-    const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
-    
-    // Shuffle and take up to 3 wrong answers
-    const selectedWrongAnswers = shuffle(uniqueAnswers).slice(0, 3);
-    
-    // Always include the correct answer and shuffle with wrong answers
-    return shuffle([back, ...selectedWrongAnswers]);
+    if (currentAnswers.length === 0) {
+      // Filter out any instances of the correct answer from otherAnswers
+      const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
+      
+      // Shuffle and take up to 3 wrong answers
+      const selectedWrongAnswers = shuffle(uniqueAnswers).slice(0, 3);
+      
+      // Always include the correct answer and shuffle with wrong answers
+      const newAnswers = shuffle([back, ...selectedWrongAnswers]);
+      setCurrentAnswers(newAnswers);
+      return newAnswers;
+    }
+    return currentAnswers;
   };
 
-  // Generate answers when component mounts or when back/otherAnswers change
+  // Get current answers
   const answers = generateAnswers();
 
   const updateLeaderboard = async (points: number) => {
@@ -88,6 +94,7 @@ export const Flashcard = ({
       setTimeout(() => {
         setSelectedAnswer(null);
         setIsCorrect(null);
+        setCurrentAnswers([]); // Reset answers for next card
         onResult(true);
         onNext();
       }, 500);
@@ -108,6 +115,7 @@ export const Flashcard = ({
     if (selectedAnswer && !isCorrect) {
       setSelectedAnswer(null);
       setIsCorrect(null);
+      setCurrentAnswers([]); // Reset answers for next card
       onNext();
     }
   };
