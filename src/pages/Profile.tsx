@@ -215,7 +215,6 @@ export default function Home() {
             <PublicPlaylists />
           </TabsContent>
         </Tabs>
-        </div>
       </div>
     </div>
   );
