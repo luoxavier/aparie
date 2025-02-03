@@ -77,10 +77,9 @@ export function QuestsDialog() {
       return data as UserQuest[];
     },
     enabled: !!user && !!quests,
-    refetchInterval: 2000,
+    refetchInterval: 1000, // Update every second for more responsive progress
   });
 
-  // Update study time progress every minute
   useEffect(() => {
     if (!user) return;
 
@@ -91,13 +90,13 @@ export function QuestsDialog() {
       });
 
       if (timeQuest) {
-        const progress = Math.min((timeQuest.progress / 10) * 100, 100); // 10 minutes = 100%
+        const progress = Math.min((timeQuest.progress / 10) * 100, 100);
         setStudyTimeProgress(progress);
         console.log('Study time progress updated:', progress);
       }
     };
 
-    const timer = setInterval(updateStudyTime, 60000); // Update every minute
+    const timer = setInterval(updateStudyTime, 10000); // Check every 10 seconds
     updateStudyTime(); // Initial update
 
     return () => clearInterval(timer);
@@ -139,6 +138,7 @@ export function QuestsDialog() {
     if (userQuestsQuery.data && quests) {
       console.log('Setting up progress animations');
       const newProgressValues: Record<string, number> = {};
+      const newCompletedQuests = new Set<string>();
       
       userQuestsQuery.data.forEach(userQuest => {
         const quest = quests.find(q => q.id === userQuest.quest_id);
@@ -154,15 +154,19 @@ export function QuestsDialog() {
             current: userQuest.progress,
             required: quest.requirement_count,
             percentage: progressPercentage,
-            completed: userQuest.completed || userQuest.progress >= quest.requirement_count,
-            type: quest.type
+            completed: userQuest.completed || userQuest.progress >= quest.requirement_count
           });
           
           newProgressValues[userQuest.quest_id] = progressPercentage;
+          
+          if (userQuest.completed || userQuest.progress >= quest.requirement_count) {
+            newCompletedQuests.add(userQuest.quest_id);
+          }
         }
       });
       
       setProgressValues(newProgressValues);
+      setCompletedQuests(newCompletedQuests);
     }
   }, [userQuestsQuery.data, quests, studyTimeProgress]);
 
@@ -175,20 +179,14 @@ export function QuestsDialog() {
   };
 
   const isQuestCompleted = (questId: string) => {
-    const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
-    const quest = quests?.find(q => q.id === questId);
-    const completed = userQuest?.completed || (userQuest?.progress || 0) >= (quest?.requirement_count || 0);
-    console.log(`Checking completion for quest ${questId}:`, completed);
-    return completed;
+    return completedQuests.has(questId);
   };
 
   const getActiveQuests = () => {
     if (!userQuestsQuery.data || !quests) return [];
-    const activeQuests = quests.filter(quest => 
+    return quests.filter(quest => 
       userQuestsQuery.data.some(uq => uq.quest_id === quest.id)
     );
-    console.log('Active quests:', activeQuests);
-    return activeQuests;
   };
 
   const activeQuests = getActiveQuests();
