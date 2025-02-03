@@ -46,7 +46,8 @@ export function SignupForm() {
         description: "Welcome to the app! You can now sign in.",
       });
       
-      navigate("/profile");
+      // Redirect to login page instead of profile
+      navigate("/login");
     } catch (error: any) {
       if (error?.message?.includes('User already registered') || error?.body?.includes('user_already_exists')) {
         toast({
