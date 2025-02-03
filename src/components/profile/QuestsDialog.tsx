@@ -29,7 +29,6 @@ export function QuestsDialog() {
   const [progressValues, setProgressValues] = useState<Record<string, number>>({});
   const [completedQuests, setCompletedQuests] = useState<Set<string>>(new Set());
 
-  // Function to assign daily quests
   const assignDailyQuests = async () => {
     console.log('Attempting to assign daily quests for user:', user?.id);
     const { data, error } = await supabase
@@ -48,7 +47,6 @@ export function QuestsDialog() {
     return data;
   };
 
-  // Mutation for assigning daily quests
   const { mutate: assignQuests } = useMutation({
     mutationFn: assignDailyQuests,
     onSuccess: () => {
@@ -98,35 +96,39 @@ export function QuestsDialog() {
         });
         throw error;
       }
+      
       console.log('User quests fetched:', data);
       
       // Update completed quests
       const newCompletedQuests = new Set<string>();
       data?.forEach(quest => {
         if (quest.completed) {
+          console.log(`Quest ${quest.quest_id} is marked as completed`);
           newCompletedQuests.add(quest.quest_id);
         }
       });
+      
+      console.log('Completed quests:', Array.from(newCompletedQuests));
       setCompletedQuests(newCompletedQuests);
       
       return data as UserQuest[];
     },
     enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds to check for updates
   });
 
-  // Effect to check and assign daily quests if needed
   useEffect(() => {
-    if (user && userQuestsQuery.data && userQuestsQuery.data.length === 0) {
+    if (user && (!userQuestsQuery.data || userQuestsQuery.data.length === 0)) {
       console.log('No active quests found, assigning new ones');
       assignQuests();
     }
   }, [user, userQuestsQuery.data, assignQuests]);
 
-  // Effect to animate progress bars
   useEffect(() => {
     if (userQuestsQuery.data && quests) {
       console.log('Setting up progress animations');
       const newProgressValues: Record<string, number> = {};
+      
       userQuestsQuery.data.forEach(userQuest => {
         const quest = quests.find(q => q.id === userQuest.quest_id);
         if (quest) {
@@ -134,13 +136,14 @@ export function QuestsDialog() {
           console.log(`Quest ${quest.id} progress:`, {
             current: userQuest.progress,
             required: quest.requirement_count,
-            percentage: progressPercentage
+            percentage: progressPercentage,
+            completed: userQuest.completed
           });
           
-          // Start from current progress
           newProgressValues[userQuest.quest_id] = progressPercentage;
         }
       });
+      
       setProgressValues(newProgressValues);
     }
   }, [userQuestsQuery.data, quests]);
@@ -160,13 +163,14 @@ export function QuestsDialog() {
 
   const getActiveQuests = () => {
     if (!userQuestsQuery.data || !quests) return [];
-    return quests.filter(quest => 
+    const activeQuests = quests.filter(quest => 
       userQuestsQuery.data.some(uq => uq.quest_id === quest.id)
     );
+    console.log('Active quests:', activeQuests);
+    return activeQuests;
   };
 
   const activeQuests = getActiveQuests();
-  console.log('Active quests:', activeQuests);
 
   return (
     <Dialog>
