@@ -1,6 +1,7 @@
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Award } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface QuestProgressProps {
   title: string;
@@ -23,9 +24,13 @@ export function QuestProgress({
 
   return (
     <motion.div 
-      className={`space-y-2 p-4 rounded-lg transition-all duration-300 ${
-        completed ? 'bg-primary/5 animate-in fade-in' : ''
-      }`}
+      className={cn(
+        "space-y-2 p-4 rounded-lg transition-all duration-300",
+        completed ? "bg-primary/5 animate-in fade-in" : "",
+      )}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -36,9 +41,10 @@ export function QuestProgress({
             )}
           </h4>
           <p className="text-sm text-muted-foreground">{description}</p>
-          <p className={`text-xs ${
-            completed ? 'text-primary font-medium' : 'text-muted-foreground'
-          }`}>
+          <p className={cn(
+            "text-xs",
+            completed ? "text-primary font-medium" : "text-muted-foreground"
+          )}>
             {completed ? `+${xpReward} XP Earned!` : `+${xpReward} XP`}
           </p>
         </div>
@@ -49,9 +55,11 @@ export function QuestProgress({
       <div className="space-y-1">
         <Progress 
           value={progressPercentage} 
-          className={`h-2 transition-all duration-1000 ease-out ${
-            completed ? 'bg-primary/20' : ''
-          }`}
+          className={cn(
+            "h-2 transition-all duration-1000 ease-out",
+            completed ? "bg-primary/20" : "",
+            progressPercentage >= 100 ? "bg-primary" : "bg-accent"
+          )}
         />
         <p className="text-xs text-muted-foreground text-right">
           {progress} / {total}

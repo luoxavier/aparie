@@ -24,7 +24,7 @@ export function QuestList() {
   const { user } = useAuth();
 
   // Fetch quests data
-  const { data: quests } = useQuery({
+  const { data: quests, refetch: refetchQuests } = useQuery({
     queryKey: ['quests'],
     queryFn: async () => {
       console.log('Fetching quests');
@@ -55,6 +55,31 @@ export function QuestList() {
     enabled: !!user && !!quests,
     refetchInterval: 2000, // Update every 2 seconds for more responsive progress
   });
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('user-quests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_quests',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          refetchUserQuests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refetchUserQuests]);
 
   // Assign daily quests if none exist
   const assignDailyQuests = async () => {
