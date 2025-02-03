@@ -103,10 +103,20 @@ export function QuestsDialog() {
       const newCompletedQuests = new Set<string>();
       data?.forEach(quest => {
         const questDefinition = quests?.find(q => q.id === quest.quest_id);
-        const isCompleted = quest.completed || quest.progress >= (questDefinition?.requirement_count || 0);
+        const currentProgress = quest.progress;
+        const requiredProgress = questDefinition?.requirement_count || 0;
+        const isCompleted = quest.completed || currentProgress >= requiredProgress;
+        
+        console.log(`Quest ${quest.quest_id} status:`, {
+          currentProgress,
+          requiredProgress,
+          isCompleted,
+          wasCompletedBefore: completedQuests.has(quest.quest_id)
+        });
         
         if (isCompleted && !completedQuests.has(quest.quest_id)) {
-          console.log(`Quest ${quest.quest_id} newly completed with progress:`, quest.progress);
+          console.log(`Quest ${quest.quest_id} newly completed with progress:`, currentProgress);
+          
           // Update quest completion status in database
           supabase
             .from('user_quests')
@@ -116,18 +126,25 @@ export function QuestsDialog() {
             })
             .eq('quest_id', quest.quest_id)
             .eq('user_id', user?.id)
-            .then(({ error }) => {
-              if (!error) {
+            .then(({ error: updateError }) => {
+              if (!updateError) {
+                console.log(`Awarding ${questDefinition?.xp_reward} XP for quest completion`);
                 // Award XP for quest completion
                 supabase.rpc('award_user_xp', { 
                   user_id_param: user?.id, 
                   xp_amount: questDefinition?.xp_reward || 0 
+                }).then(({ error: xpError }) => {
+                  if (xpError) {
+                    console.error('Error awarding XP:', xpError);
+                  } else {
+                    toast({
+                      title: "Quest Completed! 🎉",
+                      description: `You earned ${questDefinition?.xp_reward} XP!`,
+                    });
+                  }
                 });
-                
-                toast({
-                  title: "Quest Completed! 🎉",
-                  description: `You earned ${questDefinition?.xp_reward} XP!`,
-                });
+              } else {
+                console.error('Error updating quest completion:', updateError);
               }
             });
         }
@@ -136,7 +153,7 @@ export function QuestsDialog() {
           newCompletedQuests.add(quest.quest_id);
           console.log(`Quest ${quest.quest_id} marked as completed`);
         } else {
-          console.log(`Quest ${quest.quest_id} in progress:`, quest.progress);
+          console.log(`Quest ${quest.quest_id} in progress:`, currentProgress);
         }
       });
       
@@ -145,7 +162,7 @@ export function QuestsDialog() {
       return data as UserQuest[];
     },
     enabled: !!user && !!quests,
-    refetchInterval: 5000, // Refetch every 5 seconds to check for updates
+    refetchInterval: 2000, // Refetch every 2 seconds to check for updates
   });
 
   useEffect(() => {
