@@ -66,9 +66,12 @@ export function QuestProgress({
         <Progress 
           value={progressPercentage} 
           className={cn(
-            "h-2 transition-all duration-1000 ease-out",
-            completed ? "bg-primary/20" : "bg-accent/20",
-            progressPercentage >= 100 ? "bg-primary" : "bg-accent"
+            "h-2 transition-all duration-1000 ease-out bg-primary/20",
+            completed ? "bg-primary/20" : "bg-primary/20",
+          )}
+          indicatorClassName={cn(
+            "bg-primary/60 transition-all duration-1000 ease-out",
+            completed ? "bg-primary" : "bg-primary/60"
           )}
         />
         <p className="text-xs text-muted-foreground text-right">
