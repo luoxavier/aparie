@@ -5,6 +5,7 @@ import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
 import { SettingsDialog } from "@/components/profile/SettingsDialog";
+import { QuestsDialog } from "@/components/profile/QuestsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
 import { PenLine, User, Users } from "lucide-react";
@@ -157,6 +158,7 @@ export default function Home() {
               <Users className="h-5 w-5" />
             </Button>
             <NotificationsDialog />
+            <QuestsDialog />
             <Button 
               variant="ghost" 
               size="icon" 
