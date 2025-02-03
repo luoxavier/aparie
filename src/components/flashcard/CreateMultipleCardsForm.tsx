@@ -10,7 +10,7 @@ import { RecipientModifyToggle } from "./RecipientModifyToggle";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogClose } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { vibrate } from "@/utils/sound";
 import { useQueryClient } from "@tanstack/react-query";
@@ -100,24 +100,15 @@ export function CreateMultipleCardsForm({
 
       // Invalidate relevant queries to trigger a refresh
       await queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-      
-      // Close the dialog by finding the closest dialog and setting open to false
-      const dialogElement = document.querySelector('[role="dialog"]');
-      if (dialogElement) {
-        const closeButton = dialogElement.querySelector('button[aria-label="Close"]');
-        if (closeButton) {
-          (closeButton as HTMLButtonElement).click();
-        }
-      }
-
-      // Navigate back to the index page
-      navigate('/');
 
       // Show success toast
       toast({
         title: "Success",
         description: "Flashcards created successfully",
       });
+
+      // Navigate back to the index page
+      navigate('/');
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
@@ -212,9 +203,11 @@ export function CreateMultipleCardsForm({
         Add Another Card
       </Button>
 
-      <Button type="submit" className="w-full">
-        {isModifying ? "Save and Close" : "Create and Close"}
-      </Button>
+      <DialogClose asChild>
+        <Button type="submit" className="w-full">
+          {isModifying ? "Save and Close" : "Create and Close"}
+        </Button>
+      </DialogClose>
     </form>
   );
 }
