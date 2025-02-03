@@ -116,7 +116,7 @@ export function QuestsDialog() {
       return data as UserQuest[];
     },
     enabled: !!user,
-    refetchInterval: 15000, // Refetch every 15 seconds to check for updates
+    refetchInterval: 5000, // Refetch every 5 seconds to check for updates
   });
 
   useEffect(() => {
@@ -134,7 +134,7 @@ export function QuestsDialog() {
       userQuestsQuery.data.forEach(userQuest => {
         const quest = quests.find(q => q.id === userQuest.quest_id);
         if (quest) {
-          const progressPercentage = (userQuest.progress / quest.requirement_count) * 100;
+          const progressPercentage = Math.min((userQuest.progress / quest.requirement_count) * 100, 100);
           console.log(`Quest ${quest.id} progress update:`, {
             current: userQuest.progress,
             required: quest.requirement_count,
