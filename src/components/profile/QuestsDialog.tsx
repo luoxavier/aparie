@@ -27,6 +27,7 @@ type UserQuest = {
 export function QuestsDialog() {
   const { user } = useAuth();
   const [progressValues, setProgressValues] = useState<Record<string, number>>({});
+  const [completedQuests, setCompletedQuests] = useState<Set<string>>(new Set());
 
   // Function to assign daily quests
   const assignDailyQuests = async () => {
@@ -51,7 +52,6 @@ export function QuestsDialog() {
   const { mutate: assignQuests } = useMutation({
     mutationFn: assignDailyQuests,
     onSuccess: () => {
-      // Refetch quests after assignment
       userQuestsQuery.refetch();
     },
   });
@@ -99,6 +99,16 @@ export function QuestsDialog() {
         throw error;
       }
       console.log('User quests fetched:', data);
+      
+      // Update completed quests
+      const newCompletedQuests = new Set<string>();
+      data?.forEach(quest => {
+        if (quest.completed) {
+          newCompletedQuests.add(quest.quest_id);
+        }
+      });
+      setCompletedQuests(newCompletedQuests);
+      
       return data as UserQuest[];
     },
     enabled: !!user,
@@ -120,19 +130,15 @@ export function QuestsDialog() {
       userQuestsQuery.data.forEach(userQuest => {
         const quest = quests.find(q => q.id === userQuest.quest_id);
         if (quest) {
+          const progressPercentage = (userQuest.progress / quest.requirement_count) * 100;
           console.log(`Quest ${quest.id} progress:`, {
             current: userQuest.progress,
             required: quest.requirement_count,
-            percentage: (userQuest.progress / quest.requirement_count) * 100
+            percentage: progressPercentage
           });
-          // Start from 0 and animate to actual progress
-          newProgressValues[userQuest.quest_id] = 0;
-          setTimeout(() => {
-            setProgressValues(prev => ({
-              ...prev,
-              [userQuest.quest_id]: (userQuest.progress / quest.requirement_count) * 100
-            }));
-          }, 100);
+          
+          // Start from current progress
+          newProgressValues[userQuest.quest_id] = progressPercentage;
         }
       });
       setProgressValues(newProgressValues);
@@ -147,8 +153,7 @@ export function QuestsDialog() {
   };
 
   const isQuestCompleted = (questId: string) => {
-    const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
-    const completed = userQuest?.completed || false;
+    const completed = completedQuests.has(questId);
     console.log(`Checking completion for quest ${questId}:`, completed);
     return completed;
   };
@@ -192,17 +197,24 @@ export function QuestsDialog() {
               const progressValue = progressValues[quest.id] || 0;
               
               return (
-                <div key={quest.id} className={`space-y-2 p-4 rounded-lg transition-colors ${completed ? 'bg-primary/5' : ''}`}>
+                <div 
+                  key={quest.id} 
+                  className={`space-y-2 p-4 rounded-lg transition-colors ${
+                    completed ? 'bg-primary/5' : ''
+                  }`}
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-medium flex items-center gap-2">
                         {quest.title}
                         {completed && (
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                          <CheckCircle2 className="h-4 w-4 text-primary animate-in fade-in" />
                         )}
                       </h4>
                       <p className="text-sm text-muted-foreground">{quest.description}</p>
-                      <p className={`text-xs ${completed ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs ${
+                        completed ? 'text-primary font-medium' : 'text-muted-foreground'
+                      }`}>
                         {completed ? `+${quest.xp_reward} XP Earned!` : `+${quest.xp_reward} XP`}
                       </p>
                     </div>
@@ -213,7 +225,9 @@ export function QuestsDialog() {
                   <div className="space-y-1">
                     <Progress 
                       value={progressValue} 
-                      className={`h-2 transition-all duration-1000 ease-out ${completed ? 'bg-primary/20' : ''}`}
+                      className={`h-2 transition-all duration-1000 ease-out ${
+                        completed ? 'bg-primary/20' : ''
+                      }`}
                     />
                     <p className="text-xs text-muted-foreground text-right">
                       {progress} / {quest.requirement_count}
