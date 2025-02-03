@@ -28,6 +28,30 @@ export function QuestsDialog() {
   const { user } = useAuth();
   const [progressValues, setProgressValues] = useState<Record<string, number>>({});
   const [completedQuests, setCompletedQuests] = useState<Set<string>>(new Set());
+  const [studyTimeProgress, setStudyTimeProgress] = useState(0);
+
+  // Update study time progress every minute
+  useEffect(() => {
+    if (!user) return;
+
+    const updateStudyTime = () => {
+      const timeQuest = userQuestsQuery.data?.find(uq => {
+        const quest = quests?.find(q => q.id === uq.quest_id);
+        return quest?.type === 'infinite' && quest.description.includes('minutes studying');
+      });
+
+      if (timeQuest) {
+        const progress = Math.min((timeQuest.progress / 10) * 100, 100); // 10 minutes = 100%
+        setStudyTimeProgress(progress);
+        console.log('Study time progress updated:', progress);
+      }
+    };
+
+    const timer = setInterval(updateStudyTime, 60000); // Update every minute
+    updateStudyTime(); // Initial update
+
+    return () => clearInterval(timer);
+  }, [user, userQuestsQuery.data, quests]);
 
   const assignDailyQuests = async () => {
     console.log('Attempting to assign daily quests for user:', user?.id);
@@ -111,7 +135,8 @@ export function QuestsDialog() {
           currentProgress,
           requiredProgress,
           isCompleted,
-          wasCompletedBefore: completedQuests.has(quest.quest_id)
+          wasCompletedBefore: completedQuests.has(quest.quest_id),
+          type: questDefinition?.type
         });
         
         if (isCompleted && !completedQuests.has(quest.quest_id)) {
@@ -180,7 +205,13 @@ export function QuestsDialog() {
       userQuestsQuery.data.forEach(userQuest => {
         const quest = quests.find(q => q.id === userQuest.quest_id);
         if (quest) {
-          const progressPercentage = Math.min((userQuest.progress / quest.requirement_count) * 100, 100);
+          let progressPercentage;
+          if (quest.type === 'infinite' && quest.description.includes('minutes studying')) {
+            progressPercentage = studyTimeProgress;
+          } else {
+            progressPercentage = Math.min((userQuest.progress / quest.requirement_count) * 100, 100);
+          }
+          
           console.log(`Quest ${quest.id} progress update:`, {
             current: userQuest.progress,
             required: quest.requirement_count,
@@ -195,7 +226,7 @@ export function QuestsDialog() {
       
       setProgressValues(newProgressValues);
     }
-  }, [userQuestsQuery.data, quests]);
+  }, [userQuestsQuery.data, quests, studyTimeProgress]);
 
   const getQuestProgress = (questId: string) => {
     const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
