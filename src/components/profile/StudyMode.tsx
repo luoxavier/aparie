@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { StudySession } from "@/components/study/StudySession";
 import { StudyControls } from "@/components/study/StudyControls";
@@ -7,6 +7,7 @@ import { shuffle } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { playSound, vibrate } from "@/utils/sound";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudyModeProps {
   deck: FlashcardType[];
@@ -21,8 +22,10 @@ interface FlashcardType {
   creator_id: string;
 }
 
+const INACTIVITY_TIMEOUT = 15000; // 15 seconds
+
 export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
-  const { updateStreak } = useAuth();
+  const { user, updateStreak } = useAuth();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [mistakes, setMistakes] = useState<FlashcardType[]>([]);
@@ -34,6 +37,86 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
   const [infiniteCycles, setInfiniteCycles] = useState(0);
   const [perfectCycles, setPerfectCycles] = useState(0);
   const [hasUpdatedStreak, setHasUpdatedStreak] = useState(false);
+  
+  const lastActivityRef = useRef(Date.now());
+  const studyTimeRef = useRef(0);
+  const timerRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    // Start tracking study time
+    const updateStudyTime = async () => {
+      const currentTime = Date.now();
+      if (currentTime - lastActivityRef.current <= INACTIVITY_TIMEOUT) {
+        studyTimeRef.current += 1;
+        
+        // Update quest progress every minute
+        if (studyTimeRef.current % 60 === 0) {
+          const minutes = Math.floor(studyTimeRef.current / 60);
+          
+          const { data: timeQuests } = await supabase
+            .from('user_quests')
+            .select('*, quests(*)')
+            .eq('user_id', user?.id)
+            .gte('expires_at', new Date().toISOString())
+            .filter('quests.type', 'eq', 'infinite');
+
+          if (timeQuests) {
+            for (const quest of timeQuests) {
+              if (!quest.completed && quest.quests) {
+                const newProgress = Math.min(minutes, quest.quests.requirement_count);
+                
+                if (newProgress > quest.progress) {
+                  const { data: updatedQuest } = await supabase
+                    .from('user_quests')
+                    .update({ 
+                      progress: newProgress,
+                      completed: newProgress >= quest.quests.requirement_count,
+                      completed_at: newProgress >= quest.quests.requirement_count ? new Date().toISOString() : null
+                    })
+                    .eq('id', quest.id)
+                    .select()
+                    .single();
+
+                  if (updatedQuest?.completed) {
+                    playSound('complete');
+                    toast({
+                      title: "Quest Completed! 🎉",
+                      description: `You've earned ${quest.quests.xp_reward} XP!`,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    timerRef.current = setInterval(updateStudyTime, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [user]);
+
+  // Update last activity timestamp on user interaction
+  useEffect(() => {
+    const updateLastActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    window.addEventListener('mousemove', updateLastActivity);
+    window.addEventListener('keydown', updateLastActivity);
+    window.addEventListener('click', updateLastActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', updateLastActivity);
+      window.removeEventListener('keydown', updateLastActivity);
+      window.removeEventListener('click', updateLastActivity);
+    };
+  }, []);
 
   const handleCardResult = (correct: boolean) => {
     const currentCard = isReviewingMistakes 

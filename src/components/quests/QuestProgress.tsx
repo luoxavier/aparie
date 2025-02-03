@@ -26,7 +26,7 @@ export function QuestProgress({
     <motion.div 
       className={cn(
         "space-y-2 p-4 rounded-lg transition-all duration-300",
-        completed ? "bg-primary/5 animate-sparkle" : "",
+        completed ? "bg-primary/5" : "",
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
