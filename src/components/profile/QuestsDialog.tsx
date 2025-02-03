@@ -1,12 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Award, ListCheck } from "lucide-react";
+import { Award, ListCheck, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type Quest = {
   id: string;
@@ -26,6 +26,7 @@ type UserQuest = {
 
 export function QuestsDialog() {
   const { user } = useAuth();
+  const [progressValues, setProgressValues] = useState<Record<string, number>>({});
 
   // Function to assign daily quests
   const assignDailyQuests = async () => {
@@ -106,6 +107,27 @@ export function QuestsDialog() {
     }
   }, [user, userQuestsQuery.data, assignQuests]);
 
+  // Effect to animate progress bars
+  useEffect(() => {
+    if (userQuestsQuery.data && quests) {
+      const newProgressValues: Record<string, number> = {};
+      userQuestsQuery.data.forEach(userQuest => {
+        const quest = quests.find(q => q.id === userQuest.quest_id);
+        if (quest) {
+          // Start from 0 and animate to actual progress
+          newProgressValues[userQuest.quest_id] = 0;
+          setTimeout(() => {
+            setProgressValues(prev => ({
+              ...prev,
+              [userQuest.quest_id]: (userQuest.progress / quest.requirement_count) * 100
+            }));
+          }, 100);
+        }
+      });
+      setProgressValues(newProgressValues);
+    }
+  }, [userQuestsQuery.data, quests]);
+
   const getQuestProgress = (questId: string) => {
     const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
     return userQuest?.progress || 0;
@@ -151,22 +173,32 @@ export function QuestsDialog() {
             {activeQuests.map((quest) => {
               const progress = getQuestProgress(quest.id);
               const completed = isQuestCompleted(quest.id);
-              const progressPercentage = (progress / quest.requirement_count) * 100;
+              const progressValue = progressValues[quest.id] || 0;
               
               return (
-                <div key={quest.id} className="space-y-2">
+                <div key={quest.id} className={`space-y-2 p-4 rounded-lg transition-colors ${completed ? 'bg-primary/5' : ''}`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium">{quest.title}</h4>
+                      <h4 className="font-medium flex items-center gap-2">
+                        {quest.title}
+                        {completed && (
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        )}
+                      </h4>
                       <p className="text-sm text-muted-foreground">{quest.description}</p>
-                      <p className="text-xs text-primary">+{quest.xp_reward} XP</p>
+                      <p className={`text-xs ${completed ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                        {completed ? `+${quest.xp_reward} XP Earned!` : `+${quest.xp_reward} XP`}
+                      </p>
                     </div>
                     {completed && (
                       <Award className="h-5 w-5 text-primary animate-sparkle" />
                     )}
                   </div>
                   <div className="space-y-1">
-                    <Progress value={progressPercentage} className="h-2" />
+                    <Progress 
+                      value={progressValue} 
+                      className={`h-2 transition-all duration-1000 ease-out ${completed ? 'bg-primary/20' : ''}`}
+                    />
                     <p className="text-xs text-muted-foreground text-right">
                       {progress} / {quest.requirement_count}
                     </p>
