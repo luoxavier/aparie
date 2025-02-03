@@ -30,6 +30,56 @@ export function QuestsDialog() {
   const [completedQuests, setCompletedQuests] = useState<Set<string>>(new Set());
   const [studyTimeProgress, setStudyTimeProgress] = useState(0);
 
+  const { data: quests, isLoading: questsLoading } = useQuery({
+    queryKey: ['quests'],
+    queryFn: async () => {
+      console.log('Fetching quests');
+      const { data, error } = await supabase
+        .from('quests')
+        .select('*')
+        .eq('is_daily', true);
+      
+      if (error) {
+        console.error('Error fetching quests:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load quests",
+          variant: "destructive",
+        });
+        throw error;
+      }
+      console.log('Quests fetched:', data);
+      return data as Quest[];
+    },
+  });
+
+  const userQuestsQuery = useQuery({
+    queryKey: ['user-quests', user?.id],
+    queryFn: async () => {
+      console.log('Fetching user quests for:', user?.id);
+      const { data, error } = await supabase
+        .from('user_quests')
+        .select('*')
+        .eq('user_id', user?.id)
+        .gte('expires_at', new Date().toISOString());
+      
+      if (error) {
+        console.error('Error fetching user quests:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load quest progress",
+          variant: "destructive",
+        });
+        throw error;
+      }
+      
+      console.log('User quests fetched:', data);
+      return data as UserQuest[];
+    },
+    enabled: !!user && !!quests,
+    refetchInterval: 2000,
+  });
+
   // Update study time progress every minute
   useEffect(() => {
     if (!user) return;
@@ -76,118 +126,6 @@ export function QuestsDialog() {
     onSuccess: () => {
       userQuestsQuery.refetch();
     },
-  });
-
-  const { data: quests, isLoading: questsLoading } = useQuery({
-    queryKey: ['quests'],
-    queryFn: async () => {
-      console.log('Fetching quests');
-      const { data, error } = await supabase
-        .from('quests')
-        .select('*')
-        .eq('is_daily', true);
-      
-      if (error) {
-        console.error('Error fetching quests:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load quests",
-          variant: "destructive",
-        });
-        throw error;
-      }
-      console.log('Quests fetched:', data);
-      return data as Quest[];
-    },
-  });
-
-  const userQuestsQuery = useQuery({
-    queryKey: ['user-quests', user?.id],
-    queryFn: async () => {
-      console.log('Fetching user quests for:', user?.id);
-      const { data, error } = await supabase
-        .from('user_quests')
-        .select('*')
-        .eq('user_id', user?.id)
-        .gte('expires_at', new Date().toISOString());
-      
-      if (error) {
-        console.error('Error fetching user quests:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load quest progress",
-          variant: "destructive",
-        });
-        throw error;
-      }
-      
-      console.log('User quests fetched:', data);
-      
-      // Update completed quests and handle XP rewards
-      const newCompletedQuests = new Set<string>();
-      data?.forEach(quest => {
-        const questDefinition = quests?.find(q => q.id === quest.quest_id);
-        const currentProgress = quest.progress;
-        const requiredProgress = questDefinition?.requirement_count || 0;
-        const isCompleted = quest.completed || currentProgress >= requiredProgress;
-        
-        console.log(`Quest ${quest.quest_id} status:`, {
-          currentProgress,
-          requiredProgress,
-          isCompleted,
-          wasCompletedBefore: completedQuests.has(quest.quest_id),
-          type: questDefinition?.type
-        });
-        
-        if (isCompleted && !completedQuests.has(quest.quest_id)) {
-          console.log(`Quest ${quest.quest_id} newly completed with progress:`, currentProgress);
-          
-          // Update quest completion status in database
-          supabase
-            .from('user_quests')
-            .update({ 
-              completed: true,
-              completed_at: new Date().toISOString()
-            })
-            .eq('quest_id', quest.quest_id)
-            .eq('user_id', user?.id)
-            .then(({ error: updateError }) => {
-              if (!updateError) {
-                console.log(`Awarding ${questDefinition?.xp_reward} XP for quest completion`);
-                // Award XP for quest completion
-                supabase.rpc('award_user_xp', { 
-                  user_id_param: user?.id, 
-                  xp_amount: questDefinition?.xp_reward || 0 
-                }).then(({ error: xpError }) => {
-                  if (xpError) {
-                    console.error('Error awarding XP:', xpError);
-                  } else {
-                    toast({
-                      title: "Quest Completed! 🎉",
-                      description: `You earned ${questDefinition?.xp_reward} XP!`,
-                    });
-                  }
-                });
-              } else {
-                console.error('Error updating quest completion:', updateError);
-              }
-            });
-        }
-        
-        if (isCompleted) {
-          newCompletedQuests.add(quest.quest_id);
-          console.log(`Quest ${quest.quest_id} marked as completed`);
-        } else {
-          console.log(`Quest ${quest.quest_id} in progress:`, currentProgress);
-        }
-      });
-      
-      setCompletedQuests(newCompletedQuests);
-      
-      return data as UserQuest[];
-    },
-    enabled: !!user && !!quests,
-    refetchInterval: 2000, // Refetch every 2 seconds to check for updates
   });
 
   useEffect(() => {
