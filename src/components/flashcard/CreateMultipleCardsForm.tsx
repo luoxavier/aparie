@@ -63,6 +63,7 @@ export function CreateMultipleCardsForm({
   const { data: friends = [] } = useFriendsList();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +109,15 @@ export function CreateMultipleCardsForm({
           (closeButton as HTMLButtonElement).click();
         }
       }
+
+      // Navigate back to the index page
+      navigate('/');
+
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Flashcards created successfully",
+      });
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
