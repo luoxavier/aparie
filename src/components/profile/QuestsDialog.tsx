@@ -30,6 +30,7 @@ export function QuestsDialog() {
   const [completedQuests, setCompletedQuests] = useState<Set<string>>(new Set());
   const [studyTimeProgress, setStudyTimeProgress] = useState(0);
 
+  // Fetch quests data
   const { data: quests, isLoading: questsLoading } = useQuery({
     queryKey: ['quests'],
     queryFn: async () => {
@@ -53,6 +54,7 @@ export function QuestsDialog() {
     },
   });
 
+  // Fetch user quests with more frequent updates
   const userQuestsQuery = useQuery({
     queryKey: ['user-quests', user?.id],
     queryFn: async () => {
@@ -77,9 +79,10 @@ export function QuestsDialog() {
       return data as UserQuest[];
     },
     enabled: !!user && !!quests,
-    refetchInterval: 1000, // Update every second for more responsive progress
+    refetchInterval: 2000, // Update every 2 seconds for more responsive progress
   });
 
+  // Handle study time progress updates
   useEffect(() => {
     if (!user) return;
 
@@ -96,12 +99,13 @@ export function QuestsDialog() {
       }
     };
 
-    const timer = setInterval(updateStudyTime, 10000); // Check every 10 seconds
+    const timer = setInterval(updateStudyTime, 60000); // Update study time every minute
     updateStudyTime(); // Initial update
 
     return () => clearInterval(timer);
   }, [user, userQuestsQuery.data, quests]);
 
+  // Assign daily quests if none exist
   const assignDailyQuests = async () => {
     console.log('Attempting to assign daily quests for user:', user?.id);
     const { data, error } = await supabase
@@ -127,6 +131,7 @@ export function QuestsDialog() {
     },
   });
 
+  // Check and assign quests if needed
   useEffect(() => {
     if (user && (!userQuestsQuery.data || userQuestsQuery.data.length === 0)) {
       console.log('No active quests found, assigning new ones');
@@ -134,6 +139,7 @@ export function QuestsDialog() {
     }
   }, [user, userQuestsQuery.data, assignQuests]);
 
+  // Update progress and completion states
   useEffect(() => {
     if (userQuestsQuery.data && quests) {
       console.log('Setting up progress animations');
@@ -161,6 +167,14 @@ export function QuestsDialog() {
           
           if (userQuest.completed || userQuest.progress >= quest.requirement_count) {
             newCompletedQuests.add(userQuest.quest_id);
+            // Show completion toast if newly completed
+            if (!completedQuests.has(userQuest.quest_id)) {
+              toast({
+                title: "Quest Completed!",
+                description: `You earned ${quest.xp_reward} XP for completing "${quest.title}"`,
+                variant: "default",
+              });
+            }
           }
         }
       });
@@ -168,14 +182,12 @@ export function QuestsDialog() {
       setProgressValues(newProgressValues);
       setCompletedQuests(newCompletedQuests);
     }
-  }, [userQuestsQuery.data, quests, studyTimeProgress]);
+  }, [userQuestsQuery.data, quests, studyTimeProgress, completedQuests]);
 
   const getQuestProgress = (questId: string) => {
     const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
     const quest = quests?.find(q => q.id === questId);
-    const progress = Math.min(userQuest?.progress || 0, quest?.requirement_count || 0);
-    console.log(`Getting progress for quest ${questId}:`, progress);
-    return progress;
+    return Math.min(userQuest?.progress || 0, quest?.requirement_count || 0);
   };
 
   const isQuestCompleted = (questId: string) => {
@@ -223,7 +235,7 @@ export function QuestsDialog() {
                 <div 
                   key={quest.id} 
                   className={`space-y-2 p-4 rounded-lg transition-all duration-300 ${
-                    completed ? 'bg-primary/5' : ''
+                    completed ? 'bg-primary/5 animate-in fade-in' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start">
