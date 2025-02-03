@@ -345,28 +345,34 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          is_daily: boolean
           requirement_count: number
           title: string
           type: string
           updated_at: string
+          xp_reward: number
         }
         Insert: {
           created_at?: string
           description: string
           id?: string
+          is_daily?: boolean
           requirement_count?: number
           title: string
           type: string
           updated_at?: string
+          xp_reward?: number
         }
         Update: {
           created_at?: string
           description?: string
           id?: string
+          is_daily?: boolean
           requirement_count?: number
           title?: string
           type?: string
           updated_at?: string
+          xp_reward?: number
         }
         Relationships: []
       }
@@ -410,6 +416,7 @@ export type Database = {
           completed: boolean
           completed_at: string | null
           created_at: string
+          expires_at: string | null
           id: string
           progress: number
           quest_id: string
@@ -420,6 +427,7 @@ export type Database = {
           completed?: boolean
           completed_at?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           progress?: number
           quest_id: string
@@ -430,6 +438,7 @@ export type Database = {
           completed?: boolean
           completed_at?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           progress?: number
           quest_id?: string
@@ -514,6 +523,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_daily_quests: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: undefined
+      }
       award_user_xp: {
         Args: {
           user_id_param: string
@@ -526,6 +541,12 @@ export type Database = {
           current_level: number
         }
         Returns: number
+      }
+      check_daily_quests_completion: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: undefined
       }
       get_user_email_from_identifier: {
         Args: {
