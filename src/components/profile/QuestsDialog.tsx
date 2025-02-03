@@ -30,6 +30,7 @@ export function QuestsDialog() {
 
   // Function to assign daily quests
   const assignDailyQuests = async () => {
+    console.log('Attempting to assign daily quests for user:', user?.id);
     const { data, error } = await supabase
       .rpc('assign_daily_quests', { user_id_param: user?.id });
     
@@ -42,6 +43,7 @@ export function QuestsDialog() {
       });
       throw error;
     }
+    console.log('Daily quests assigned successfully:', data);
     return data;
   };
 
@@ -57,6 +59,7 @@ export function QuestsDialog() {
   const { data: quests, isLoading: questsLoading } = useQuery({
     queryKey: ['quests'],
     queryFn: async () => {
+      console.log('Fetching quests');
       const { data, error } = await supabase
         .from('quests')
         .select('*')
@@ -71,7 +74,7 @@ export function QuestsDialog() {
         });
         throw error;
       }
-
+      console.log('Quests fetched:', data);
       return data as Quest[];
     },
   });
@@ -79,6 +82,7 @@ export function QuestsDialog() {
   const userQuestsQuery = useQuery({
     queryKey: ['user-quests', user?.id],
     queryFn: async () => {
+      console.log('Fetching user quests for:', user?.id);
       const { data, error } = await supabase
         .from('user_quests')
         .select('*')
@@ -94,7 +98,7 @@ export function QuestsDialog() {
         });
         throw error;
       }
-
+      console.log('User quests fetched:', data);
       return data as UserQuest[];
     },
     enabled: !!user,
@@ -103,6 +107,7 @@ export function QuestsDialog() {
   // Effect to check and assign daily quests if needed
   useEffect(() => {
     if (user && userQuestsQuery.data && userQuestsQuery.data.length === 0) {
+      console.log('No active quests found, assigning new ones');
       assignQuests();
     }
   }, [user, userQuestsQuery.data, assignQuests]);
@@ -110,10 +115,16 @@ export function QuestsDialog() {
   // Effect to animate progress bars
   useEffect(() => {
     if (userQuestsQuery.data && quests) {
+      console.log('Setting up progress animations');
       const newProgressValues: Record<string, number> = {};
       userQuestsQuery.data.forEach(userQuest => {
         const quest = quests.find(q => q.id === userQuest.quest_id);
         if (quest) {
+          console.log(`Quest ${quest.id} progress:`, {
+            current: userQuest.progress,
+            required: quest.requirement_count,
+            percentage: (userQuest.progress / quest.requirement_count) * 100
+          });
           // Start from 0 and animate to actual progress
           newProgressValues[userQuest.quest_id] = 0;
           setTimeout(() => {
@@ -130,12 +141,16 @@ export function QuestsDialog() {
 
   const getQuestProgress = (questId: string) => {
     const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
-    return userQuest?.progress || 0;
+    const progress = userQuest?.progress || 0;
+    console.log(`Getting progress for quest ${questId}:`, progress);
+    return progress;
   };
 
   const isQuestCompleted = (questId: string) => {
     const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
-    return userQuest?.completed || false;
+    const completed = userQuest?.completed || false;
+    console.log(`Checking completion for quest ${questId}:`, completed);
+    return completed;
   };
 
   const getActiveQuests = () => {
@@ -146,6 +161,7 @@ export function QuestsDialog() {
   };
 
   const activeQuests = getActiveQuests();
+  console.log('Active quests:', activeQuests);
 
   return (
     <Dialog>
