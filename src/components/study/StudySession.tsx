@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Flashcard } from "@/components/Flashcard";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StudySessionProps {
   currentCard: FlashcardType;
@@ -24,6 +26,40 @@ export function StudySession({
   onNext,
   streak 
 }: StudySessionProps) {
+  const { user } = useAuth();
+  const [studyStartTime] = useState(Date.now());
+
+  // Update study time quest progress
+  useEffect(() => {
+    if (!user) return;
+
+    const updateStudyTime = async () => {
+      const elapsedMinutes = Math.floor((Date.now() - studyStartTime) / 60000);
+      
+      const { data: timeQuests } = await supabase
+        .from('user_quests')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('expires_at', new Date().toISOString());
+
+      if (timeQuests && timeQuests.length > 0) {
+        const infiniteQuest = timeQuests.find(q => 
+          q.quest_id && q.quest_id.toString().includes('infinite')
+        );
+
+        if (infiniteQuest) {
+          await supabase
+            .from('user_quests')
+            .update({ progress: elapsedMinutes })
+            .eq('id', infiniteQuest.id);
+        }
+      }
+    };
+
+    const timer = setInterval(updateStudyTime, 60000); // Update every minute
+    return () => clearInterval(timer);
+  }, [user, studyStartTime]);
+
   const getOtherAnswers = (currentCard: FlashcardType) => {
     return deck
       .filter(card => card.id !== currentCard.id)
