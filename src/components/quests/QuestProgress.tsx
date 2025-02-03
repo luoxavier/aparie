@@ -26,7 +26,7 @@ export function QuestProgress({
     <motion.div 
       className={cn(
         "space-y-2 p-4 rounded-lg transition-all duration-300",
-        completed ? "bg-primary/5 animate-in fade-in" : "",
+        completed ? "bg-primary/5 animate-sparkle" : "",
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -45,7 +45,17 @@ export function QuestProgress({
             "text-xs",
             completed ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {completed ? `+${xpReward} XP Earned!` : `+${xpReward} XP`}
+            {completed ? (
+              <motion.span
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                +{xpReward} XP Earned!
+              </motion.span>
+            ) : (
+              `+${xpReward} XP`
+            )}
           </p>
         </div>
         {completed && (
@@ -57,7 +67,7 @@ export function QuestProgress({
           value={progressPercentage} 
           className={cn(
             "h-2 transition-all duration-1000 ease-out",
-            completed ? "bg-primary/20" : "",
+            completed ? "bg-primary/20" : "bg-accent/20",
             progressPercentage >= 100 ? "bg-primary" : "bg-accent"
           )}
         />

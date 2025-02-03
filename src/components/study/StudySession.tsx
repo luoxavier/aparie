@@ -3,6 +3,7 @@ import { Flashcard } from "@/components/Flashcard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { playSound } from "@/utils/sound";
 
 interface StudySessionProps {
   currentCard: FlashcardType;
@@ -30,6 +31,7 @@ export function StudySession({
   const { user } = useAuth();
   const { toast } = useToast();
   const [studyStartTime] = useState(Date.now());
+  const [lastActivityTime, setLastActivityTime] = useState(Date.now());
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
 
@@ -38,31 +40,57 @@ export function StudySession({
     if (!user) return;
 
     const updateStudyTime = async () => {
-      const elapsedMinutes = Math.floor((Date.now() - studyStartTime) / 60000);
+      const currentTime = Date.now();
+      // Check if user has been inactive for more than 15 seconds
+      if (currentTime - lastActivityTime > 15000) {
+        return;
+      }
+
+      const elapsedMinutes = Math.floor((currentTime - studyStartTime) / 60000);
       
       const { data: timeQuests } = await supabase
         .from('user_quests')
-        .select('*')
+        .select('*, quests(*)')
         .eq('user_id', user.id)
         .gte('expires_at', new Date().toISOString());
 
       if (timeQuests && timeQuests.length > 0) {
-        const infiniteQuest = timeQuests.find(q => 
-          q.quest_id && q.quest_id.toString().includes('infinite')
+        const infiniteQuests = timeQuests.filter(q => 
+          q.quests?.type === 'infinite'
         );
 
-        if (infiniteQuest) {
-          await supabase
-            .from('user_quests')
-            .update({ progress: elapsedMinutes })
-            .eq('id', infiniteQuest.id);
+        for (const quest of infiniteQuests) {
+          if (!quest.completed && quest.quests) {
+            const newProgress = Math.min(elapsedMinutes, quest.quests.requirement_count);
+            
+            if (newProgress > quest.progress) {
+              const { data: updatedQuest } = await supabase
+                .from('user_quests')
+                .update({ 
+                  progress: newProgress,
+                  completed: newProgress >= quest.quests.requirement_count,
+                  completed_at: newProgress >= quest.quests.requirement_count ? new Date().toISOString() : null
+                })
+                .eq('id', quest.id)
+                .select()
+                .single();
+
+              if (updatedQuest?.completed) {
+                playSound('complete');
+                toast({
+                  title: "Quest Completed! 🎉",
+                  description: `You've earned ${quest.quests.xp_reward} XP!`,
+                });
+              }
+            }
+          }
         }
       }
     };
 
     const timer = setInterval(updateStudyTime, 60000); // Update every minute
     return () => clearInterval(timer);
-  }, [user, studyStartTime]);
+  }, [user, studyStartTime, lastActivityTime]);
 
   // Update accuracy quest progress
   useEffect(() => {
@@ -73,31 +101,42 @@ export function StudySession({
       
       const { data: accuracyQuests } = await supabase
         .from('user_quests')
-        .select('*')
+        .select('*, quests(*)')
         .eq('user_id', user.id)
         .gte('expires_at', new Date().toISOString());
 
       if (accuracyQuests) {
-        const playlistQuest = accuracyQuests.find(q => 
-          q.quest_id && (
-            q.quest_id.toString().includes('playlist_private') || 
-            q.quest_id.toString().includes('playlist_public')
-          )
+        const playlistQuests = accuracyQuests.filter(q => 
+          q.quests?.type.includes('playlist_')
         );
 
-        if (playlistQuest && accuracy >= playlistQuest.requirement_count) {
-          await supabase
-            .from('user_quests')
-            .update({ 
-              progress: accuracy,
-              completed: true 
-            })
-            .eq('id', playlistQuest.id);
+        for (const quest of playlistQuests) {
+          if (!quest.completed && quest.quests && accuracy >= quest.quests.requirement_count) {
+            const { data: updatedQuest } = await supabase
+              .from('user_quests')
+              .update({ 
+                progress: accuracy,
+                completed: true,
+                completed_at: new Date().toISOString()
+              })
+              .eq('id', quest.id)
+              .select()
+              .single();
 
-          toast({
-            title: "Quest Completed!",
-            description: `You've achieved ${accuracy}% accuracy!`,
-          });
+            if (updatedQuest?.completed) {
+              playSound('complete');
+              toast({
+                title: "Quest Completed! 🎉",
+                description: `You've achieved ${accuracy}% accuracy and earned ${quest.quests.xp_reward} XP!`,
+              });
+            }
+          } else if (quest.quests && accuracy > quest.progress) {
+            // Update progress even if not completed
+            await supabase
+              .from('user_quests')
+              .update({ progress: accuracy })
+              .eq('id', quest.id);
+          }
         }
       }
     };
@@ -106,6 +145,7 @@ export function StudySession({
   }, [correctAnswers, totalAnswers, user]);
 
   const handleAnswer = async (isCorrect: boolean) => {
+    setLastActivityTime(Date.now());
     setTotalAnswers(prev => prev + 1);
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);

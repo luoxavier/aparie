@@ -52,7 +52,6 @@ const animations = {
   },
 };
 
-// Theme colors configuration
 const themeColors = {
   border: "hsl(var(--border))",
   input: "hsl(var(--input))",
@@ -89,7 +88,6 @@ const themeColors = {
   },
 };
 
-// Main configuration
 export default {
   darkMode: ["class"],
   content: [
