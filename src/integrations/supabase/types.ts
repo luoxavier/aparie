@@ -554,6 +554,10 @@ export type Database = {
         }
         Returns: string
       }
+      handle_midnight_updates: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_leaderboard_score: {
         Args: {
           user_id_param: string
@@ -561,6 +565,10 @@ export type Database = {
           creator_id_param: string
           score: number
         }
+        Returns: undefined
+      }
+      update_user_streak: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
