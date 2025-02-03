@@ -98,23 +98,25 @@ export function QuestsDialog() {
       }
       
       console.log('User quests fetched:', data);
+      console.log('Completed quests:', data?.filter(q => q.completed));
       
       // Update completed quests
       const newCompletedQuests = new Set<string>();
       data?.forEach(quest => {
         if (quest.completed) {
-          console.log(`Quest ${quest.quest_id} is marked as completed`);
+          console.log(`Quest ${quest.quest_id} marked as completed with progress:`, quest.progress);
           newCompletedQuests.add(quest.quest_id);
+        } else {
+          console.log(`Quest ${quest.quest_id} in progress:`, quest.progress);
         }
       });
       
-      console.log('Completed quests:', Array.from(newCompletedQuests));
       setCompletedQuests(newCompletedQuests);
       
       return data as UserQuest[];
     },
     enabled: !!user,
-    refetchInterval: 30000, // Refetch every 30 seconds to check for updates
+    refetchInterval: 15000, // Refetch every 15 seconds to check for updates
   });
 
   useEffect(() => {
@@ -133,11 +135,12 @@ export function QuestsDialog() {
         const quest = quests.find(q => q.id === userQuest.quest_id);
         if (quest) {
           const progressPercentage = (userQuest.progress / quest.requirement_count) * 100;
-          console.log(`Quest ${quest.id} progress:`, {
+          console.log(`Quest ${quest.id} progress update:`, {
             current: userQuest.progress,
             required: quest.requirement_count,
             percentage: progressPercentage,
-            completed: userQuest.completed
+            completed: userQuest.completed,
+            type: quest.type
           });
           
           newProgressValues[userQuest.quest_id] = progressPercentage;
@@ -203,7 +206,7 @@ export function QuestsDialog() {
               return (
                 <div 
                   key={quest.id} 
-                  className={`space-y-2 p-4 rounded-lg transition-colors ${
+                  className={`space-y-2 p-4 rounded-lg transition-all duration-300 ${
                     completed ? 'bg-primary/5' : ''
                   }`}
                 >
