@@ -53,12 +53,22 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
         if (studyTimeRef.current % 60 === 0) {
           const minutes = Math.floor(studyTimeRef.current / 60);
           
-          const { data: timeQuests } = await supabase
+          // Log the current UTC time for testing
+          console.log('Current UTC time:', new Date().toISOString());
+          
+          const { data: timeQuests, error: questError } = await supabase
             .from('user_quests')
             .select('*, quests(*)')
             .eq('user_id', user?.id)
             .gte('expires_at', new Date().toISOString())
             .filter('quests.type', 'eq', 'infinite');
+
+          if (questError) {
+            console.error('Error fetching quests:', questError);
+            return;
+          }
+
+          console.log('Active quests:', timeQuests);
 
           if (timeQuests) {
             for (const quest of timeQuests) {
@@ -66,7 +76,7 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
                 const newProgress = Math.min(minutes, quest.quests.requirement_count);
                 
                 if (newProgress > quest.progress) {
-                  const { data: updatedQuest } = await supabase
+                  const { data: updatedQuest, error: updateError } = await supabase
                     .from('user_quests')
                     .update({ 
                       progress: newProgress,
@@ -77,12 +87,20 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
                     .select()
                     .single();
 
+                  if (updateError) {
+                    console.error('Error updating quest:', updateError);
+                    return;
+                  }
+
                   if (updatedQuest?.completed) {
                     playSound('complete');
                     toast({
                       title: "Quest Completed! 🎉",
                       description: `You've earned ${quest.quests.xp_reward} XP!`,
                     });
+
+                    // Log quest completion time for testing
+                    console.log('Quest completed at UTC:', new Date().toISOString());
                   }
                 }
               }
@@ -93,6 +111,26 @@ export function StudyMode({ deck, onExit, mode }: StudyModeProps) {
     };
 
     timerRef.current = setInterval(updateStudyTime, 1000);
+
+    // Log initial quest and streak state for testing
+    const logInitialState = async () => {
+      const { data: streakData } = await supabase
+        .from('user_streaks')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+      
+      console.log('Current streak state:', streakData);
+      
+      const { data: questData } = await supabase
+        .from('user_quests')
+        .select('*, quests(*)')
+        .eq('user_id', user?.id);
+      
+      console.log('Current quests state:', questData);
+    };
+
+    logInitialState();
 
     return () => {
       if (timerRef.current) {
