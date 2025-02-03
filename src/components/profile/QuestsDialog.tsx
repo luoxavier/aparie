@@ -98,12 +98,11 @@ export function QuestsDialog() {
       }
       
       console.log('User quests fetched:', data);
-      console.log('Completed quests:', data?.filter(q => q.completed));
       
       // Update completed quests
       const newCompletedQuests = new Set<string>();
       data?.forEach(quest => {
-        if (quest.completed) {
+        if (quest.completed || quest.progress >= (quests?.find(q => q.id === quest.quest_id)?.requirement_count || 0)) {
           console.log(`Quest ${quest.quest_id} marked as completed with progress:`, quest.progress);
           newCompletedQuests.add(quest.quest_id);
         } else {
@@ -139,7 +138,7 @@ export function QuestsDialog() {
             current: userQuest.progress,
             required: quest.requirement_count,
             percentage: progressPercentage,
-            completed: userQuest.completed,
+            completed: userQuest.completed || userQuest.progress >= quest.requirement_count,
             type: quest.type
           });
           
@@ -153,13 +152,16 @@ export function QuestsDialog() {
 
   const getQuestProgress = (questId: string) => {
     const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
-    const progress = userQuest?.progress || 0;
+    const quest = quests?.find(q => q.id === questId);
+    const progress = Math.min(userQuest?.progress || 0, quest?.requirement_count || 0);
     console.log(`Getting progress for quest ${questId}:`, progress);
     return progress;
   };
 
   const isQuestCompleted = (questId: string) => {
-    const completed = completedQuests.has(questId);
+    const userQuest = userQuestsQuery.data?.find(uq => uq.quest_id === questId);
+    const quest = quests?.find(q => q.id === questId);
+    const completed = userQuest?.completed || (userQuest?.progress || 0) >= (quest?.requirement_count || 0);
     console.log(`Checking completion for quest ${questId}:`, completed);
     return completed;
   };
