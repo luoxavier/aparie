@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
+import { getBorderClass } from "@/utils/level-utils";
 
 export default function Home() {
   const { user } = useAuth();
@@ -119,18 +120,25 @@ export default function Home() {
           {/* Top Section with Avatar and Settings */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
-              {profile?.avatar_url && (
-                <img
-                  src={profile.avatar_url}
-                  alt="Profile"
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              )}
+              <div className={`rounded-full overflow-hidden ${getBorderClass(userStats?.level)}`}>
+                {profile?.avatar_url && (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Profile"
+                    className="w-12 h-12 object-cover"
+                  />
+                )}
+              </div>
               <div className="flex flex-col items-start gap-1">
                 <div className="flex items-baseline gap-2">
                   <h1 className="text-xl font-semibold">{profile?.display_name}</h1>
                   {profile?.username && (
                     <span className="text-sm text-muted-foreground">@{profile.username}</span>
+                  )}
+                  {userStats?.level && (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Lvl {userStats.level}
+                    </span>
                   )}
                 </div>
                 {userStats && (
@@ -147,7 +155,6 @@ export default function Home() {
             <SettingsDialog />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
@@ -208,6 +215,7 @@ export default function Home() {
             <PublicPlaylists />
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
