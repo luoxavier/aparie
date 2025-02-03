@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { vibrate } from "@/utils/sound";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Flashcard {
   id?: string;
@@ -61,6 +62,7 @@ export function CreateMultipleCardsForm({
   const [isPublic, setIsPublic] = useState(false);
   const { data: friends = [] } = useFriendsList();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,13 +88,34 @@ export function CreateMultipleCardsForm({
       return;
     }
 
-    await onSubmit({
-      recipientId,
-      playlistName,
-      cards,
-      allowRecipientModify,
-      isPublic
-    });
+    try {
+      await onSubmit({
+        recipientId,
+        playlistName,
+        cards,
+        allowRecipientModify,
+        isPublic
+      });
+
+      // Invalidate relevant queries to trigger a refresh
+      await queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      
+      // Close the dialog by finding the closest dialog and setting open to false
+      const dialogElement = document.querySelector('[role="dialog"]');
+      if (dialogElement) {
+        const closeButton = dialogElement.querySelector('button[aria-label="Close"]');
+        if (closeButton) {
+          (closeButton as HTMLButtonElement).click();
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save flashcards. Please try again.",
+      });
+    }
   };
 
   const addCard = () => {
