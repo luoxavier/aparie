@@ -99,12 +99,42 @@ export function QuestsDialog() {
       
       console.log('User quests fetched:', data);
       
-      // Update completed quests
+      // Update completed quests and handle XP rewards
       const newCompletedQuests = new Set<string>();
       data?.forEach(quest => {
-        if (quest.completed || quest.progress >= (quests?.find(q => q.id === quest.quest_id)?.requirement_count || 0)) {
-          console.log(`Quest ${quest.quest_id} marked as completed with progress:`, quest.progress);
+        const questDefinition = quests?.find(q => q.id === quest.quest_id);
+        const isCompleted = quest.completed || quest.progress >= (questDefinition?.requirement_count || 0);
+        
+        if (isCompleted && !completedQuests.has(quest.quest_id)) {
+          console.log(`Quest ${quest.quest_id} newly completed with progress:`, quest.progress);
+          // Update quest completion status in database
+          supabase
+            .from('user_quests')
+            .update({ 
+              completed: true,
+              completed_at: new Date().toISOString()
+            })
+            .eq('quest_id', quest.quest_id)
+            .eq('user_id', user?.id)
+            .then(({ error }) => {
+              if (!error) {
+                // Award XP for quest completion
+                supabase.rpc('award_user_xp', { 
+                  user_id_param: user?.id, 
+                  xp_amount: questDefinition?.xp_reward || 0 
+                });
+                
+                toast({
+                  title: "Quest Completed! 🎉",
+                  description: `You earned ${questDefinition?.xp_reward} XP!`,
+                });
+              }
+            });
+        }
+        
+        if (isCompleted) {
           newCompletedQuests.add(quest.quest_id);
+          console.log(`Quest ${quest.quest_id} marked as completed`);
         } else {
           console.log(`Quest ${quest.quest_id} in progress:`, quest.progress);
         }
@@ -114,7 +144,7 @@ export function QuestsDialog() {
       
       return data as UserQuest[];
     },
-    enabled: !!user,
+    enabled: !!user && !!quests,
     refetchInterval: 5000, // Refetch every 5 seconds to check for updates
   });
 
