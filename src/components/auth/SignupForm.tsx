@@ -45,8 +45,17 @@ export function SignupForm() {
         title: "Account created",
         description: "Welcome to the app! You can now sign in.",
       });
+
+      // Show the welcome message
+      setTimeout(() => {
+        toast({
+          title: "Welcome! 👋",
+          description: "This app is still a work in progress. Please help us by sharing any bugs, feedback, suggestions, or if you simply want to chat!",
+          duration: 8000,
+        });
+      }, 1000);
       
-      // Redirect to login page instead of profile
+      // Redirect to login page
       navigate("/login");
     } catch (error: any) {
       if (error?.message?.includes('User already registered') || error?.body?.includes('user_already_exists')) {
