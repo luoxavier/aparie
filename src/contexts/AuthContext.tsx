@@ -58,17 +58,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log('Auth state changed:', event);
       
-      if (event === 'TOKEN_REFRESHED') {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-      } else if (event === 'SIGNED_IN') {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        await updateUserStreak();
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-        setSession(null);
-        setUser(null);
-        navigate('/login');
+      switch (event) {
+        case 'TOKEN_REFRESHED':
+        case 'SIGNED_IN':
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          if (event === 'SIGNED_IN') {
+            await updateUserStreak();
+          }
+          break;
+        case 'SIGNED_OUT':
+        case 'USER_DELETED':
+          setSession(null);
+          setUser(null);
+          navigate('/login');
+          break;
+        // Handle other cases if needed
+        case 'USER_UPDATED':
+        case 'PASSWORD_RECOVERY':
+        case 'MFA_CHALLENGE_VERIFIED':
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          break;
       }
     });
 
