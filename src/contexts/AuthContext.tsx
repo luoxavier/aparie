@@ -25,29 +25,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const currentSession = await supabase.auth.getSession();
-        if (currentSession.error) {
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          // Clear the invalid session
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
-          return;
-        }
-        
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
+          navigate('/login');
           return;
         }
 
-        if (initialSession) {
-          setSession(initialSession);
-          setUser(initialSession.user);
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
           await updateUserStreak();
         }
-
       } catch (error) {
         console.error('Error in auth initialization:', error);
+        // Clear any invalid state
+        setSession(null);
+        setUser(null);
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -57,11 +57,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log('Auth state changed:', event);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (event === 'SIGNED_IN') {
+      
+      if (event === 'TOKEN_REFRESHED') {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+      } else if (event === 'SIGNED_IN') {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         await updateUserStreak();
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setSession(null);
+        setUser(null);
+        navigate('/login');
       }
     });
 
@@ -118,10 +125,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error('Error signing out:', error);
+      // Even if there's an error, clear the local state
+      setUser(null);
+      setSession(null);
+      navigate('/login');
+      
       toast({
         variant: "destructive",
         title: "Error signing out",
-        description: "Please try again",
+        description: "Your session has been cleared locally",
       });
     }
   };
