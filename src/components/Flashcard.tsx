@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
@@ -29,22 +30,15 @@ export const Flashcard = ({
   streak = 0
 }: FlashcardProps) => {
   const { user } = useAuth();
-  const [isFlipped, setIsFlipped] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [maintainStreak, setMaintainStreak] = useState(true);
   const [currentAnswers, setCurrentAnswers] = useState<string[]>([]);
 
-  // Generate fresh answers for each card, but only when no answer is selected
   const generateAnswers = () => {
     if (currentAnswers.length === 0) {
-      // Filter out any instances of the correct answer from otherAnswers
       const uniqueAnswers = otherAnswers.filter(answer => answer !== back);
-      
-      // Shuffle and take up to 3 wrong answers
       const selectedWrongAnswers = shuffle(uniqueAnswers).slice(0, 3);
-      
-      // Always include the correct answer and shuffle with wrong answers
       const newAnswers = shuffle([back, ...selectedWrongAnswers]);
       setCurrentAnswers(newAnswers);
       return newAnswers;
@@ -52,7 +46,6 @@ export const Flashcard = ({
     return currentAnswers;
   };
 
-  // Get current answers
   const answers = generateAnswers();
 
   const updateLeaderboard = async (points: number) => {
@@ -76,7 +69,7 @@ export const Flashcard = ({
   };
 
   const handleAnswer = async (answer: string) => {
-    if (selectedAnswer) return; // Prevent multiple answers
+    if (selectedAnswer) return;
     
     setSelectedAnswer(answer);
     const correct = answer === back;
@@ -90,11 +83,10 @@ export const Flashcard = ({
         title: "Correct! 🎉",
         description: "+10 points!",
       });
-      // Use a shorter animation duration of 250ms
       setTimeout(() => {
         setSelectedAnswer(null);
         setIsCorrect(null);
-        setCurrentAnswers([]); // Reset answers for next card
+        setCurrentAnswers([]);
         onResult(true);
         onNext();
       }, 250);
@@ -115,20 +107,20 @@ export const Flashcard = ({
     if (selectedAnswer && !isCorrect) {
       setSelectedAnswer(null);
       setIsCorrect(null);
-      setCurrentAnswers([]); // Reset answers for next card
+      setCurrentAnswers([]);
       onNext();
     }
   };
 
-  // Calculate glow intensity based on streak
-  const baseCorrectGlowIntensity = 0.75;
-  const streakBonus = Math.min(streak, 10) * 0.25;
-  const correctGlowIntensity = Math.min(baseCorrectGlowIntensity + streakBonus, 1.0);
-  const incorrectGlowIntensity = 1.25;
+  // Calculate streak-based glow effect
+  const baseGlowIntensity = 0.3; // Starting intensity
+  const maxStreak = 10;
+  const streakBonus = Math.min(streak, maxStreak) * 0.07; // Increment per streak, maxing at 10
+  const glowIntensity = baseGlowIntensity + streakBonus;
 
   // Theme-matching pastel colors in RGB format
-  const correctGlowColor = "134, 239, 172";
-  const incorrectGlowColor = "252, 165, 165";
+  const correctGlowColor = "155, 135, 245"; // Purple theme color
+  const incorrectGlowColor = "252, 165, 165"; // Red for incorrect
 
   return (
     <div 
@@ -147,10 +139,10 @@ export const Flashcard = ({
           animate={{
             boxShadow: selectedAnswer
               ? isCorrect
-                ? `inset 0 0 20px rgba(${correctGlowColor}, ${correctGlowIntensity})`
-                : `inset 0 0 20px rgba(${incorrectGlowColor}, ${incorrectGlowIntensity})`
+                ? `0 0 ${25 * glowIntensity}px ${12 * glowIntensity}px rgba(${correctGlowColor}, ${glowIntensity})`
+                : `0 0 20px 10px rgba(${incorrectGlowColor}, ${glowIntensity})`
               : streak > 0 && maintainStreak
-                ? `inset 0 0 20px rgba(${correctGlowColor}, ${correctGlowIntensity})`
+                ? `0 0 ${25 * glowIntensity}px ${12 * glowIntensity}px rgba(${correctGlowColor}, ${glowIntensity})`
                 : "none"
           }}
           transition={{ duration: 0.3 }}
