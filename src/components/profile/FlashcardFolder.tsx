@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -53,10 +54,26 @@ export function FlashcardFolder({
   const queryClient = useQueryClient();
   const [showCards, setShowCards] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const folderRef = useRef<HTMLDivElement>(null);
   const { isFavorited, toggleFavorite } = useFavoriteFolder(user?.id, creatorId, playlistName);
 
-  // Check if any flashcard in the playlist is public
   const isPublic = flashcards.some(card => card.is_public);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (folderRef.current && !folderRef.current.contains(event.target as Node)) {
+        setShowCards(false);
+      }
+    };
+
+    if (showCards) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCards]);
 
   const handleFolderClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
@@ -83,6 +100,7 @@ export function FlashcardFolder({
 
   return (
     <Card 
+      ref={folderRef}
       className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
       onClick={handleFolderClick}
     >
@@ -138,7 +156,9 @@ export function FlashcardFolder({
       />
 
       <div 
-        className={`mt-4 transition-all duration-300 ${showCards ? 'animate-accordion-down' : 'animate-accordion-up'}`}
+        className={`mt-4 overflow-hidden transition-all duration-300 ease-in-out ${
+          showCards ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <FolderContent
