@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Flashcard } from "@/components/Flashcard";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ export function StudySession({
   const [lastActivityTime, setLastActivityTime] = useState(Date.now());
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
+  const [highestStreak, setHighestStreak] = useState(0);
 
   // Update study time quest progress
   useEffect(() => {
@@ -41,7 +43,6 @@ export function StudySession({
 
     const updateStudyTime = async () => {
       const currentTime = Date.now();
-      // Check if user has been inactive for more than 15 seconds
       if (currentTime - lastActivityTime > 15000) {
         return;
       }
@@ -88,68 +89,107 @@ export function StudySession({
       }
     };
 
-    const timer = setInterval(updateStudyTime, 60000); // Update every minute
+    const timer = setInterval(updateStudyTime, 60000);
     return () => clearInterval(timer);
   }, [user, studyStartTime, lastActivityTime]);
 
-  // Update accuracy quest progress
+  // Update accuracy and streak quest progress
   useEffect(() => {
-    const updateAccuracyProgress = async () => {
-      if (!user || totalAnswers === 0) return;
+    const updateProgress = async () => {
+      if (!user) return;
 
-      const accuracy = Math.floor((correctAnswers / totalAnswers) * 100);
-      
-      const { data: accuracyQuests } = await supabase
+      const { data: quests } = await supabase
         .from('user_quests')
         .select('*, quests(*)')
         .eq('user_id', user.id)
         .gte('expires_at', new Date().toISOString());
 
-      if (accuracyQuests) {
-        const playlistQuests = accuracyQuests.filter(q => 
-          q.quests?.type.includes('playlist_')
+      if (quests) {
+        // Handle accuracy quests
+        if (totalAnswers > 0) {
+          const accuracy = Math.floor((correctAnswers / totalAnswers) * 100);
+          const accuracyQuests = quests.filter(q => 
+            q.quests?.type.includes('playlist_')
+          );
+
+          for (const quest of accuracyQuests) {
+            if (!quest.completed && quest.quests && accuracy >= quest.quests.requirement_count) {
+              const { data: updatedQuest } = await supabase
+                .from('user_quests')
+                .update({ 
+                  progress: accuracy,
+                  completed: true,
+                  completed_at: new Date().toISOString()
+                })
+                .eq('id', quest.id)
+                .select()
+                .single();
+
+              if (updatedQuest?.completed) {
+                playSound('complete');
+                toast({
+                  title: "Quest Completed! 🎉",
+                  description: `You've achieved ${accuracy}% accuracy and earned ${quest.quests.xp_reward} XP!`,
+                });
+              }
+            } else if (quest.quests && accuracy > quest.progress) {
+              await supabase
+                .from('user_quests')
+                .update({ progress: accuracy })
+                .eq('id', quest.id);
+            }
+          }
+        }
+
+        // Handle mastery/streak quests
+        const streakQuests = quests.filter(q => 
+          q.quests?.type === 'mastery'
         );
 
-        for (const quest of playlistQuests) {
-          if (!quest.completed && quest.quests && accuracy >= quest.quests.requirement_count) {
-            const { data: updatedQuest } = await supabase
-              .from('user_quests')
-              .update({ 
-                progress: accuracy,
-                completed: true,
-                completed_at: new Date().toISOString()
-              })
-              .eq('id', quest.id)
-              .select()
-              .single();
+        for (const quest of streakQuests) {
+          if (!quest.completed && quest.quests) {
+            const newProgress = Math.max(highestStreak, streak); // Use the higher of current streak or highest achieved
+            
+            if (newProgress > quest.progress) {
+              const { data: updatedQuest } = await supabase
+                .from('user_quests')
+                .update({ 
+                  progress: newProgress,
+                  completed: newProgress >= quest.quests.requirement_count,
+                  completed_at: newProgress >= quest.quests.requirement_count ? new Date().toISOString() : null
+                })
+                .eq('id', quest.id)
+                .select()
+                .single();
 
-            if (updatedQuest?.completed) {
-              playSound('complete');
-              toast({
-                title: "Quest Completed! 🎉",
-                description: `You've achieved ${accuracy}% accuracy and earned ${quest.quests.xp_reward} XP!`,
-              });
+              if (updatedQuest?.completed) {
+                playSound('complete');
+                toast({
+                  title: "Perfect Streak Quest Completed! 🎯",
+                  description: `You've achieved a ${newProgress} card streak and earned ${quest.quests.xp_reward} XP!`,
+                });
+              }
             }
-          } else if (quest.quests && accuracy > quest.progress) {
-            // Update progress even if not completed
-            await supabase
-              .from('user_quests')
-              .update({ progress: accuracy })
-              .eq('id', quest.id);
           }
         }
       }
     };
 
-    updateAccuracyProgress();
-  }, [correctAnswers, totalAnswers, user]);
+    updateProgress();
+  }, [correctAnswers, totalAnswers, streak, highestStreak, user]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     setLastActivityTime(Date.now());
     setTotalAnswers(prev => prev + 1);
+    
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
+      const newStreak = streak + 1;
+      if (newStreak > highestStreak) {
+        setHighestStreak(newStreak);
+      }
     }
+    
     onResult(isCorrect);
   };
 
