@@ -66,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           break;
         case 'SIGNED_OUT':
-        case 'USER_DELETED':
           setSession(null);
           setUser(null);
           navigate('/login');
@@ -133,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error('Error signing out:', error);
-      // Even if there's an error, clear the local state
       setUser(null);
       setSession(null);
       navigate('/login');
@@ -183,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (loading) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (
