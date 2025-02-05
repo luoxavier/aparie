@@ -29,7 +29,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (sessionError) {
           console.error('Error getting session:', sessionError);
-          // Clear the invalid session
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
@@ -44,7 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error in auth initialization:', error);
-        // Clear any invalid state
         setSession(null);
         setUser(null);
         navigate('/login');
@@ -73,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           navigate('/login');
           break;
-        // Handle other cases if needed
         case 'USER_UPDATED':
         case 'PASSWORD_RECOVERY':
         case 'MFA_CHALLENGE_VERIFIED':
