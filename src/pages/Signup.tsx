@@ -10,7 +10,7 @@ export default function Signup() {
           <img 
             src="/lovable-uploads/e352f81d-e5ce-4d6c-a7ce-bc7e005d7898.png"
             alt="Lovable Logo"
-            className="w-24 h-24 mb-2"
+            className="w-24 h-24 mb-2 mix-blend-multiply"
           />
           <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
           <p className="text-sm text-muted-foreground">
