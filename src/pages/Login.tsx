@@ -15,8 +15,8 @@ export default function Login() {
             alt="Lovable Logo"
             className={`w-24 h-24 mb-2 ${
               theme === 'dark' 
-                ? 'invert brightness-0' 
-                : 'brightness-0'
+                ? 'invert' 
+                : 'mix-blend-multiply'
             } transition-all duration-200`}
           />
           <h1 className="text-2xl font-semibold tracking-tight">
