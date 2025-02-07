@@ -31,9 +31,15 @@ export function SignupForm() {
   };
 
   const checkExistingEmail = async (email: string) => {
-    const { data: { user }, error } = await supabase.auth.admin.getUserByEmail(email);
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        shouldCreateUser: false, // This ensures we only check if the user exists
+      }
+    });
     
-    if (user || (error && error.message.includes("User already registered"))) {
+    // If we don't get an error about user not existing, then the email is taken
+    if (!error || (error && !error.message.includes("Email not found"))) {
       toast({
         variant: "destructive",
         title: "Email already in use",
