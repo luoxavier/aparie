@@ -54,35 +54,7 @@ export function SignupForm() {
         return;
       }
 
-      // Then check if email exists without creating the user
-      const { data: { users }, error: emailCheckError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: email
-        }
-      });
-
-      if (emailCheckError) {
-        throw emailCheckError;
-      }
-
-      if (users && users.length > 0) {
-        if (usernameExists) {
-          toast({
-            variant: "destructive",
-            title: "Email and username are taken",
-            description: "Try logging in!",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Email already in use",
-            description: "Try another one!",
-          });
-        }
-        return;
-      }
-
-      // If we get here, both email and username are available
+      // Try to sign up - this will also check if the email exists
       await signUp(email, password, username, username);
       
       // Show success messages
@@ -105,11 +77,21 @@ export function SignupForm() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: error.message || "An unexpected error occurred",
-      });
+      
+      // Check for specific error messages
+      if (error.message?.includes('User already registered')) {
+        toast({
+          variant: "destructive",
+          title: "Email already in use",
+          description: "Try another one or log in if this is your account!",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: error.message || "An unexpected error occurred",
+        });
+      }
     } finally {
       setLoading(false);
     }
