@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -20,8 +21,8 @@ export const checkExistingUsername = async (username: string) => {
   if (existingUser) {
     toast({
       variant: "destructive",
-      title: "Username taken",
-      description: "This username has already been taken. Please choose another one.",
+      title: "Username already taken",
+      description: "Try another one!",
     });
     throw new Error("Username taken");
   }
