@@ -39,10 +39,56 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      // First check username
-      await checkExistingUsername(username);
-      
-      // Then attempt signup - if email exists, Supabase will return an error
+      // Check for existing username and email simultaneously
+      const [usernameExists] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select()
+          .eq('username', username)
+          .maybeSingle()
+      ]);
+
+      // Attempt signup to check email existence
+      const { error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            display_name: username,
+          },
+        },
+      });
+
+      // Handle different error scenarios
+      if (signupError?.message.includes('User already registered') && usernameExists.data) {
+        toast({
+          variant: "destructive",
+          title: "Email and username are taken",
+          description: "Try logging in!",
+        });
+        return;
+      }
+
+      if (signupError?.message.includes('User already registered')) {
+        toast({
+          variant: "destructive",
+          title: "Email already in use",
+          description: "Try another one!",
+        });
+        return;
+      }
+
+      if (usernameExists.data) {
+        toast({
+          variant: "destructive",
+          title: "Username already taken",
+          description: "Try another one!",
+        });
+        return;
+      }
+
+      // If we get here, the signup was successful
       await signUp(email, password, username, username);
       
       // Show success message and animated pointer
@@ -65,37 +111,10 @@ export function SignupForm() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
-      
-      // Parse error message if it's a JSON string
-      let errorMessage = error.message;
-      try {
-        if (error.body) {
-          const errorBody = JSON.parse(error.body);
-          errorMessage = errorBody.message;
-        }
-      } catch (e) {
-        // If parsing fails, use the original error message
-      }
-      
-      // Handle specific error cases
-      if (errorMessage.includes('User already registered') || error?.body?.includes('user_already_exists')) {
-        toast({
-          variant: "destructive",
-          title: "Email already in use",
-          description: "Try another one!",
-        });
-        return;
-      }
-      
-      if (error?.message?.includes('Username taken')) {
-        // This is handled by checkExistingUsername
-        return;
-      }
-      
       toast({
         variant: "destructive",
         title: "Error signing up",
-        description: errorMessage || "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
       });
     } finally {
       setLoading(false);
