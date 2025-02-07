@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -50,7 +51,7 @@ export function SignupForm() {
       setTimeout(() => {
         toast({
           title: "Welcome! 👋",
-          description: "This app is still a work in progress. Please help us by sharing any bugs, feedback, suggestions, or if you simply want to chat!",
+          description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
           duration: 8000,
         });
       }, 1000);
