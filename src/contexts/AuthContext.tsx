@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,21 +89,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      // First try to update the streak
+      const { error: updateError } = await supabase
         .from('user_streaks')
         .update({ last_activity_date: new Date().toISOString() })
         .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Error updating streak:', error);
-        return;
+      if (updateError) {
+        // If update fails, the row might not exist, so try to insert
+        const { error: insertError } = await supabase
+          .from('user_streaks')
+          .insert([{ 
+            user_id: user.id,
+            last_activity_date: new Date().toISOString(),
+            current_streak: 1,
+            highest_streak: 1
+          }]);
+
+        if (insertError) {
+          console.error('Error creating streak:', insertError);
+          return;
+        }
       }
 
-      const { data: streakData } = await supabase
+      // Get the current streak data
+      const { data: streakData, error: fetchError } = await supabase
         .from('user_streaks')
         .select('current_streak, highest_streak')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching streak:', fetchError);
+        return;
+      }
 
       if (streakData) {
         toast({
