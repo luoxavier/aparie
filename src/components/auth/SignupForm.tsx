@@ -31,12 +31,9 @@ export function SignupForm() {
   };
 
   const checkExistingEmail = async (email: string) => {
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email: email,
-    });
+    const { data: { user }, error } = await supabase.auth.admin.getUserByEmail(email);
     
-    // If we get data back or a specific error, the email exists
-    if (data.user || (error && error.message.includes("Email rate limit"))) {
+    if (user || (error && error.message.includes("User already registered"))) {
       toast({
         variant: "destructive",
         title: "Email already in use",
@@ -89,6 +86,28 @@ export function SignupForm() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
+      
+      // Parse error message if it's a JSON string
+      let errorMessage = error.message;
+      try {
+        if (error.body) {
+          const errorBody = JSON.parse(error.body);
+          errorMessage = errorBody.message;
+        }
+      } catch (e) {
+        // If parsing fails, use the original error message
+      }
+      
+      // Handle specific error cases
+      if (errorMessage.includes('User already registered') || error?.body?.includes('user_already_exists')) {
+        toast({
+          variant: "destructive",
+          title: "Email already in use",
+          description: "Try another one!",
+        });
+        return;
+      }
+      
       if (error?.message?.includes('Username taken')) {
         // This is handled by checkExistingUsername
         return;
@@ -97,7 +116,7 @@ export function SignupForm() {
       toast({
         variant: "destructive",
         title: "Error signing up",
-        description: error.message || "An unexpected error occurred",
+        description: errorMessage || "An unexpected error occurred",
       });
     } finally {
       setLoading(false);
