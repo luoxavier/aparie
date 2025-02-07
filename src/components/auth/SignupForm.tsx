@@ -30,26 +30,6 @@ export function SignupForm() {
     return true;
   };
 
-  const checkExistingEmail = async (email: string) => {
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        shouldCreateUser: false, // This ensures we only check if the user exists
-      }
-    });
-    
-    // If we don't get an error about user not existing, then the email is taken
-    if (!error || (error && !error.message.includes("Email not found"))) {
-      toast({
-        variant: "destructive",
-        title: "Email already in use",
-        description: "Try another one!",
-      });
-      return true;
-    }
-    return false;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -59,17 +39,10 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      // Check email first
-      const emailExists = await checkExistingEmail(email);
-      if (emailExists) {
-        setLoading(false);
-        return;
-      }
-      
-      // Then check username
+      // First check username
       await checkExistingUsername(username);
       
-      // If both checks pass, attempt signup
+      // Then attempt signup - if email exists, Supabase will return an error
       await signUp(email, password, username, username);
       
       // Show success message and animated pointer
