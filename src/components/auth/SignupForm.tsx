@@ -39,42 +39,61 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      // First check if username exists
+      // Check if username exists
       const { data: usernameExists } = await supabase
         .from('profiles')
         .select()
         .eq('username', username)
         .maybeSingle();
 
-      // Then check if email exists using signUp but don't create the user yet
-      const { error: emailError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { username },
-        },
-      });
-
-      // Handle different scenarios
-      if (emailError?.message.includes('User already registered') && usernameExists) {
+      // Check if email exists by a direct signup attempt
+      try {
+        await signUp(email, password, username, username);
+        
+        // If we get here, signup was successful
         toast({
-          variant: "destructive",
-          title: "Email and username are taken",
-          description: "Try logging in!",
+          title: "Account created",
+          description: "Welcome to the app! Click anywhere to continue.",
+          duration: null, // Keep it visible until clicked
+          action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
         });
-        return;
-      }
 
-      if (emailError?.message.includes('User already registered')) {
-        toast({
-          variant: "destructive",
-          title: "Email already in use",
-          description: "Try another one!",
-        });
-        return;
+        // Show welcome message
+        setTimeout(() => {
+          toast({
+            title: "Welcome! 👋",
+            description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
+            duration: null, // Keep it visible until clicked
+          });
+          setShowPointer(true);
+        }, 1000);
+        
+      } catch (error: any) {
+        // Handle email exists error
+        if (error.message.includes('User already registered')) {
+          if (usernameExists) {
+            toast({
+              variant: "destructive",
+              title: "Email and username are taken",
+              description: "Try logging in!",
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Email already in use",
+              description: "Try another one!",
+            });
+          }
+          return;
+        }
+        throw error; // Re-throw if it's a different error
       }
-
-      if (usernameExists) {
+      
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      
+      // Check if username exists after other errors
+      if (error.message?.includes('duplicate key')) {
         toast({
           variant: "destructive",
           title: "Username already taken",
@@ -83,30 +102,7 @@ export function SignupForm() {
         return;
       }
 
-      // If we get here, both email and username are available
-      // Now we can create the user
-      await signUp(email, password, username, username);
-      
-      // Show success messages
-      toast({
-        title: "Account created",
-        description: "Welcome to the app! Click anywhere to continue.",
-        duration: null, // Keep it visible until clicked
-        action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
-      });
-
-      // Show welcome message
-      setTimeout(() => {
-        toast({
-          title: "Welcome! 👋",
-          description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
-          duration: null, // Keep it visible until clicked
-        });
-        setShowPointer(true);
-      }, 1000);
-      
-    } catch (error: any) {
-      console.error('Signup error:', error);
+      // Handle any other errors
       toast({
         variant: "destructive",
         title: "Error signing up",
