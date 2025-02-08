@@ -23,6 +23,7 @@ export function SignupForm() {
         variant: "destructive",
         title: "Invalid password",
         description: "Password must be at least 6 characters long.",
+        duration: null, // Keep it visible until clicked
       });
       return false;
     }
@@ -50,6 +51,7 @@ export function SignupForm() {
           variant: "destructive",
           title: "Username already taken",
           description: "Please choose a different username.",
+          duration: null, // Keep it visible until clicked
         });
         setLoading(false);
         return;
@@ -73,12 +75,14 @@ export function SignupForm() {
             variant: "destructive",
             title: "Email already registered",
             description: "Please use a different email or try logging in.",
+            duration: null, // Keep it visible until clicked
           });
         } else {
           toast({
             variant: "destructive",
             title: "Error signing up",
             description: signUpError.message,
+            duration: null, // Keep it visible until clicked
           });
         }
         setLoading(false);
@@ -109,6 +113,7 @@ export function SignupForm() {
         variant: "destructive",
         title: "Error signing up",
         description: error.message || "An unexpected error occurred",
+        duration: null, // Keep it visible until clicked
       });
     } finally {
       setLoading(false);
