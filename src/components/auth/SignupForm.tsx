@@ -39,25 +39,53 @@ export function SignupForm() {
     setLoading(true);
     try {
       // First check if username exists
-      const { data: usernameExists } = await supabase
+      const { data: existingUsername } = await supabase
         .from('profiles')
-        .select()
+        .select('username')
         .eq('username', username)
         .maybeSingle();
 
-      if (usernameExists) {
+      if (existingUsername) {
         toast({
           variant: "destructive",
           title: "Username already taken",
-          description: "Try another one!",
+          description: "Please choose a different username.",
         });
+        setLoading(false);
         return;
       }
 
-      // Try to sign up - this will also check if the email exists
-      await signUp(email, password, username, username);
-      
-      // Show success messages
+      // Now try to sign up - Supabase will check if email exists
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            display_name: username,
+          },
+        },
+      });
+
+      if (signUpError) {
+        if (signUpError.message.includes('User already registered')) {
+          toast({
+            variant: "destructive",
+            title: "Email already registered",
+            description: "Please use a different email or try logging in.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error signing up",
+            description: signUpError.message,
+          });
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Show success message
       toast({
         title: "Account created",
         description: "Welcome to the app! Click anywhere to continue.",
@@ -65,7 +93,7 @@ export function SignupForm() {
         action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
       });
 
-      // Show welcome message
+      // Show welcome/feedback message
       setTimeout(() => {
         toast({
           title: "Welcome! 👋",
@@ -77,21 +105,11 @@ export function SignupForm() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
-      
-      // Check for specific error messages
-      if (error.message?.includes('User already registered')) {
-        toast({
-          variant: "destructive",
-          title: "Email already in use",
-          description: "Try another one or log in if this is your account!",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error signing up",
-          description: error.message || "An unexpected error occurred",
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "Error signing up",
+        description: error.message || "An unexpected error occurred",
+      });
     } finally {
       setLoading(false);
     }
