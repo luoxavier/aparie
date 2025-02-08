@@ -39,7 +39,22 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      // First check if username exists
+      // First check if email exists using our database function
+      const { data: existingEmail } = await supabase
+        .rpc('get_user_email_from_identifier', { identifier: email });
+
+      if (existingEmail) {
+        toast({
+          variant: "destructive",
+          title: "Email already registered",
+          description: "This email is already registered. Please try logging in instead.",
+          duration: null, // Keep it visible until clicked
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Then check if username exists
       const { data: existingUsername } = await supabase
         .from('profiles')
         .select('username')
@@ -71,6 +86,7 @@ export function SignupForm() {
 
       if (signUpError) {
         let errorMessage = signUpError.message;
+        // Just in case our previous check missed it
         if (signUpError.message.includes('User already registered')) {
           errorMessage = "This email is already registered. Please try logging in instead.";
         }
