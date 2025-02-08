@@ -57,7 +57,26 @@ export function SignupForm() {
         return;
       }
 
-      // Now try to sign up - Supabase will check if email exists
+      // Check if email exists
+      const { data: existingEmail, error: emailError } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummy-password-for-check', // Using a dummy password since we just want to check if email exists
+      });
+
+      // If we get a successful response or a specific error other than invalid credentials, 
+      // it means the email exists
+      if (existingEmail?.user || (emailError && !emailError.message.includes('Invalid login credentials'))) {
+        toast({
+          variant: "destructive",
+          title: "Email already registered",
+          description: "Please use a different email or try logging in.",
+          duration: null, // Keep it visible until clicked
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Now try to sign up
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -70,21 +89,12 @@ export function SignupForm() {
       });
 
       if (signUpError) {
-        if (signUpError.message.includes('User already registered')) {
-          toast({
-            variant: "destructive",
-            title: "Email already registered",
-            description: "Please use a different email or try logging in.",
-            duration: null, // Keep it visible until clicked
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error signing up",
-            description: signUpError.message,
-            duration: null, // Keep it visible until clicked
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: signUpError.message,
+          duration: null, // Keep it visible until clicked
+        });
         setLoading(false);
         return;
       }
