@@ -8,13 +8,10 @@ import { CreateCardForm } from "./CreateCardForm";
 import { RecipientSelect } from "./RecipientSelect";
 import { FolderNameInput } from "./FolderNameInput";
 import { RecipientModifyToggle } from "./RecipientModifyToggle";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogClose } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
-import { vibrate } from "@/utils/sound";
-import { useQueryClient } from "@tanstack/react-query";
+import { PublicPlaylistToggle } from "./PublicPlaylistToggle";
+import { useFlashcardFormSubmit } from "./useFlashcardFormSubmit";
+import { useFlashcardState } from "./useFlashcardState";
 
 interface Flashcard {
   id?: string;
@@ -54,117 +51,29 @@ export function CreateMultipleCardsForm({
 }: CreateMultipleCardsFormProps) {
   const [recipientId, setRecipientId] = useState<string>(initialRecipientId || preselectedFriend?.id || "self");
   const [playlistName, setPlaylistName] = useState(initialPlaylistName || "");
-  const [cards, setCards] = useState<Flashcard[]>(existingCards?.map(card => ({
-    id: card.id,
-    front: card.front,
-    back: card.back
-  })) || [{ front: "", back: "" }]);
   const [allowRecipientModify, setAllowRecipientModify] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const { data: friends = [] } = useFriendsList();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  
+  const { cards, addCard, updateCard, removeCard, handleKeyPress } = useFlashcardState(existingCards);
+  const { handleSubmit } = useFlashcardFormSubmit({ isModifying, onSubmit });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    vibrate('button');
-    
-    // Validate cards
-    if (cards.some(card => !card.front.trim() || !card.back.trim())) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please fill in all card fields",
-      });
-      return;
-    }
-
-    // Validate playlist name
-    if (!playlistName.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter a playlist name",
-      });
-      return;
-    }
-
-    try {
-      await onSubmit({
-        recipientId,
-        playlistName,
-        cards,
-        allowRecipientModify,
-        isPublic
-      });
-
-      // Invalidate relevant queries to trigger a refresh
-      await queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-      await queryClient.invalidateQueries({ queryKey: ['notifications'] });
-
-      // Show success toast
-      toast({
-        title: "Success",
-        description: isModifying ? "Flashcards updated successfully" : "Flashcards created successfully",
-      });
-
-      // Navigate back to the index page
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save flashcards. Please try again.",
-      });
-    }
+    await handleSubmit({
+      recipientId,
+      playlistName,
+      cards,
+      allowRecipientModify,
+      isPublic
+    });
   };
 
-  const addCard = () => {
-    vibrate('button');
-    setCards([...cards, { front: "", back: "" }]);
-  };
-
-  const updateCard = (index: number, field: "front" | "back", value: string) => {
-    const newCards = [...cards];
-    newCards[index][field] = value;
-    setCards(newCards);
-  };
-
-  const removeCard = (index: number) => {
-    vibrate('button');
-    const newCards = cards.filter((_, i) => i !== index);
-    setCards(newCards);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, index: number, field: "front" | "back") => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (field === "front") {
-        document.getElementById(`back-${index}`)?.focus();
-      } else if (index === cards.length - 1) {
-        addCard();
-        setTimeout(() => document.getElementById(`front-${index + 1}`)?.focus(), 0);
-      } else {
-        document.getElementById(`front-${index + 1}`)?.focus();
-      }
-    }
-  };
-
-  // Show modification toggle only when creating for others or modifying existing shared playlist
   const showModifyToggle = (!isPublic && (recipientId !== "self" || isModifying));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="public-playlist"
-          checked={isPublic}
-          onCheckedChange={setIsPublic}
-        />
-        <Label htmlFor="public-playlist">Make this playlist public</Label>
-      </div>
+    <form onSubmit={onFormSubmit} className="space-y-4">
+      <PublicPlaylistToggle isPublic={isPublic} setIsPublic={setIsPublic} />
 
       {!hideRecipientSelect && !isPublic && (
         <RecipientSelect
@@ -213,4 +122,3 @@ export function CreateMultipleCardsForm({
     </form>
   );
 }
-
