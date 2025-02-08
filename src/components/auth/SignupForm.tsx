@@ -40,15 +40,27 @@ export function SignupForm() {
     setLoading(true);
     try {
       // First check if email exists using our database function
-      const { data: existingEmail } = await supabase
+      const { data: existingEmail, error: emailCheckError } = await supabase
         .rpc('get_user_email_from_identifier', { identifier: email });
+
+      if (emailCheckError) {
+        console.error('Error checking email:', emailCheckError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An error occurred while checking email availability.",
+          duration: null,
+        });
+        setLoading(false);
+        return;
+      }
 
       if (existingEmail) {
         toast({
           variant: "destructive",
           title: "Email already registered",
           description: "This email is already registered. Please try logging in instead.",
-          duration: null, // Keep it visible until clicked
+          duration: null,
         });
         setLoading(false);
         return;
@@ -65,8 +77,8 @@ export function SignupForm() {
         toast({
           variant: "destructive",
           title: "Username already taken",
-          description: "Please choose a different username.",
-          duration: null, // Keep it visible until clicked
+          description: "This username is already taken. Please choose a different one.",
+          duration: null,
         });
         setLoading(false);
         return;
@@ -95,7 +107,7 @@ export function SignupForm() {
           variant: "destructive",
           title: "Error signing up",
           description: errorMessage,
-          duration: null, // Keep it visible until clicked
+          duration: null,
         });
         setLoading(false);
         return;
@@ -105,7 +117,7 @@ export function SignupForm() {
       toast({
         title: "Account created",
         description: "Welcome to the app! Click anywhere to continue.",
-        duration: null, // Keep it visible until clicked
+        duration: null,
         action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
       });
 
@@ -114,7 +126,7 @@ export function SignupForm() {
         toast({
           title: "Welcome! 👋",
           description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
-          duration: null, // Keep it visible until clicked
+          duration: null,
         });
         setShowPointer(true);
       }, 1000);
@@ -125,7 +137,7 @@ export function SignupForm() {
         variant: "destructive",
         title: "Error signing up",
         description: error.message || "An unexpected error occurred",
-        duration: null, // Keep it visible until clicked
+        duration: null,
       });
     } finally {
       setLoading(false);
