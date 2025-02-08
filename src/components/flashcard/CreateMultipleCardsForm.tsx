@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -39,7 +40,7 @@ interface CreateMultipleCardsFormProps {
     cards: Flashcard[];
     allowRecipientModify: boolean;
     isPublic: boolean;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export function CreateMultipleCardsForm({
@@ -100,15 +101,16 @@ export function CreateMultipleCardsForm({
 
       // Invalidate relevant queries to trigger a refresh
       await queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      await queryClient.invalidateQueries({ queryKey: ['notifications'] });
 
       // Show success toast
       toast({
         title: "Success",
-        description: "Flashcards created successfully",
+        description: isModifying ? "Flashcards updated successfully" : "Flashcards created successfully",
       });
 
       // Navigate back to the index page
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
@@ -211,3 +213,4 @@ export function CreateMultipleCardsForm({
     </form>
   );
 }
+

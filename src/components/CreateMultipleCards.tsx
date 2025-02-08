@@ -1,3 +1,4 @@
+
 import { Profile } from "@/types/database";
 import { CreateMultipleCardsForm } from "./flashcard/CreateMultipleCardsForm";
 import { useFlashcardManagement } from "./flashcard/useFlashcardManagement";
@@ -106,19 +107,10 @@ export function CreateMultipleCards({
         }
       }
 
-      toast({
-        title: "Success",
-        description: isModifying ? "Playlist updated successfully!" : "Flashcards created successfully!",
-      });
-
       onComplete?.();
     } catch (error) {
       console.error("Error handling flashcards:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save flashcards. Please try again.",
-        variant: "destructive",
-      });
+      throw error; // Re-throw to be handled by the form
     }
   };
 
