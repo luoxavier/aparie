@@ -31,15 +31,18 @@ export function SignupForm() {
 
   const checkExistingEmail = async (email: string) => {
     try {
-      // Try to sign in with the email to check if it exists
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: "dummy-password-for-check"
-      });
-      
-      // If we get an "Invalid login credentials" error, the email exists
-      // If we get any other error, the email doesn't exist
-      return error?.message?.includes('Invalid login credentials') || false;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking email:', error);
+        return false;
+      }
+
+      return !!data;
     } catch (error) {
       console.error('Error checking email:', error);
       return false;
@@ -47,18 +50,23 @@ export function SignupForm() {
   };
 
   const checkExistingUsername = async (username: string) => {
-    const { data: existingUser, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .maybeSingle();
-    
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error checking username:', error);
+        return false;
+      }
+      
+      return !!data;
+    } catch (error) {
       console.error('Error checking username:', error);
-      throw error;
+      return false;
     }
-    
-    return !!existingUser;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,10 +78,8 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      console.log('Checking email:', email);
       // Check for existing email
       const emailExists = await checkExistingEmail(email);
-      console.log('Email exists:', emailExists);
       
       if (emailExists) {
         toast({
@@ -85,10 +91,8 @@ export function SignupForm() {
         return;
       }
 
-      console.log('Checking username:', username);
       // Check for existing username
       const usernameExists = await checkExistingUsername(username);
-      console.log('Username exists:', usernameExists);
       
       if (usernameExists) {
         toast({
@@ -100,7 +104,6 @@ export function SignupForm() {
         return;
       }
 
-      console.log('Proceeding with signup');
       // If all checks pass, proceed with signup
       await signUp(email, password, username, username);
 
