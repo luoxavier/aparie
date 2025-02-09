@@ -29,46 +29,6 @@ export function SignupForm() {
     return true;
   };
 
-  const checkExistingEmail = async (email: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking email:', error);
-        return false;
-      }
-
-      return !!data;
-    } catch (error) {
-      console.error('Error checking email:', error);
-      return false;
-    }
-  };
-
-  const checkExistingUsername = async (username: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error checking username:', error);
-        return false;
-      }
-      
-      return !!data;
-    } catch (error) {
-      console.error('Error checking username:', error);
-      return false;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -78,23 +38,14 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      // Check for existing email
-      const emailExists = await checkExistingEmail(email);
-      
-      if (emailExists) {
-        toast({
-          variant: "destructive",
-          title: "Email already registered",
-          description: "This email is already in use. Please try logging in instead.",
-        });
-        setLoading(false);
-        return;
-      }
+      // First check if the username is taken
+      const { data: existingUsername } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
 
-      // Check for existing username
-      const usernameExists = await checkExistingUsername(username);
-      
-      if (usernameExists) {
+      if (existingUsername) {
         toast({
           variant: "destructive",
           title: "Username already taken",
@@ -104,7 +55,7 @@ export function SignupForm() {
         return;
       }
 
-      // If all checks pass, proceed with signup
+      // If username is available, proceed with signup
       await signUp(email, password, username, username);
 
       // Show success message
@@ -130,11 +81,21 @@ export function SignupForm() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: error.message || "An error occurred during signup.",
-      });
+      
+      // Handle specific error cases
+      if (error.message?.includes('User already registered')) {
+        toast({
+          variant: "destructive",
+          title: "Email already registered",
+          description: "This email is already in use. Please try logging in instead.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: error.message || "An error occurred during signup.",
+        });
+      }
     } finally {
       setLoading(false);
     }
