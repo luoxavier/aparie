@@ -30,8 +30,15 @@ export function SignupForm() {
   };
 
   const checkExistingEmail = async (email: string) => {
-    const { data: { user } } = await supabase.auth.admin.getUserByEmail(email);
-    return !!user;
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        shouldCreateUser: false,
+      }
+    });
+    
+    // If there's no error, it means the email exists
+    return !error;
   };
 
   const checkExistingUsername = async (username: string) => {
