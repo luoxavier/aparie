@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { AnimatedFeedbackPointer } from "@/components/feedback/AnimatedFeedbackPointer";
 import { supabase } from "@/integrations/supabase/client";
-import { AdminUserAttributes } from "@supabase/supabase-js";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -32,20 +31,18 @@ export function SignupForm() {
 
   const checkExistingEmail = async (email: string) => {
     try {
-      const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      if (error) {
-        console.error('Error checking email:', error);
-        return false;
-      }
-      return users?.some((user: AdminUserAttributes) => user.email === email) || false;
-    } catch (error) {
-      console.error('Error checking email:', error);
-      // Fallback to the sign-in check method if admin API fails
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      // Try to sign in with the email to check if it exists
+      const { error } = await supabase.auth.signInWithPassword({
         email: email,
         password: "dummy-password-for-check"
       });
-      return signInError?.message?.includes('Invalid login credentials');
+      
+      // If we get an "Invalid login credentials" error, the email exists
+      // If we get any other error, the email doesn't exist
+      return error?.message?.includes('Invalid login credentials') || false;
+    } catch (error) {
+      console.error('Error checking email:', error);
+      return false;
     }
   };
 
