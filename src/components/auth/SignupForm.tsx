@@ -29,6 +29,21 @@ export function SignupForm() {
     return true;
   };
 
+  const checkExistingEmail = async (email: string) => {
+    const { data: { user } } = await supabase.auth.admin.getUserByEmail(email);
+    return !!user;
+  };
+
+  const checkExistingUsername = async (username: string) => {
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .maybeSingle();
+    
+    return !!existingUser;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -38,63 +53,53 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      // First check if email exists using our database function
-      const { data: existingEmail, error: emailCheckError } = await supabase
-        .rpc('get_user_email_from_identifier', { identifier: email });
-
-      if (emailCheckError) {
-        console.error('Error checking email:', emailCheckError);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "An error occurred while checking email availability.",
-        });
-        return;
-      }
-
-      if (existingEmail) {
+      // Check for existing email
+      const emailExists = await checkExistingEmail(email);
+      if (emailExists) {
         toast({
           variant: "destructive",
           title: "Email already registered",
-          description: "This email is already registered. Please try logging in instead.",
+          description: "This email is already in use. Please try logging in instead.",
         });
+        setLoading(false);
         return;
       }
 
-      // Check if username exists
-      const { data: existingUsername } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .maybeSingle();
-
-      if (existingUsername) {
+      // Check for existing username
+      const usernameExists = await checkExistingUsername(username);
+      if (usernameExists) {
         toast({
           variant: "destructive",
           title: "Username already taken",
           description: "This username is already taken. Please choose a different one.",
         });
+        setLoading(false);
         return;
       }
 
-      // Now try to sign up using the auth context
+      // If all checks pass, proceed with signup
       await signUp(email, password, username, username);
 
       // Show success message
       toast({
-        title: "Account created",
-        description: "Welcome to the app! Click anywhere to continue.",
-        action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
+        title: "Account created successfully! 🎉",
+        description: "Welcome aboard! Click anywhere to continue.",
       });
 
-      // Show welcome/feedback message
+      // Show welcome/feedback message with pointer
       setTimeout(() => {
         toast({
           title: "Welcome! 👋",
-          description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
+          description: "This app is still a work in progress. We'd love to hear your feedback and suggestions!",
         });
         setShowPointer(true);
       }, 1000);
+
+      // Navigate to profile page after a short delay
+      setTimeout(() => {
+        navigate("/profile");
+        window.location.reload(); // Refresh the page
+      }, 2000);
       
     } catch (error: any) {
       console.error('Signup error:', error);
