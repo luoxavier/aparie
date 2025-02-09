@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { AnimatedFeedbackPointer } from "@/components/feedback/AnimatedFeedbackPointer";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminUserAttributes } from "@supabase/supabase-js";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -31,12 +32,12 @@ export function SignupForm() {
 
   const checkExistingEmail = async (email: string) => {
     try {
-      const { data, error } = await supabase.auth.admin.listUsers();
+      const { data: { users }, error } = await supabase.auth.admin.listUsers();
       if (error) {
         console.error('Error checking email:', error);
         return false;
       }
-      return data?.users.some(user => user.email === email) || false;
+      return users?.some((user: AdminUserAttributes) => user.email === email) || false;
     } catch (error) {
       console.error('Error checking email:', error);
       // Fallback to the sign-in check method if admin API fails
