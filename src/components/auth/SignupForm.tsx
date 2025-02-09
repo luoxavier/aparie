@@ -51,7 +51,6 @@ export function SignupForm() {
           description: "An error occurred while checking email availability.",
           duration: null,
         });
-        setLoading(false);
         return;
       }
 
@@ -62,25 +61,6 @@ export function SignupForm() {
           description: "This email is already registered. Please try logging in instead.",
           duration: null,
         });
-        setLoading(false);
-        return;
-      }
-
-      // Then check if username exists
-      const { data: existingUsername } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .maybeSingle();
-
-      if (existingUsername) {
-        toast({
-          variant: "destructive",
-          title: "Username already taken",
-          description: "This username is already taken. Please choose a different one.",
-          duration: null,
-        });
-        setLoading(false);
         return;
       }
 
@@ -107,12 +87,6 @@ export function SignupForm() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: error.message || "An unexpected error occurred",
-        duration: null,
-      });
     } finally {
       setLoading(false);
     }

@@ -4,7 +4,7 @@ import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { signInWithIdentifier } from "@/services/auth";
+import { signInWithIdentifier, signUpWithEmail } from "@/services/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -174,6 +174,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, username: string, displayName: string) => {
     try {
+      // First check if username exists
+      const { data: existingUsername } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existingUsername) {
+        toast({
+          variant: "destructive",
+          title: "Username already taken",
+          description: "This username is already taken. Please choose a different one.",
+        });
+        throw new Error("Username taken");
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -185,8 +201,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = error.message;
+        if (error.message.includes('User already registered')) {
+          errorMessage = "This email is already registered. Please try logging in instead.";
+        }
+        
+        toast({
+          variant: "destructive",
+          title: "Error signing up",
+          description: errorMessage,
+        });
+        throw error;
+      }
+
+      toast({
+        title: "Account created",
+        description: "Welcome to the app! Please check your email to verify your account.",
+      });
     } catch (error) {
+      console.error('Error signing up:', error);
       throw error;
     }
   };
