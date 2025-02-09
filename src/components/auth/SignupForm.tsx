@@ -14,6 +14,7 @@ export function SignupForm() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPointer, setShowPointer] = useState(false);
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const validatePassword = (password: string) => {
@@ -83,34 +84,8 @@ export function SignupForm() {
         return;
       }
 
-      // Now try to sign up
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-            display_name: username,
-          },
-        },
-      });
-
-      if (signUpError) {
-        let errorMessage = signUpError.message;
-        // Just in case our previous check missed it
-        if (signUpError.message.includes('User already registered')) {
-          errorMessage = "This email is already registered. Please try logging in instead.";
-        }
-        
-        toast({
-          variant: "destructive",
-          title: "Error signing up",
-          description: errorMessage,
-          duration: null,
-        });
-        setLoading(false);
-        return;
-      }
+      // Now try to sign up using the auth context
+      await signUp(email, password, username, username);
 
       // Show success message
       toast({
@@ -185,4 +160,3 @@ export function SignupForm() {
     </>
   );
 }
-
