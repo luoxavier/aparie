@@ -23,7 +23,6 @@ export function SignupForm() {
         variant: "destructive",
         title: "Invalid password",
         description: "Password must be at least 6 characters long.",
-        duration: null,
       });
       return false;
     }
@@ -49,7 +48,6 @@ export function SignupForm() {
           variant: "destructive",
           title: "Error",
           description: "An error occurred while checking email availability.",
-          duration: null,
         });
         return;
       }
@@ -59,7 +57,22 @@ export function SignupForm() {
           variant: "destructive",
           title: "Email already registered",
           description: "This email is already registered. Please try logging in instead.",
-          duration: null,
+        });
+        return;
+      }
+
+      // Check if username exists
+      const { data: existingUsername } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existingUsername) {
+        toast({
+          variant: "destructive",
+          title: "Username already taken",
+          description: "This username is already taken. Please choose a different one.",
         });
         return;
       }
@@ -71,7 +84,6 @@ export function SignupForm() {
       toast({
         title: "Account created",
         description: "Welcome to the app! Click anywhere to continue.",
-        duration: null,
         action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
       });
 
@@ -80,13 +92,17 @@ export function SignupForm() {
         toast({
           title: "Welcome! 👋",
           description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
-          duration: null,
         });
         setShowPointer(true);
       }, 1000);
       
     } catch (error: any) {
       console.error('Signup error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error signing up",
+        description: error.message || "An error occurred during signup.",
+      });
     } finally {
       setLoading(false);
     }
