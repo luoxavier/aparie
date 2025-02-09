@@ -23,44 +23,11 @@ export function SignupForm() {
         variant: "destructive",
         title: "Invalid password",
         description: "Password must be at least 6 characters long.",
+        duration: null,
       });
       return false;
     }
     return true;
-  };
-
-  const checkExistingEmail = async (email: string) => {
-    try {
-      const { data, error } = await supabase.auth.admin.listUsers();
-      if (error) {
-        console.error('Error checking email:', error);
-        return false;
-      }
-      return data?.users.some(user => user.email === email) || false;
-    } catch (error) {
-      console.error('Error checking email:', error);
-      // Fallback to the sign-in check method if admin API fails
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: "dummy-password-for-check"
-      });
-      return signInError?.message?.includes('Invalid login credentials');
-    }
-  };
-
-  const checkExistingUsername = async (username: string) => {
-    const { data: existingUser, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error checking username:', error);
-      throw error;
-    }
-    
-    return !!existingUser;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,68 +39,54 @@ export function SignupForm() {
 
     setLoading(true);
     try {
-      console.log('Checking email:', email);
-      // Check for existing email
-      const emailExists = await checkExistingEmail(email);
-      console.log('Email exists:', emailExists);
-      
-      if (emailExists) {
+      // First check if email exists using our database function
+      const { data: existingEmail, error: emailCheckError } = await supabase
+        .rpc('get_user_email_from_identifier', { identifier: email });
+
+      if (emailCheckError) {
+        console.error('Error checking email:', emailCheckError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An error occurred while checking email availability.",
+          duration: null,
+        });
+        return;
+      }
+
+      if (existingEmail) {
         toast({
           variant: "destructive",
           title: "Email already registered",
-          description: "This email is already in use. Please try logging in instead.",
+          description: "This email is already registered. Please try logging in instead.",
+          duration: null,
         });
-        setLoading(false);
         return;
       }
 
-      console.log('Checking username:', username);
-      // Check for existing username
-      const usernameExists = await checkExistingUsername(username);
-      console.log('Username exists:', usernameExists);
-      
-      if (usernameExists) {
-        toast({
-          variant: "destructive",
-          title: "Username already taken",
-          description: "This username is already taken. Please choose a different one.",
-        });
-        setLoading(false);
-        return;
-      }
-
-      console.log('Proceeding with signup');
-      // If all checks pass, proceed with signup
+      // Now try to sign up using the auth context
       await signUp(email, password, username, username);
 
       // Show success message
       toast({
-        title: "Account created successfully! 🎉",
-        description: "Welcome aboard! Click anywhere to continue.",
+        title: "Account created",
+        description: "Welcome to the app! Click anywhere to continue.",
+        duration: null,
+        action: <Button variant="outline" onClick={() => navigate("/login")}>Continue</Button>,
       });
 
-      // Show welcome/feedback message with pointer
+      // Show welcome/feedback message
       setTimeout(() => {
         toast({
           title: "Welcome! 👋",
-          description: "This app is still a work in progress. We'd love to hear your feedback and suggestions!",
+          description: "This app is still a work in progress, please help us by letting us know of any bugs, feedback, suggestions, or simply just want to chat!",
+          duration: null,
         });
         setShowPointer(true);
       }, 1000);
-
-      // Navigate to profile page after a short delay
-      setTimeout(() => {
-        navigate("/profile");
-        window.location.reload(); // Refresh the page
-      }, 2000);
       
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: error.message || "An error occurred during signup.",
-      });
     } finally {
       setLoading(false);
     }
