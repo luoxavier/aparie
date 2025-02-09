@@ -23,7 +23,7 @@ export function SignupForm() {
         variant: "destructive",
         title: "Invalid password",
         description: "Password must be at least 6 characters long.",
-        duration: null, // Keep it visible until clicked
+        duration: null,
       });
       return false;
     }
@@ -174,7 +174,11 @@ export function SignupForm() {
             minLength={6}
           />
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={loading}
+        >
           {loading ? "Creating account..." : "Sign Up"}
         </Button>
       </form>
