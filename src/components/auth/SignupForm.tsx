@@ -14,7 +14,6 @@ export function SignupForm() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPointer, setShowPointer] = useState(false);
-  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const validatePassword = (password: string) => {
@@ -186,3 +185,4 @@ export function SignupForm() {
     </>
   );
 }
+
