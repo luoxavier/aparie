@@ -73,9 +73,9 @@ export function SignupForm() {
         setShowPointer(true);
       }, 1000);
 
-      // Navigate to profile page after a short delay
+      // Navigate to index page after a short delay
       setTimeout(() => {
-        navigate("/profile");
+        navigate("/");
         window.location.reload(); // Refresh the page
       }, 2000);
       
