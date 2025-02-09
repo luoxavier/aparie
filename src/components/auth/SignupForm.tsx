@@ -30,15 +30,15 @@ export function SignupForm() {
   };
 
   const checkExistingEmail = async (email: string) => {
-    const { data, error } = await supabase.auth.signInWithOtp({
+    // Try to sign in with the email - if we get a invalid_credentials error,
+    // it means the email exists but the password is wrong
+    const { error } = await supabase.auth.signInWithPassword({
       email: email,
-      options: {
-        shouldCreateUser: false,
-      }
+      password: "dummy-password-for-check"
     });
     
-    // If there's no error, it means the email exists
-    return !error;
+    // If we get an invalid_credentials error, the email exists
+    return error?.message?.includes('Invalid login credentials');
   };
 
   const checkExistingUsername = async (username: string) => {
