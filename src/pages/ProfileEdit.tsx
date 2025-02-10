@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,6 +195,10 @@ export default function ProfileEdit() {
     try {
       await signOut();
       navigate('/login');
+      toast({
+        title: "Signed out successfully",
+        description: "Come back tomorrow to keep your streak!",
+      });
     } catch (error) {
       console.error('Logout error:', error);
       toast({
