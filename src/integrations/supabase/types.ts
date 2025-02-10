@@ -512,7 +512,7 @@ export type Database = {
           {
             foreignKeyName: "user_streaks_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },

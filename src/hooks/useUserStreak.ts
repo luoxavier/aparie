@@ -8,33 +8,10 @@ export const useUserStreak = () => {
     if (!user) return;
 
     try {
-      // First try to update the streak
-      const { error: updateError } = await supabase
+      // First try to get the existing streak
+      const { data: existingStreak, error: fetchError } = await supabase
         .from('user_streaks')
-        .update({ last_activity_date: new Date().toISOString() })
-        .eq('user_id', user.id);
-
-      if (updateError) {
-        // If update fails, the row might not exist, so try to insert
-        const { error: insertError } = await supabase
-          .from('user_streaks')
-          .insert([{ 
-            user_id: user.id,
-            last_activity_date: new Date().toISOString(),
-            current_streak: 1,
-            highest_streak: 1
-          }]);
-
-        if (insertError) {
-          console.error('Error creating streak:', insertError);
-          return;
-        }
-      }
-
-      // Get the current streak data
-      const { data: streakData, error: fetchError } = await supabase
-        .from('user_streaks')
-        .select('current_streak, highest_streak')
+        .select('current_streak, highest_streak, last_activity_date')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -43,10 +20,60 @@ export const useUserStreak = () => {
         return;
       }
 
-      if (streakData) {
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (!existingStreak) {
+        // Create new streak record if none exists
+        const { error: insertError } = await supabase
+          .from('user_streaks')
+          .insert([{ 
+            user_id: user.id,
+            last_activity_date: today,
+            current_streak: 1,
+            highest_streak: 1
+          }]);
+
+        if (insertError) {
+          console.error('Error creating streak:', insertError);
+          return;
+        }
+
         toast({
-          title: `Daily Streak: ${streakData.current_streak} days`,
-          description: streakData.current_streak > 1 
+          title: "Welcome!",
+          description: "Start your learning streak today!",
+        });
+        return;
+      }
+
+      // Calculate if the streak should be incremented or reset
+      const lastActivity = new Date(existingStreak.last_activity_date);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const isConsecutiveDay = lastActivity.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
+      const isSameDay = lastActivity.toISOString().split('T')[0] === today;
+
+      if (!isSameDay) {
+        const newStreak = isConsecutiveDay ? existingStreak.current_streak + 1 : 1;
+        const newHighestStreak = Math.max(newStreak, existingStreak.highest_streak);
+
+        const { error: updateError } = await supabase
+          .from('user_streaks')
+          .update({ 
+            last_activity_date: today,
+            current_streak: newStreak,
+            highest_streak: newHighestStreak
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Error updating streak:', updateError);
+          return;
+        }
+
+        toast({
+          title: `Daily Streak: ${newStreak} days`,
+          description: newStreak > 1 
             ? "Keep up the great work!" 
             : "Welcome back! Start your streak!",
         });
