@@ -24,49 +24,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          await supabase.auth.signOut();
-          if (mounted) {
+        if (mounted) {
+          if (currentSession) {
+            setSession(currentSession);
+            setUser(currentSession.user);
+            await updateUserStreak(currentSession.user);
+            
+            // Prefetch profile data
+            queryClient.prefetchQuery({
+              queryKey: ['profile', currentSession.user.id],
+              queryFn: async () => {
+                const { data, error } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', currentSession.user.id)
+                  .maybeSingle();
+                
+                if (error) throw error;
+                return data;
+              },
+              staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+            });
+          } else {
             setSession(null);
             setUser(null);
           }
-          navigate('/login');
-          return;
-        }
-
-        if (currentSession && mounted) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          await updateUserStreak(currentSession.user);
-          
-          // Prefetch profile data
-          queryClient.prefetchQuery({
-            queryKey: ['profile', currentSession.user.id],
-            queryFn: async () => {
-              const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentSession.user.id)
-                .single();
-              
-              if (error) throw error;
-              return data;
-            },
-            staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-          });
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error in auth initialization:', error);
         if (mounted) {
           setSession(null);
           setUser(null);
-        }
-        navigate('/login');
-      } finally {
-        if (mounted) {
           setLoading(false);
         }
       }
@@ -100,7 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(currentSession?.user ?? null);
           queryClient.invalidateQueries({ queryKey: ['profile'] });
           break;
-        case 'PASSWORD_RECOVERY':
         case 'INITIAL_SESSION':
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
