@@ -2,13 +2,18 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useUserStreak = () => {
+  const queryClient = useQueryClient();
+
   const updateUserStreak = async (user: User | null) => {
     if (!user) return;
 
     try {
-      // First try to get the existing streak
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Try to get the existing streak with a single query
       const { data: existingStreak, error: fetchError } = await supabase
         .from('user_streaks')
         .select('current_streak, highest_streak, last_activity_date')
@@ -20,8 +25,6 @@ export const useUserStreak = () => {
         return;
       }
 
-      const today = new Date().toISOString().split('T')[0];
-      
       if (!existingStreak) {
         // Create new streak record if none exists
         const { error: insertError } = await supabase
@@ -38,6 +41,9 @@ export const useUserStreak = () => {
           return;
         }
 
+        queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['streaks', user.id] });
+
         toast({
           title: "Welcome!",
           description: "Start your learning streak today!",
@@ -45,7 +51,6 @@ export const useUserStreak = () => {
         return;
       }
 
-      // Calculate if the streak should be incremented or reset
       const lastActivity = new Date(existingStreak.last_activity_date);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -53,6 +58,7 @@ export const useUserStreak = () => {
       const isConsecutiveDay = lastActivity.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
       const isSameDay = lastActivity.toISOString().split('T')[0] === today;
 
+      // Only update if it's not the same day
       if (!isSameDay) {
         const newStreak = isConsecutiveDay ? existingStreak.current_streak + 1 : 1;
         const newHighestStreak = Math.max(newStreak, existingStreak.highest_streak);
@@ -70,6 +76,10 @@ export const useUserStreak = () => {
           console.error('Error updating streak:', updateError);
           return;
         }
+
+        // Invalidate queries to update UI
+        queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['streaks', user.id] });
 
         toast({
           title: `Daily Streak: ${newStreak} days`,

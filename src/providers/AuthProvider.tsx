@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { signInWithIdentifier, signUpWithEmail } from "@/services/auth";
 import { AuthContextType } from "@/types/auth";
 import { useUserStreak } from "@/hooks/useUserStreak";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -16,8 +16,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { updateUserStreak } = useUserStreak();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
@@ -25,24 +28,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (sessionError) {
           console.error('Error getting session:', sessionError);
           await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+          }
           navigate('/login');
           return;
         }
 
-        if (currentSession) {
+        if (currentSession && mounted) {
           setSession(currentSession);
           setUser(currentSession.user);
           await updateUserStreak(currentSession.user);
+          
+          // Prefetch profile data
+          queryClient.prefetchQuery({
+            queryKey: ['profile', currentSession.user.id],
+            queryFn: async () => {
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentSession.user.id)
+                .single();
+              
+              if (error) throw error;
+              return data;
+            },
+            staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+          });
         }
       } catch (error) {
         console.error('Error in auth initialization:', error);
-        setSession(null);
-        setUser(null);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+        }
         navigate('/login');
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -51,6 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
       console.log('Auth state changed:', event);
       
+      if (!mounted) return;
+
       switch (event) {
         case 'TOKEN_REFRESHED':
         case 'SIGNED_IN':
@@ -58,26 +85,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(currentSession?.user ?? null);
           if (event === 'SIGNED_IN') {
             await updateUserStreak(currentSession?.user ?? null);
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
           }
           break;
         case 'SIGNED_OUT':
           setSession(null);
           setUser(null);
+          queryClient.clear(); // Clear all queries on sign out
           navigate('/login');
           break;
         case 'USER_UPDATED':
-        case 'PASSWORD_RECOVERY':
-        case 'MFA_CHALLENGE_VERIFIED':
+        case 'USER_DELETED':
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
+          queryClient.invalidateQueries({ queryKey: ['profile'] });
           break;
       }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, updateUserStreak]);
+  }, [navigate, updateUserStreak, queryClient]);
 
   const signOut = async () => {
     try {
@@ -177,7 +207,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (loading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
