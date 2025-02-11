@@ -24,41 +24,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Initialize session
     initializeSession(mounted);
 
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
       console.log('Auth state changed:', event);
       
       if (!mounted) return;
 
-      switch (event) {
-        case 'TOKEN_REFRESHED':
-        case 'SIGNED_IN':
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          if (event === 'SIGNED_IN') {
-            await updateUserStreak(currentSession?.user ?? null);
-            queryClient.invalidateQueries({ queryKey: ['profile'] });
-          }
-          break;
-        case 'SIGNED_OUT':
-          setSession(null);
-          setUser(null);
-          queryClient.clear();
-          navigate('/login');
-          break;
-        case 'USER_UPDATED':
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        if (event === 'SIGNED_IN') {
+          await updateUserStreak(currentSession?.user ?? null);
           queryClient.invalidateQueries({ queryKey: ['profile'] });
-          break;
-        case 'INITIAL_SESSION':
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          break;
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
+        queryClient.clear();
+        navigate('/login');
       }
     });
 
+    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
