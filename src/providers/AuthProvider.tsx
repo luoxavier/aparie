@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,10 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           navigate('/login');
           break;
         case 'USER_UPDATED':
-        case 'USER_DELETED':
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           queryClient.invalidateQueries({ queryKey: ['profile'] });
+          break;
+        case 'PASSWORD_RECOVERY':
+        case 'INITIAL_SESSION':
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
           break;
       }
     });
