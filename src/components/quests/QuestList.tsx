@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QuestProgress } from "./QuestProgress";
 import { useEffect } from "react";
@@ -24,6 +24,7 @@ interface UserQuest {
 
 export function QuestList() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Fetch quests data with optimized caching
   const { data: quests, isLoading: questsLoading } = useQuery({
@@ -39,7 +40,7 @@ export function QuestList() {
       return data as Quest[];
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
   });
 
   // Fetch user quests with optimized configuration
@@ -75,9 +76,9 @@ export function QuestList() {
           table: 'user_quests',
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           // Only refetch if the change is relevant
-          if (payload.new && !payload.new.completed) {
+          if (payload.new && typeof payload.new.completed !== 'undefined') {
             setTimeout(() => {
               // Wait a brief moment to allow any batch updates to complete
               queryClient.invalidateQueries({ queryKey: ['user-quests', user.id] });
@@ -90,7 +91,7 @@ export function QuestList() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, queryClient]);
 
   // Assign daily quests if none exist
   const assignDailyQuests = async () => {
