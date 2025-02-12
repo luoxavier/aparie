@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,10 @@ export function LoginForm() {
 
     try {
       await signIn(identifier, password);
-      navigate("/");
+      // Wait a brief moment to ensure auth state is updated
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 500);
     } catch (error: any) {
       console.error("Error signing in:", error);
       
