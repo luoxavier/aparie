@@ -4,7 +4,6 @@ import { AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/services/auth";
 import { AuthContextType } from "@/types/auth";
-import { useUserStreak } from "@/hooks/useUserStreak";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useAuthActions } from "@/hooks/useAuthActions";
@@ -15,9 +14,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user, setUser, session, setSession, loading, setLoading } = useAuthState();
-  const { updateUserStreak } = useUserStreak();
   const { signOut, signUp } = useAuthActions();
-  const initializeSession = useSessionInit(setUser, setSession, setLoading, updateUserStreak);
+  const initializeSession = useSessionInit(setUser, setSession, setLoading);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const mountedRef = useRef(false);
@@ -25,29 +23,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('AuthProvider: Starting session initialization');
     mountedRef.current = true;
-
-    // Initialize session
+    
     initializeSession(mountedRef.current);
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
       console.log('Auth state changed:', event, 'Session:', currentSession ? 'exists' : 'null');
       
-      if (!mountedRef.current) {
-        console.log('Component unmounted, skipping auth state change');
-        return;
-      }
+      if (!mountedRef.current) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-        console.log('Setting session and user data');
+      if (event === 'SIGNED_IN') {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        if (event === 'SIGNED_IN') {
-          await updateUserStreak(currentSession?.user ?? null);
-          queryClient.invalidateQueries({ queryKey: ['profile'] });
-        }
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        navigate('/');
       } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out, clearing session and navigating to login');
         setSession(null);
         setUser(null);
         queryClient.clear();
@@ -55,13 +44,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Cleanup
     return () => {
       console.log('AuthProvider: Cleaning up');
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [navigate, updateUserStreak, queryClient, setUser, setSession, setLoading, initializeSession]);
+  }, [navigate, queryClient, setUser, setSession, setLoading, initializeSession]);
 
   const signIn = async (identifier: string, password: string) => {
     setLoading(true);
@@ -77,12 +65,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     signOut,
-    updateStreak: () => updateUserStreak(user),
+    updateStreak: async () => {}, // Simplified - streak updates will be handled separately
     signIn,
     signUp,
   };
-
-  console.log('AuthProvider: Current loading state:', loading);
 
   if (loading) {
     return (
