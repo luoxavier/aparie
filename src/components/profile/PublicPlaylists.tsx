@@ -29,11 +29,15 @@ export function PublicPlaylists() {
         .eq('is_public', true);
 
       if (searchTerm) {
-        query = query.or(`playlist_name.ilike.%${searchTerm}%,creator.display_name.ilike.%${searchTerm}%`);
+        // Fix: Use the correct Supabase filter syntax for OR conditions
+        query = query.or(`playlist_name.ilike.%${searchTerm}%,profiles.display_name.ilike.%${searchTerm}%`);
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching public playlists:", error);
+        throw error;
+      }
 
       // Group flashcards by playlist_name and creator
       const groupedPlaylists = data.reduce((acc: any, card) => {
