@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -84,23 +85,21 @@ export function FriendCard({ friend }: FriendCardProps) {
         </DropdownMenu>
       </div>
 
-      {isDialogOpen && (
-        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Flashcards for {friend.display_name || friend.username}</DialogTitle>
-              <DialogDescription>
-                Create and share flashcards with your friend
-              </DialogDescription>
-            </DialogHeader>
-            <CreateMultipleCards 
-              preselectedFriend={friend} 
-              onComplete={handleComplete}
-              hideRecipientSelect
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create Flashcards for {friend.display_name || friend.username}</DialogTitle>
+            <DialogDescription>
+              Create and share flashcards with your friend
+            </DialogDescription>
+          </DialogHeader>
+          <CreateMultipleCards 
+            preselectedFriend={friend} 
+            onComplete={handleComplete}
+            hideRecipientSelect
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
