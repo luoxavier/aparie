@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,10 +46,9 @@ export function PublicPlaylists() {
             flashcards: []
           };
         }
-        // Ensure is_public is set for each flashcard
         acc[key].flashcards.push({
           ...card,
-          is_public: true // Since we're only querying public flashcards
+          is_public: true
         });
         return acc;
       }, {});
@@ -56,8 +56,6 @@ export function PublicPlaylists() {
       return Object.values(groupedPlaylists);
     },
   });
-
-  if (isLoading) return <div>Loading public playlists...</div>;
 
   return (
     <div className="space-y-4">
@@ -72,17 +70,25 @@ export function PublicPlaylists() {
       </div>
 
       <div className="space-y-4">
-        {publicPlaylists.map((playlist: any) => (
-          <FlashcardFolder
-            key={`${playlist.creatorId}-${playlist.playlistName}`}
-            title={playlist.playlistName}
-            subtitle={`Created by ${playlist.creator.display_name}`}
-            flashcards={playlist.flashcards}
-            showCreator={true}
-            creatorId={playlist.creatorId}
-            playlistName={playlist.playlistName}
-          />
-        ))}
+        {isLoading ? (
+          <div className="text-center">Loading public playlists...</div>
+        ) : publicPlaylists.length === 0 ? (
+          <div className="text-center text-muted-foreground">
+            {searchTerm ? "No playlists found" : "No public playlists available"}
+          </div>
+        ) : (
+          publicPlaylists.map((playlist: any) => (
+            <FlashcardFolder
+              key={`${playlist.creatorId}-${playlist.playlistName}`}
+              title={playlist.playlistName}
+              subtitle={`Created by ${playlist.creator.display_name}`}
+              flashcards={playlist.flashcards}
+              showCreator={true}
+              creatorId={playlist.creatorId}
+              playlistName={playlist.playlistName}
+            />
+          ))
+        )}
       </div>
     </div>
   );
