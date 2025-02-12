@@ -2,28 +2,27 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { Search } from "lucide-react";
 import debounce from "lodash/debounce";
+import { FriendSearchInput } from "./FriendSearchInput";
 
 export function PublicPlaylists() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
 
-  // Create a debounced function that updates the search term
+  // Create a debounced function that updates the search term with 150ms delay
   const debouncedSearch = useMemo(
     () =>
       debounce((value: string) => {
         setDebouncedTerm(value);
-      }, 300),
+      }, 150),
     []
   );
 
   // Handle input change
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
+    (value: string) => {
       setSearchTerm(value); // Update the input value immediately
       debouncedSearch(value); // Debounce the actual search
     },
@@ -50,7 +49,6 @@ export function PublicPlaylists() {
         .eq('is_public', true);
 
       if (debouncedTerm) {
-        // Fix: Split the OR conditions into separate calls
         query = query.or(
           `playlist_name.ilike.%${debouncedTerm}%,creator.display_name.ilike.%${debouncedTerm}%`
         );
@@ -62,7 +60,6 @@ export function PublicPlaylists() {
         throw error;
       }
 
-      // Group flashcards by playlist_name and creator
       const groupedPlaylists = data.reduce((acc: any, card) => {
         const key = `${card.creator_id}-${card.playlist_name}`;
         if (!acc[key]) {
@@ -86,15 +83,11 @@ export function PublicPlaylists() {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by playlist name or creator..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="pl-8"
-        />
-      </div>
+      <FriendSearchInput
+        value={searchTerm}
+        onChange={handleSearchChange}
+        placeholder="Search by playlist name or creator..."
+      />
 
       <div className="space-y-4">
         {isLoading ? (

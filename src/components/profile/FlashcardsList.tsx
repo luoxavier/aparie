@@ -5,8 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { FriendSearchInput } from "./FriendSearchInput";
 import { useMemo } from "react";
 import debounce from "lodash/debounce";
 
@@ -15,19 +14,18 @@ export function FlashcardsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
 
-  // Create a debounced function that updates the search term
+  // Create a debounced function that updates the search term with 150ms delay
   const debouncedSearch = useMemo(
     () =>
       debounce((value: string) => {
         setDebouncedTerm(value);
-      }, 300),
+      }, 150),
     []
   );
 
   // Handle input change
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
+    (value: string) => {
       setSearchTerm(value); // Update the input value immediately
       debouncedSearch(value); // Debounce the actual search
     },
@@ -92,16 +90,11 @@ export function FlashcardsList() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by playlist name..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="pl-8"
-            disabled
-          />
-        </div>
+        <FriendSearchInput
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Search by playlist name..."
+        />
         <div className="animate-pulse">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 bg-gray-200 rounded-lg mb-4" />
@@ -114,15 +107,11 @@ export function FlashcardsList() {
   if (error) {
     return (
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by playlist name..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="pl-8"
-          />
-        </div>
+        <FriendSearchInput
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Search by playlist name..."
+        />
         <div className="text-center text-red-500">
           Error loading flashcards. Please try again later.
         </div>
@@ -136,15 +125,11 @@ export function FlashcardsList() {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by playlist name..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="pl-8"
-        />
-      </div>
+      <FriendSearchInput
+        value={searchTerm}
+        onChange={handleSearchChange}
+        placeholder="Search by playlist name..."
+      />
 
       <div className="space-y-4">
         {flashcards.length === 0 ? (
