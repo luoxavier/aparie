@@ -7,7 +7,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -26,31 +25,24 @@ interface FriendCardProps {
 
 export function FriendCard({ friend }: FriendCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      // Ensure we wait for any animations to complete
-      setTimeout(() => {
-        setIsDialogOpen(false);
-      }, 0);
-    } else {
-      setIsDialogOpen(true);
-    }
+    setIsDialogOpen(open);
   }, []);
 
   const handleComplete = useCallback(() => {
-    // Ensure we wait for any animations to complete
-    setTimeout(() => {
-      setIsDialogOpen(false);
-    }, 0);
+    setIsDialogOpen(false);
   }, []);
 
   const handleProfileClick = useCallback(() => {
+    setIsMenuOpen(false);
     navigate(`/profile/${friend.id}`);
   }, [navigate, friend.id]);
 
   const handleSendPlaylist = useCallback(() => {
+    setIsMenuOpen(false);
     setIsDialogOpen(true);
   }, []);
 
@@ -77,18 +69,23 @@ export function FriendCard({ friend }: FriendCardProps) {
             </p>
           )}
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="focus:outline-none">
-            <div className="p-2 hover:bg-accent rounded-full">
-              <User className="h-5 w-5" />
-            </div>
+        <DropdownMenu 
+          open={isMenuOpen} 
+          onOpenChange={setIsMenuOpen}
+        >
+          <DropdownMenuTrigger asChild>
+            <button className="focus:outline-none">
+              <div className="p-2 hover:bg-accent rounded-full">
+                <User className="h-5 w-5" />
+              </div>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleProfileClick}>
+            <DropdownMenuItem onSelect={handleProfileClick}>
               <User className="mr-2 h-4 w-4" />
               View Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSendPlaylist}>
+            <DropdownMenuItem onSelect={handleSendPlaylist}>
               <Send className="mr-2 h-4 w-4" />
               Send Playlist
             </DropdownMenuItem>
@@ -102,14 +99,7 @@ export function FriendCard({ friend }: FriendCardProps) {
       >
         <DialogContent 
           className="sm:max-w-[425px]"
-          onInteractOutside={(e) => {
-            e.preventDefault();
-            handleOpenChange(false);
-          }}
-          onEscapeKeyDown={(e) => {
-            e.preventDefault();
-            handleOpenChange(false);
-          }}
+          onPointerDownOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle>Create Flashcards for {friend.display_name || friend.username}</DialogTitle>
