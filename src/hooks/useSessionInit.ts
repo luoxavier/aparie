@@ -41,12 +41,14 @@ export function useSessionInit(
         setSession(null);
         setUser(null);
       }
+      
+      // Always set loading to false after initialization
+      setLoading(false);
     } catch (error) {
       console.error('Error in auth initialization:', error);
       setSession(null);
       setUser(null);
-    } finally {
-      setLoading(false);
+      setLoading(false); // Make sure to set loading to false even on error
     }
   };
 

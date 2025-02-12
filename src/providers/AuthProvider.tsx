@@ -46,6 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         queryClient.clear();
         navigate('/login');
       }
+
+      // Make sure to set loading to false after handling auth state change
+      setLoading(false);
     });
 
     // Cleanup
@@ -53,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, updateUserStreak, queryClient, setUser, setSession]);
+  }, [navigate, updateUserStreak, queryClient, setUser, setSession, setLoading]);
 
   const signIn = async (identifier: string, password: string) => {
     try {
@@ -72,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
   };
 
+  // Only show loading state for initial authentication check
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
