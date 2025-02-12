@@ -4,10 +4,10 @@ import { toast } from "@/hooks/use-toast";
 
 export async function signInWithIdentifier(identifier: string, password: string) {
   try {
-    // If identifier contains @, treat it as an email
-    const email = identifier.includes('@') ? identifier : null;
+    let email = identifier;
     
-    if (!email) {
+    // Only lookup email if the identifier is not already an email
+    if (!identifier.includes('@')) {
       // Get the email using our database function
       const { data: emailData, error: emailError } = await supabase
         .rpc('get_user_email_from_identifier', { identifier });
@@ -31,11 +31,13 @@ export async function signInWithIdentifier(identifier: string, password: string)
         throw new Error("User not found");
       }
 
-      identifier = emailData; // Use the email we found
+      email = emailData;
     }
 
+    console.log('Attempting login with email:', email); // Debug log
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: identifier,
+      email,
       password,
     });
 
