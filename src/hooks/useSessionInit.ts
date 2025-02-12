@@ -12,12 +12,18 @@ export function useSessionInit(
   const queryClient = useQueryClient();
 
   const initializeSession = async (mounted: boolean) => {
-    if (!mounted) return;
+    console.log('useSessionInit: Starting session initialization');
+    if (!mounted) {
+      console.log('Component not mounted, skipping initialization');
+      return;
+    }
 
     try {
+      console.log('Fetching current session');
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
       if (currentSession) {
+        console.log('Session found, setting up user data');
         setSession(currentSession);
         setUser(currentSession.user);
         await updateUserStreak(currentSession.user);
@@ -38,17 +44,18 @@ export function useSessionInit(
           staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
         });
       } else {
+        console.log('No session found, clearing user data');
         setSession(null);
         setUser(null);
       }
       
-      // Always set loading to false after initialization
+      console.log('Setting loading to false after initialization');
       setLoading(false);
     } catch (error) {
       console.error('Error in auth initialization:', error);
       setSession(null);
       setUser(null);
-      setLoading(false); // Make sure to set loading to false even on error
+      setLoading(false);
     }
   };
 

@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('AuthProvider: Starting session initialization');
     let mounted = true;
 
     // Initialize session
@@ -29,11 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
-      console.log('Auth state changed:', event);
+      console.log('Auth state changed:', event, 'Session:', currentSession ? 'exists' : 'null');
       
-      if (!mounted) return;
+      if (!mounted) {
+        console.log('Component unmounted, skipping auth state change');
+        return;
+      }
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        console.log('Setting session and user data');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         if (event === 'SIGNED_IN') {
@@ -41,18 +46,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           queryClient.invalidateQueries({ queryKey: ['profile'] });
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out, clearing session and navigating to login');
         setSession(null);
         setUser(null);
         queryClient.clear();
         navigate('/login');
       }
 
-      // Make sure to set loading to false after handling auth state change
+      console.log('Setting loading to false after auth state change');
       setLoading(false);
     });
 
     // Cleanup
     return () => {
+      console.log('AuthProvider: Cleaning up');
       mounted = false;
       subscription.unsubscribe();
     };
@@ -75,7 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
   };
 
-  // Only show loading state for initial authentication check
+  console.log('AuthProvider: Current loading state:', loading);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
