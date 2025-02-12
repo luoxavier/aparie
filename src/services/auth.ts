@@ -1,56 +1,68 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { AuthError } from "@supabase/supabase-js";
 
 export async function signInWithIdentifier(identifier: string, password: string) {
   try {
-    // Get the email using our database function
-    const { data: emailData, error: emailError } = await supabase
-      .rpc('get_user_email_from_identifier', { identifier });
-
-    if (emailError) {
-      toast({
-        variant: "destructive",
-        title: "Error signing in",
-        description: "Invalid credentials",
-      });
-      throw emailError;
-    }
-
-    const email = emailData as string;
+    // If identifier contains @, treat it as an email
+    const email = identifier.includes('@') ? identifier : null;
+    
     if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Error signing in",
-        description: "User not found",
-      });
-      throw new Error("User not found");
+      // Get the email using our database function
+      const { data: emailData, error: emailError } = await supabase
+        .rpc('get_user_email_from_identifier', { identifier });
+
+      if (emailError) {
+        console.error('Error getting email:', emailError);
+        toast({
+          variant: "destructive",
+          title: "Error signing in",
+          description: "Invalid credentials",
+        });
+        throw emailError;
+      }
+
+      if (!emailData) {
+        toast({
+          variant: "destructive",
+          title: "Error signing in",
+          description: "User not found",
+        });
+        throw new Error("User not found");
+      }
     }
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email || identifier,
       password,
     });
 
     if (error) {
-      let errorMessage = "An error occurred during sign in";
+      console.error('Sign in error:', error);
       
       // Handle specific error cases
       if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password";
+        toast({
+          variant: "destructive",
+          title: "Invalid credentials",
+          description: "Please check your email/username and password",
+        });
       } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Please verify your email before signing in";
+        toast({
+          variant: "destructive",
+          title: "Email not verified",
+          description: "Please verify your email before signing in",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error signing in",
+          description: error.message,
+        });
       }
-
-      toast({
-        variant: "destructive",
-        title: "Error signing in",
-        description: errorMessage,
-      });
       throw error;
     }
   } catch (error) {
-    console.error('Error signing in:', error);
+    console.error('Error in signInWithIdentifier:', error);
     throw error;
   }
 }

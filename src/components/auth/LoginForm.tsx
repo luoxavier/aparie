@@ -19,31 +19,12 @@ export function LoginForm() {
 
     try {
       await signIn(identifier, password);
-      // Wait a brief moment to ensure auth state is updated
-      setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 500);
+      // Navigate after successful login
+      navigate("/");
     } catch (error: any) {
       console.error("Error signing in:", error);
       
-      const isInvalidCredentials = 
-        error.message?.includes("Invalid login credentials") ||
-        error.error?.message?.includes("Invalid login credentials");
-
-      if (isInvalidCredentials) {
-        toast({
-          title: "Incorrect credentials",
-          description: "Please check your email/username and password",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error signing in",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
+      // Error is already handled in the signIn function
       setLoading(false);
     }
   };
@@ -53,11 +34,12 @@ export function LoginForm() {
       <div className="space-y-2">
         <Input
           type="text"
-          placeholder="Email, username, or display name"
+          placeholder="Email or username"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
           required
           className="w-full"
+          disabled={loading}
         />
       </div>
       <div className="space-y-2">
@@ -68,6 +50,7 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           className="w-full"
+          disabled={loading}
         />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
