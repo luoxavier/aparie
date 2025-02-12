@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -29,10 +30,12 @@ export async function signInWithIdentifier(identifier: string, password: string)
         });
         throw new Error("User not found");
       }
+
+      identifier = emailData; // Use the email we found
     }
 
     const { error } = await supabase.auth.signInWithPassword({
-      email: email || identifier,
+      email: identifier,
       password,
     });
 
@@ -61,6 +64,8 @@ export async function signInWithIdentifier(identifier: string, password: string)
       }
       throw error;
     }
+
+    // Success! The AuthProvider will handle the session update
   } catch (error) {
     console.error('Error in signInWithIdentifier:', error);
     throw error;
