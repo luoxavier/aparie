@@ -15,6 +15,7 @@ export function useSessionInit(
     console.log('useSessionInit: Starting session initialization');
     if (!mounted) {
       console.log('Component not mounted, skipping initialization');
+      setLoading(false);
       return;
     }
 
@@ -29,7 +30,7 @@ export function useSessionInit(
         await updateUserStreak(currentSession.user);
         
         // Prefetch profile data
-        queryClient.prefetchQuery({
+        await queryClient.prefetchQuery({
           queryKey: ['profile', currentSession.user.id],
           queryFn: async () => {
             const { data, error } = await supabase
@@ -48,14 +49,15 @@ export function useSessionInit(
         setSession(null);
         setUser(null);
       }
-      
-      console.log('Setting loading to false after initialization');
-      setLoading(false);
     } catch (error) {
       console.error('Error in auth initialization:', error);
       setSession(null);
       setUser(null);
-      setLoading(false);
+    } finally {
+      console.log('Setting loading to false after initialization');
+      if (mounted) {
+        setLoading(false);
+      }
     }
   };
 

@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/services/auth";
@@ -20,19 +20,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializeSession = useSessionInit(setUser, setSession, setLoading, updateUserStreak);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     console.log('AuthProvider: Starting session initialization');
-    let mounted = true;
+    mountedRef.current = true;
 
     // Initialize session
-    initializeSession(mounted);
+    initializeSession(mountedRef.current);
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
       console.log('Auth state changed:', event, 'Session:', currentSession ? 'exists' : 'null');
       
-      if (!mounted) {
+      if (!mountedRef.current) {
         console.log('Component unmounted, skipping auth state change');
         return;
       }
@@ -52,23 +53,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         queryClient.clear();
         navigate('/login');
       }
-
-      console.log('Setting loading to false after auth state change');
-      setLoading(false);
     });
 
     // Cleanup
     return () => {
       console.log('AuthProvider: Cleaning up');
-      mounted = false;
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [navigate, updateUserStreak, queryClient, setUser, setSession, setLoading]);
+  }, [navigate, updateUserStreak, queryClient, setUser, setSession, setLoading, initializeSession]);
 
   const signIn = async (identifier: string, password: string) => {
+    setLoading(true);
     try {
       await signInWithIdentifier(identifier, password);
     } catch (error) {
+      setLoading(false);
       throw error;
     }
   };
