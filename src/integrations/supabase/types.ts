@@ -376,6 +376,27 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_colors: {
+        Row: {
+          base: string
+          foreground: string
+          id: string
+          name: string
+        }
+        Insert: {
+          base: string
+          foreground: string
+          id?: string
+          name: string
+        }
+        Update: {
+          base?: string
+          foreground?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       user_feedback: {
         Row: {
           content: string
