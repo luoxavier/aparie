@@ -1,16 +1,37 @@
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { FlashcardFolder } from "./FlashcardFolder";
 import { Search } from "lucide-react";
+import debounce from "lodash/debounce";
 
 export function PublicPlaylists() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+
+  // Create a debounced function that updates the search term
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedTerm(value);
+      }, 300),
+    []
+  );
+
+  // Handle input change
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setSearchTerm(value); // Update the input value immediately
+      debouncedSearch(value); // Debounce the actual search
+    },
+    [debouncedSearch]
+  );
 
   const { data: publicPlaylists = [], isLoading } = useQuery({
-    queryKey: ['public-playlists', searchTerm],
+    queryKey: ['public-playlists', debouncedTerm],
     queryFn: async () => {
       let query = supabase
         .from('flashcards')
@@ -28,9 +49,11 @@ export function PublicPlaylists() {
         `)
         .eq('is_public', true);
 
-      if (searchTerm) {
-        // Fix: Use the correct Supabase filter syntax for OR conditions
-        query = query.or(`playlist_name.ilike.%${searchTerm}%,profiles.display_name.ilike.%${searchTerm}%`);
+      if (debouncedTerm) {
+        // Fix: Split the OR conditions into separate calls
+        query = query.or(
+          `playlist_name.ilike.%${debouncedTerm}%,creator.display_name.ilike.%${debouncedTerm}%`
+        );
       }
 
       const { data, error } = await query;
@@ -68,7 +91,7 @@ export function PublicPlaylists() {
         <Input
           placeholder="Search by playlist name or creator..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
           className="pl-8"
         />
       </div>
@@ -78,7 +101,7 @@ export function PublicPlaylists() {
           <div className="text-center">Loading public playlists...</div>
         ) : publicPlaylists.length === 0 ? (
           <div className="text-center text-muted-foreground">
-            {searchTerm ? "No playlists found" : "No public playlists available"}
+            {debouncedTerm ? "No playlists found" : "No public playlists available"}
           </div>
         ) : (
           publicPlaylists.map((playlist: any) => (
