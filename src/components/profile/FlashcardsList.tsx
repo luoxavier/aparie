@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,13 +7,35 @@ import { FlashcardFolder } from "./FlashcardFolder";
 import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useMemo } from "react";
+import debounce from "lodash/debounce";
 
 export function FlashcardsList() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+
+  // Create a debounced function that updates the search term
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedTerm(value);
+      }, 300),
+    []
+  );
+
+  // Handle input change
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setSearchTerm(value); // Update the input value immediately
+      debouncedSearch(value); // Debounce the actual search
+    },
+    [debouncedSearch]
+  );
 
   const { data: flashcards = [], isLoading, error } = useQuery({
-    queryKey: ['flashcards', user?.id, searchTerm],
+    queryKey: ['flashcards', user?.id, debouncedTerm],
     queryFn: async () => {
       if (!user) return [];
 
@@ -36,8 +58,8 @@ export function FlashcardsList() {
         .or(`creator_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .eq('is_public', false);
 
-      if (searchTerm) {
-        query = query.ilike('playlist_name', `%${searchTerm}%`);
+      if (debouncedTerm) {
+        query = query.ilike('playlist_name', `%${debouncedTerm}%`);
       }
 
       const { data, error } = await query;
@@ -75,7 +97,7 @@ export function FlashcardsList() {
           <Input
             placeholder="Search by playlist name..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-8"
             disabled
           />
@@ -97,7 +119,7 @@ export function FlashcardsList() {
           <Input
             placeholder="Search by playlist name..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-8"
           />
         </div>
@@ -108,7 +130,7 @@ export function FlashcardsList() {
     );
   }
 
-  if (!flashcards.length && !searchTerm) {
+  if (!flashcards.length && !debouncedTerm) {
     return <EmptyFlashcardsState />;
   }
 
@@ -119,7 +141,7 @@ export function FlashcardsList() {
         <Input
           placeholder="Search by playlist name..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
           className="pl-8"
         />
       </div>
@@ -127,7 +149,7 @@ export function FlashcardsList() {
       <div className="space-y-4">
         {flashcards.length === 0 ? (
           <div className="text-center text-muted-foreground">
-            {searchTerm ? "No playlists found" : "No playlists available"}
+            {debouncedTerm ? "No playlists found" : "No playlists available"}
           </div>
         ) : (
           flashcards.map((playlist: any) => (
