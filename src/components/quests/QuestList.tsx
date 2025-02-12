@@ -1,10 +1,8 @@
-
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QuestProgress } from "./QuestProgress";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface Quest {
   id: string;
@@ -24,10 +22,9 @@ interface UserQuest {
 
 export function QuestList() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  // Fetch quests data with optimized caching
-  const { data: quests, isLoading: questsLoading } = useQuery({
+  // Fetch quests data
+  const { data: quests, refetch: refetchQuests } = useQuery({
     queryKey: ['quests'],
     queryFn: async () => {
       console.log('Fetching quests');
@@ -39,12 +36,10 @@ export function QuestList() {
       if (error) throw error;
       return data as Quest[];
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
   });
 
-  // Fetch user quests with optimized configuration
-  const { data: userQuests, isLoading: userQuestsLoading } = useQuery({
+  // Fetch user quests with more frequent updates
+  const { data: userQuests, refetch: refetchUserQuests } = useQuery({
     queryKey: ['user-quests', user?.id],
     queryFn: async () => {
       console.log('Fetching user quests for:', user?.id);
@@ -57,12 +52,11 @@ export function QuestList() {
       if (error) throw error;
       return data as UserQuest[];
     },
-    enabled: !!user,
-    staleTime: 1000 * 30, // Consider data fresh for 30 seconds
-    refetchInterval: 5000, // Update every 5 seconds for progress
+    enabled: !!user && !!quests,
+    refetchInterval: 2000, // Update every 2 seconds for more responsive progress
   });
 
-  // Subscribe to real-time updates with debounced refetch
+  // Subscribe to real-time updates
   useEffect(() => {
     if (!user) return;
 
@@ -76,14 +70,8 @@ export function QuestList() {
           table: 'user_quests',
           filter: `user_id=eq.${user.id}`,
         },
-        (payload: any) => {
-          // Only refetch if the change is relevant
-          if (payload.new && typeof payload.new.completed !== 'undefined') {
-            setTimeout(() => {
-              // Wait a brief moment to allow any batch updates to complete
-              queryClient.invalidateQueries({ queryKey: ['user-quests', user.id] });
-            }, 100);
-          }
+        () => {
+          refetchUserQuests();
         }
       )
       .subscribe();
@@ -91,7 +79,7 @@ export function QuestList() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, refetchUserQuests]);
 
   // Assign daily quests if none exist
   const assignDailyQuests = async () => {
@@ -100,6 +88,8 @@ export function QuestList() {
     await supabase.rpc('assign_daily_quests', { 
       user_id_param: user.id 
     });
+    
+    refetchUserQuests();
   };
 
   // Check and assign quests if needed
@@ -109,20 +99,8 @@ export function QuestList() {
     }
   }, [user, userQuests]);
 
-  if (questsLoading || userQuestsLoading) {
-    return (
-      <div className="grid gap-4 py-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-3">
-            <Skeleton className="h-[100px] w-full rounded-lg" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   if (!quests || !userQuests) {
-    return <div className="py-6">No quests available</div>;
+    return <div className="py-6">Loading quests...</div>;
   }
 
   return (
