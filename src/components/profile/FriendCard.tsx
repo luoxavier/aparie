@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -28,11 +29,21 @@ export function FriendCard({ friend }: FriendCardProps) {
   const navigate = useNavigate();
 
   const handleOpenChange = useCallback((open: boolean) => {
-    setIsDialogOpen(open);
+    if (!open) {
+      // Ensure we wait for any animations to complete
+      setTimeout(() => {
+        setIsDialogOpen(false);
+      }, 0);
+    } else {
+      setIsDialogOpen(true);
+    }
   }, []);
 
   const handleComplete = useCallback(() => {
-    setIsDialogOpen(false);
+    // Ensure we wait for any animations to complete
+    setTimeout(() => {
+      setIsDialogOpen(false);
+    }, 0);
   }, []);
 
   const handleProfileClick = useCallback(() => {
@@ -85,8 +96,21 @@ export function FriendCard({ friend }: FriendCardProps) {
         </DropdownMenu>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog 
+        open={isDialogOpen} 
+        onOpenChange={handleOpenChange}
+      >
+        <DialogContent 
+          className="sm:max-w-[425px]"
+          onInteractOutside={(e) => {
+            e.preventDefault();
+            handleOpenChange(false);
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+            handleOpenChange(false);
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Create Flashcards for {friend.display_name || friend.username}</DialogTitle>
             <DialogDescription>
