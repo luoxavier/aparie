@@ -49,9 +49,8 @@ export function PublicPlaylists() {
         .eq('is_public', true);
 
       if (debouncedTerm) {
-        query = query.or(
-          `playlist_name.ilike.%${debouncedTerm}%,creator.display_name.ilike.%${debouncedTerm}%`
-        );
+        // Fix: Use the correct OR syntax for PostgREST
+        query = query.or(`playlist_name.ilike.*${debouncedTerm}*,profiles.display_name.ilike.*${debouncedTerm}*`);
       }
 
       const { data, error } = await query;
