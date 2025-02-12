@@ -15,16 +15,16 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent multiple submissions
+    
     setLoading(true);
 
     try {
       await signIn(identifier, password);
-      // Navigate after successful login
-      navigate("/");
+      // Success toast and navigation are handled by the AuthProvider
     } catch (error: any) {
       console.error("Error signing in:", error);
-      
-      // Error is already handled in the signIn function
+      setPassword(""); // Clear password on error for security
       setLoading(false);
     }
   };
@@ -40,6 +40,7 @@ export function LoginForm() {
           required
           className="w-full"
           disabled={loading}
+          autoComplete="username"
         />
       </div>
       <div className="space-y-2">
@@ -51,9 +52,14 @@ export function LoginForm() {
           required
           className="w-full"
           disabled={loading}
+          autoComplete="current-password"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading || !identifier || !password}
+      >
         {loading ? "Signing in..." : "Sign in"}
       </Button>
     </form>
