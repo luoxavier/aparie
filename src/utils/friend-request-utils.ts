@@ -5,10 +5,12 @@ import type { FriendProfile, FriendRequestError } from "@/types/friend-request";
 export async function findUserByIdentifier(identifier: string): Promise<FriendProfile | null> {
   if (!identifier) return null;
 
+  const searchPattern = `%${identifier}%`;
+
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('id')
-    .or(`username.ilike.${identifier},display_name.ilike.${identifier}`)
+    .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`)
     .maybeSingle();
 
   if (error) {
