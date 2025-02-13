@@ -10,7 +10,7 @@ export async function findUserByIdentifier(identifier: string): Promise<FriendPr
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('id')
-    .or('username.ilike,display_name.ilike', { username: searchPattern, display_name: searchPattern })
+    .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`)
     .maybeSingle();
 
   if (error) {
