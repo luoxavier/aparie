@@ -1,24 +1,22 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import type { FriendProfile, FriendRequestError } from "@/types/friend-request";
+import type { FriendProfile, FriendRequestError, SearchResults } from "@/types/friend-request";
 
-export async function findUserByIdentifier(identifier: string): Promise<FriendProfile | null> {
-  if (!identifier) return null;
+export async function findUserByIdentifier(identifier: string): Promise<SearchResults> {
+  if (!identifier) return [];
 
   const searchPattern = `%${identifier}%`;
 
-  const { data: profile, error } = await supabase
+  const { data: profiles, error } = await supabase
     .from('profiles')
     .select('id')
-    .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`)
-    .single();
+    .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`);
 
   if (error) {
     console.error('Error finding user:', error);
     throw new Error('Failed to search for user');
   }
 
-  return profile;
+  return profiles || [];
 }
 
 export async function validateFriendRequest(userId: string, friendId: string): Promise<FriendRequestError | null> {
