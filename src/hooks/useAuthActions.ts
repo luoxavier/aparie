@@ -10,13 +10,22 @@ export function useAuthActions() {
 
   const signOut = async () => {
     try {
-      // First check if we have a session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Clear local state first to ensure UI is responsive
+      queryClient.clear();
+      
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Error checking session:', sessionError);
+        await supabase.auth.setSession(null);
+        navigate('/login');
+        return;
+      }
       
       if (!session) {
-        // If no session exists, just clear the local state
+        console.log('No active session found, clearing local state only');
         await supabase.auth.setSession(null);
-        queryClient.clear();
         navigate('/login');
         
         toast({
@@ -26,34 +35,26 @@ export function useAuthActions() {
         return;
       }
 
-      // If we have a session, try to sign out properly
-      const { error } = await supabase.auth.signOut();
+      // If we have a session, sign out properly
+      const { error } = await supabase.auth.signOut({
+        scope: 'local' // Only clear the current tab's session
+      });
       
       if (error) {
         console.error('Error signing out:', error);
-        // Clear local state even if there's an error
+        // Force clear the session if there's an error
         await supabase.auth.setSession(null);
-        queryClient.clear();
-        navigate('/login');
-        
-        toast({
-          variant: "destructive",
-          title: "Error signing out",
-          description: "Your session has been cleared locally",
-        });
-        return;
       }
 
       navigate('/login');
-      queryClient.clear();
       
       toast({
         title: "Signed out successfully",
         description: "Come back tomorrow to keep your streak!",
       });
     } catch (error) {
-      console.error('Error signing out:', error);
-      // Clear local state even if there's an error
+      console.error('Error in signOut:', error);
+      // Ensure we always clear local state and redirect
       await supabase.auth.setSession(null);
       queryClient.clear();
       navigate('/login');
