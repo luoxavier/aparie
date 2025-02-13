@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -10,20 +9,14 @@ export function useAuthActions() {
 
   const signOut = async () => {
     try {
-      // Clear local state first to ensure UI is responsive
+      // First clear all local query cache
       queryClient.clear();
-      
+
       // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Error checking session:', sessionError);
-        await supabase.auth.setSession(null);
-        navigate('/login');
-        return;
-      }
-      
+      const { data: { session } } = await supabase.auth.getSession();
+
       if (!session) {
+        // If there's no session, just clear local state
         console.log('No active session found, clearing local state only');
         await supabase.auth.setSession(null);
         navigate('/login');
@@ -35,17 +28,19 @@ export function useAuthActions() {
         return;
       }
 
-      // If we have a session, sign out properly
-      const { error } = await supabase.auth.signOut({
-        scope: 'local' // Only clear the current tab's session
-      });
-      
-      if (error) {
-        console.error('Error signing out:', error);
-        // Force clear the session if there's an error
-        await supabase.auth.setSession(null);
+      // If we have a valid session, try a graceful sign out
+      try {
+        await supabase.auth.setSession(null); // First clear the session
+        const { error } = await supabase.auth.signOut(); // Then try to sign out
+        
+        if (error) {
+          console.error('Error in signOut:', error);
+        }
+      } catch (error) {
+        console.error('Error during sign out process:', error);
       }
 
+      // Always navigate and show success message, even if there were errors
       navigate('/login');
       
       toast({
@@ -53,15 +48,14 @@ export function useAuthActions() {
         description: "Come back tomorrow to keep your streak!",
       });
     } catch (error) {
-      console.error('Error in signOut:', error);
-      // Ensure we always clear local state and redirect
+      console.error('Error in signOut flow:', error);
+      // Ensure we always clear everything locally
       await supabase.auth.setSession(null);
       queryClient.clear();
       navigate('/login');
       
       toast({
-        variant: "destructive",
-        title: "Error signing out",
+        title: "Signed out",
         description: "Your session has been cleared locally",
       });
     }
