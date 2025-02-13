@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +14,7 @@ import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationsList } from "./NotificationsList";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 interface NotificationContent {
   playlistName?: string;
@@ -52,9 +53,7 @@ export function NotificationsDialog() {
           throw error;
         }
 
-        if (!data) return [];
-
-        return data.map(notification => ({
+        return data?.map(notification => ({
           ...notification,
           sender: {
             ...notification.sender,
@@ -63,7 +62,7 @@ export function NotificationsDialog() {
               : notification.sender?.display_name || 'Unknown User'
           },
           content: notification.content as NotificationContent
-        }));
+        })) || [];
       } catch (error: any) {
         console.error('Error in notifications query:', error);
         if (error.message?.includes('JWT')) {
@@ -76,11 +75,44 @@ export function NotificationsDialog() {
       }
     },
     enabled: !!user?.id && isOpen,
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 1000 * 60,
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 30, // Consider data fresh for 30 seconds
+    refetchInterval: 1000 * 30, // Refetch every 30 seconds when window is focused
   });
+
+  // Subscribe to real-time notifications
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Notification change received:', payload);
+          refetch();
+          
+          // Show toast for new notifications
+          if (payload.eventType === 'INSERT') {
+            const newNotification = payload.new as any;
+            toast({
+              title: "New Notification",
+              description: newNotification.content?.message || "You have a new notification",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, refetch, toast]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     if (!user?.id) return;
