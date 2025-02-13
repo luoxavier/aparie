@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
@@ -43,24 +42,13 @@ export default function Home() {
       }
 
       if (!data) {
-        // Create default profile if none exists
-        const defaultProfile = {
-          id: user?.id,
-          display_name: user?.email?.split('@')[0] || 'User',
-          avatar_url: null,
-          username: null
-        };
-
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert([defaultProfile]);
-
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          throw insertError;
-        }
-
-        return defaultProfile;
+        // If no profile is found, show an error since it should have been created by the trigger
+        toast({
+          title: "Profile not found",
+          description: "Please try logging out and back in",
+          variant: "destructive",
+        });
+        return null;
       }
 
       return data;
@@ -129,9 +117,7 @@ export default function Home() {
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
       <div className="flex flex-col space-y-6">
-        {/* Profile Header */}
         <div className="flex flex-col space-y-4">
-          {/* Top Section with Avatar and Settings */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
               <div className={`rounded-full overflow-hidden ${getBorderClass(userStats?.level)}`}>
@@ -207,7 +193,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Main Content */}
         <Tabs defaultValue="cards" className="w-full">
           <div className="flex justify-center w-full">
             <TabsList className="w-full max-w-2xl px-4">
