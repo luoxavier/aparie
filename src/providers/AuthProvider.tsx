@@ -24,28 +24,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthProvider: Starting session initialization');
     mountedRef.current = true;
     
+    // Initialize session
     initializeSession(mountedRef.current);
 
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
       console.log('Auth state changed:', event, 'Session:', currentSession ? 'exists' : 'null');
       
       if (!mountedRef.current) return;
 
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        console.log('User signed in or token refreshed');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         queryClient.invalidateQueries({ queryKey: ['profile'] });
         navigate('/');
       } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
         // Clear everything on sign out
         setSession(null);
         setUser(null);
         queryClient.clear();
         await supabase.auth.setSession(null); // Ensure local session is cleared
         navigate('/login');
-      } else if (event === 'TOKEN_REFRESHED') {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
       }
     });
 
