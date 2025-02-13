@@ -43,7 +43,7 @@ export const getTestAccounts = async () => {
   try {
     const { data: testAccounts, error } = await supabase
       .from('profiles')
-      .select('username, email')
+      .select('username')
       .eq('is_test_account', true);
 
     if (error) throw error;
@@ -69,7 +69,7 @@ export const deleteAllTestAccounts = async () => {
 
     // Show confirmation with list of accounts
     const confirmMessage = `The following test accounts will be deleted:\n${
-      testAccounts.map(account => `- ${account.username} (${account.email})`).join('\n')
+      testAccounts.map(account => `- ${account.username}`).join('\n')
     }\n\nAre you sure you want to proceed?`;
 
     if (!confirm(confirmMessage)) {
