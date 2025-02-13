@@ -10,9 +10,40 @@ export function useAuthActions() {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // First check if we have a session
+      const { data: { session } } = await supabase.auth.getSession();
       
+      if (!session) {
+        // If no session exists, just clear the local state
+        await supabase.auth.setSession(null);
+        queryClient.clear();
+        navigate('/login');
+        
+        toast({
+          title: "Signed out successfully",
+          description: "Come back tomorrow to keep your streak!",
+        });
+        return;
+      }
+
+      // If we have a session, try to sign out properly
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+        // Clear local state even if there's an error
+        await supabase.auth.setSession(null);
+        queryClient.clear();
+        navigate('/login');
+        
+        toast({
+          variant: "destructive",
+          title: "Error signing out",
+          description: "Your session has been cleared locally",
+        });
+        return;
+      }
+
       navigate('/login');
       queryClient.clear();
       
@@ -22,6 +53,9 @@ export function useAuthActions() {
       });
     } catch (error) {
       console.error('Error signing out:', error);
+      // Clear local state even if there's an error
+      await supabase.auth.setSession(null);
+      queryClient.clear();
       navigate('/login');
       
       toast({
