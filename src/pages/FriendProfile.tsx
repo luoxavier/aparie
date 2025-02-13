@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,6 +6,7 @@ import { getBorderClass } from "@/utils/level-utils";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
 import { Trophy, Medal, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 export default function FriendProfile() {
   const { id } = useParams();
@@ -74,6 +76,7 @@ export default function FriendProfile() {
 
   return (
     <div className="container mx-auto py-4 px-4">
+      {/* Profile Info */}
       <div className="flex items-center gap-4">
         <div className={`rounded-full overflow-hidden ${getBorderClass(stats?.level)}`}>
           {profile?.avatar_url && (
@@ -160,6 +163,8 @@ export default function FriendProfile() {
         <h2 className="text-xl font-semibold mb-4">Public Playlists</h2>
         <PublicPlaylists creatorId={id} />
       </div>
+
+      <ReturnHomeButton />
     </div>
   );
 }
