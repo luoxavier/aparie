@@ -25,7 +25,36 @@ export function NotificationsDialog() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
+  // Separate query for unread count - always enabled
+  const { refetch: refetchCount } = useQuery({
+    queryKey: ['notifications-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      
+      try {
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .eq('read', false)
+          .neq('sender_id', user.id);
+        
+        if (error) throw error;
+        
+        setUnreadCount(count || 0);
+        return count || 0;
+      } catch (error) {
+        console.error('Error fetching notification count:', error);
+        return 0;
+      }
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 30,
+  });
+
+  // Main query for notification content - only enabled when dialog is open
   const { data: notifications, refetch, isError, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -48,10 +77,7 @@ export function NotificationsDialog() {
           .neq('sender_id', user.id)
           .order('created_at', { ascending: false });
         
-        if (error) {
-          console.error('Error fetching notifications:', error);
-          throw error;
-        }
+        if (error) throw error;
 
         return data?.map(notification => ({
           ...notification,
@@ -75,8 +101,7 @@ export function NotificationsDialog() {
       }
     },
     enabled: !!user?.id && isOpen,
-    staleTime: 1000 * 30, // Consider data fresh for 30 seconds
-    refetchInterval: 1000 * 30, // Refetch every 30 seconds when window is focused
+    staleTime: 1000 * 30,
   });
 
   // Subscribe to real-time notifications
@@ -93,9 +118,16 @@ export function NotificationsDialog() {
           table: 'notifications',
           filter: `recipient_id=eq.${user.id}`
         },
-        (payload) => {
+        async (payload) => {
           console.log('Notification change received:', payload);
-          refetch();
+          
+          // Update count immediately
+          await refetchCount();
+          
+          // Only refetch full data if dialog is open
+          if (isOpen) {
+            await refetch();
+          }
           
           // Show toast for new notifications
           if (payload.eventType === 'INSERT') {
@@ -112,7 +144,7 @@ export function NotificationsDialog() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, refetch, toast]);
+  }, [user?.id, refetch, refetchCount, toast, isOpen]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     if (!user?.id) return;
@@ -123,11 +155,10 @@ export function NotificationsDialog() {
         .update({ read: true })
         .eq('id', notificationId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      await refetch();
+      // Update both queries
+      await Promise.all([refetch(), refetchCount()]);
     } catch (error: any) {
       console.error('Error marking notification as read:', error);
       toast({
@@ -136,9 +167,7 @@ export function NotificationsDialog() {
         variant: "destructive",
       });
     }
-  }, [user?.id, toast, refetch]);
-
-  const totalNotifications = notifications?.length || 0;
+  }, [user?.id, toast, refetch, refetchCount]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -152,9 +181,9 @@ export function NotificationsDialog() {
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          {totalNotifications > 0 && (
+          {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {totalNotifications}
+              {unreadCount}
             </span>
           )}
         </Button>
@@ -206,7 +235,7 @@ export function NotificationsDialog() {
             />
           )}
 
-          {!isLoading && !isError && totalNotifications === 0 && (
+          {!isLoading && !isError && notifications?.length === 0 && (
             <p className="text-center text-muted-foreground">No new notifications</p>
           )}
         </div>
