@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(currentSession?.user ?? null);
         queryClient.invalidateQueries({ queryKey: ['profile'] });
         navigate('/');
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      } else if (event === 'SIGNED_OUT') {
         // Clear everything on sign out
         setSession(null);
         setUser(null);
