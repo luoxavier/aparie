@@ -314,6 +314,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_test_account: boolean | null
           status: string | null
           updated_at: string
           username: string | null
@@ -324,6 +325,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          is_test_account?: boolean | null
           status?: string | null
           updated_at?: string
           username?: string | null
@@ -334,6 +336,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_test_account?: boolean | null
           status?: string | null
           updated_at?: string
           username?: string | null
@@ -567,6 +570,10 @@ export type Database = {
         Args: {
           user_id_param: string
         }
+        Returns: undefined
+      }
+      delete_test_accounts: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       get_user_email_from_identifier: {

@@ -78,7 +78,8 @@ export async function signUpWithEmail(
   email: string, 
   password: string, 
   username: string, 
-  displayName: string
+  displayName: string,
+  isTestAccount: boolean = false
 ) {
   try {
     const { error } = await supabase.auth.signUp({
@@ -88,6 +89,7 @@ export async function signUpWithEmail(
         data: {
           username,
           display_name: displayName,
+          is_test_account: isTestAccount,
         },
       },
     });
