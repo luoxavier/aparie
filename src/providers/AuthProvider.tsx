@@ -36,11 +36,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(currentSession?.user ?? null);
         queryClient.invalidateQueries({ queryKey: ['profile'] });
         navigate('/');
-      } else if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        // Clear everything on sign out
         setSession(null);
         setUser(null);
         queryClient.clear();
+        await supabase.auth.setSession(null); // Ensure local session is cleared
         navigate('/login');
+      } else if (event === 'TOKEN_REFRESHED') {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
       }
     });
 
