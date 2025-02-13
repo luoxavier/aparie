@@ -42,7 +42,6 @@ export default function Home() {
       }
 
       if (!data) {
-        // If no profile is found, show an error since it should have been created by the trigger
         toast({
           title: "Profile not found",
           description: "Please try logging out and back in",
@@ -58,7 +57,7 @@ export default function Home() {
 
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['user-stats', user?.id],
-    enabled: !!profile, // Only run this query after profile exists
+    enabled: !!profile,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_streaks')
@@ -132,14 +131,6 @@ export default function Home() {
               <div className="flex flex-col items-start gap-1">
                 <div className="flex items-baseline gap-2">
                   <h1 className="text-xl font-semibold">{profile?.display_name}</h1>
-                  {profile?.username && (
-                    <span className="text-sm text-muted-foreground">{profile.username}</span>
-                  )}
-                  {userStats?.level && (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Lvl {userStats.level}
-                    </span>
-                  )}
                 </div>
                 {userStats && (
                   <div className="flex flex-col gap-1 w-full min-w-[200px]">
