@@ -1,24 +1,12 @@
 
 import { Link } from "react-router-dom";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { useTheme } from "next-themes";
 
 export default function Login() {
-  const { theme } = useTheme();
-
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
       <div className="w-full max-w-[350px] mx-auto space-y-6 my-4">
         <div className="flex flex-col items-center space-y-3 text-center px-2">
-          <img 
-            src="/lovable-uploads/e352f81d-e5ce-4d6c-a7ce-bc7e005d7898.png"
-            alt="Lovable Logo"
-            className={`w-24 h-24 mb-2 bg-background ${
-              theme === 'dark' 
-                ? 'invert' 
-                : 'mix-blend-multiply'
-            } transition-all duration-200`}
-          />
           <h1 className="text-2xl font-semibold tracking-tight">
             Welcome back
           </h1>
