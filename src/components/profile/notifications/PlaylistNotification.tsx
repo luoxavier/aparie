@@ -51,7 +51,7 @@ export function PlaylistNotification({
       onExit();
       setTimeout(() => {
         onMarkAsRead(id);
-        navigate('/study-folder', {
+        navigate('/', {
           state: {
             flashcards,
             folderName: content.playlistName,
