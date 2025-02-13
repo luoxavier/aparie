@@ -8,9 +8,7 @@ export default function IndexPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      navigate('/profile');
-    } else {
+    if (!user) {
       navigate('/login');
     }
   }, [navigate, user]);
