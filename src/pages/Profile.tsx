@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
@@ -42,12 +43,24 @@ export default function Home() {
       }
 
       if (!data) {
-        toast({
-          title: "Profile not found",
-          description: "Please try logging out and back in",
-          variant: "destructive",
-        });
-        return null;
+        // Create default profile if none exists
+        const defaultProfile = {
+          id: user?.id,
+          display_name: user?.email?.split('@')[0] || 'User',
+          avatar_url: null,
+          username: null
+        };
+
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert([defaultProfile]);
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          throw insertError;
+        }
+
+        return defaultProfile;
       }
 
       return data;
@@ -57,6 +70,7 @@ export default function Home() {
 
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['user-stats', user?.id],
+    enabled: !!profile, // Only run this query after profile exists
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_streaks')
