@@ -66,7 +66,7 @@ export function useAuthActions() {
     }
   };
 
-  const signUp = async (email: string, password: string, username: string, displayName: string) => {
+  const signUp = async (email: string, password: string, username: string, displayName: string, isTestAccount: boolean = false) => {
     try {
       const { data: existingUsername } = await supabase
         .from('profiles')
@@ -90,6 +90,7 @@ export function useAuthActions() {
           data: {
             username,
             display_name: displayName,
+            is_test_account: isTestAccount,
           },
         },
       });

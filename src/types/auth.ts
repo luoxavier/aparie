@@ -7,5 +7,5 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   updateStreak: () => Promise<void>;
   signIn: (identifier: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, username: string, displayName: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string, displayName: string, isTestAccount?: boolean) => Promise<void>;
 }
