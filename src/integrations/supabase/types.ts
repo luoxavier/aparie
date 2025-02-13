@@ -599,6 +599,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      wipe_all_user_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

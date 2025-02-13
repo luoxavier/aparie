@@ -125,3 +125,38 @@ export const createMultipleTestAccounts = async (count: number) => {
   }
   return accounts;
 };
+
+export const wipeAllUserData = async () => {
+  try {
+    // Show a warning confirmation
+    const confirmMessage = "WARNING: This will permanently delete ALL user data, including all accounts, playlists, and associated data. This action cannot be undone.\n\nAre you absolutely sure you want to proceed?";
+    
+    if (!confirm(confirmMessage)) {
+      toast({
+        title: "Operation cancelled",
+        description: "Database wipe was cancelled.",
+      });
+      return;
+    }
+
+    const { error } = await supabase.rpc('wipe_all_user_data');
+    
+    if (error) throw error;
+
+    toast({
+      title: "Database wiped",
+      description: "Successfully deleted all user data from the database.",
+    });
+    
+    // Redirect to login page after successful wipe
+    window.location.href = '/login';
+  } catch (error: any) {
+    console.error('Error wiping database:', error);
+    toast({
+      variant: "destructive",
+      title: "Error wiping database",
+      description: error.message,
+    });
+    throw error;
+  }
+};
