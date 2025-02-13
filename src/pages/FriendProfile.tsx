@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +41,7 @@ export default function FriendProfile() {
         .select(`
           points,
           playlist_name,
+          creator_id,
           creator:profiles!playlist_leaderboards_creator_id_fkey (
             display_name
           )
@@ -74,7 +74,6 @@ export default function FriendProfile() {
 
   return (
     <div className="container mx-auto py-4 px-4">
-      {/* Profile Header */}
       <div className="flex items-center gap-4">
         <div className={`rounded-full overflow-hidden ${getBorderClass(stats?.level)}`}>
           {profile?.avatar_url && (
@@ -101,7 +100,6 @@ export default function FriendProfile() {
         </div>
       </div>
 
-      {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
         <div className="p-4 rounded-lg border">
           <div className="flex items-center gap-2">
@@ -128,7 +126,6 @@ export default function FriendProfile() {
         </div>
       </div>
 
-      {/* Achievements Section */}
       {achievements && achievements.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Top Achievements</h2>
@@ -159,7 +156,6 @@ export default function FriendProfile() {
         </div>
       )}
 
-      {/* Public Playlists Section */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Public Playlists</h2>
         <PublicPlaylists creatorId={id} />
