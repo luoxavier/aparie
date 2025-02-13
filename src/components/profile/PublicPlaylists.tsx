@@ -7,7 +7,11 @@ import { Search } from "lucide-react";
 import debounce from "lodash/debounce";
 import { FriendSearchInput } from "./FriendSearchInput";
 
-export function PublicPlaylists() {
+interface PublicPlaylistsProps {
+  creatorId?: string;
+}
+
+export function PublicPlaylists({ creatorId }: PublicPlaylistsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
 
@@ -30,7 +34,7 @@ export function PublicPlaylists() {
   );
 
   const { data: publicPlaylists = [], isLoading } = useQuery({
-    queryKey: ['public-playlists', debouncedTerm],
+    queryKey: ['public-playlists', debouncedTerm, creatorId],
     queryFn: async () => {
       let query = supabase
         .from('flashcards')
@@ -48,8 +52,12 @@ export function PublicPlaylists() {
         `)
         .eq('is_public', true);
 
+      // If creatorId is provided, filter by it
+      if (creatorId) {
+        query = query.eq('creator_id', creatorId);
+      }
+
       if (debouncedTerm) {
-        // Fix: Use the correct OR syntax for PostgREST
         query = query.or(`playlist_name.ilike.*${debouncedTerm}*,profiles.display_name.ilike.*${debouncedTerm}*`);
       }
 
@@ -82,11 +90,13 @@ export function PublicPlaylists() {
 
   return (
     <div className="space-y-4">
-      <FriendSearchInput
-        value={searchTerm}
-        onChange={handleSearchChange}
-        placeholder="Search by playlist name or creator..."
-      />
+      {!creatorId && (
+        <FriendSearchInput
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Search by playlist name or creator..."
+        />
+      )}
 
       <div className="space-y-4">
         {isLoading ? (
@@ -102,7 +112,7 @@ export function PublicPlaylists() {
               title={playlist.playlistName}
               subtitle={`Created by ${playlist.creator.display_name}`}
               flashcards={playlist.flashcards}
-              showCreator={true}
+              showCreator={!creatorId}
               creatorId={playlist.creatorId}
               playlistName={playlist.playlistName}
             />
