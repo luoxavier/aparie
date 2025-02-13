@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, X, List } from "lucide-react";
@@ -75,10 +76,19 @@ export function NotificationItem({
           if (updateError) throw updateError;
         }
 
-        // Mark notification as read
+        // Mark notification as read only after successful friend request handling
         onMarkAsRead(id);
       } else {
-        // Just mark the notification as read for deny
+        // For deny action, delete the friend request
+        const { error: deleteError } = await supabase
+          .from('friend_connections')
+          .delete()
+          .eq('user_id', senderId)
+          .eq('friend_id', user?.id);
+
+        if (deleteError) throw deleteError;
+
+        // Mark notification as read after denying
         onMarkAsRead(id);
       }
     },
