@@ -133,7 +133,7 @@ export default function Home() {
                 <div className="flex items-baseline gap-2">
                   <h1 className="text-xl font-semibold">{profile?.display_name}</h1>
                   {profile?.username && (
-                    <span className="text-sm text-muted-foreground">@{profile.username}</span>
+                    <span className="text-sm text-muted-foreground">{profile.username}</span>
                   )}
                   {userStats?.level && (
                     <span className="text-xs font-medium text-muted-foreground">
