@@ -11,7 +11,7 @@ export async function findUserByIdentifier(identifier: string): Promise<FriendPr
     .from('profiles')
     .select('id')
     .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`)
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error('Error finding user:', error);
