@@ -39,15 +39,54 @@ export const createTestAccount = async (
   }
 };
 
+export const getTestAccounts = async () => {
+  try {
+    const { data: testAccounts, error } = await supabase
+      .from('profiles')
+      .select('username, email')
+      .eq('is_test_account', true);
+
+    if (error) throw error;
+    return testAccounts;
+  } catch (error: any) {
+    console.error('Error fetching test accounts:', error);
+    throw error;
+  }
+};
+
 export const deleteAllTestAccounts = async () => {
   try {
+    // First get all test accounts
+    const testAccounts = await getTestAccounts();
+    
+    if (!testAccounts || testAccounts.length === 0) {
+      toast({
+        title: "No test accounts found",
+        description: "There are no test accounts to delete.",
+      });
+      return;
+    }
+
+    // Show confirmation with list of accounts
+    const confirmMessage = `The following test accounts will be deleted:\n${
+      testAccounts.map(account => `- ${account.username} (${account.email})`).join('\n')
+    }\n\nAre you sure you want to proceed?`;
+
+    if (!confirm(confirmMessage)) {
+      toast({
+        title: "Deletion cancelled",
+        description: "No test accounts were deleted.",
+      });
+      return;
+    }
+
     const { error } = await supabase.rpc('delete_test_accounts');
     
     if (error) throw error;
 
     toast({
       title: "Test accounts deleted",
-      description: "All test accounts have been successfully deleted",
+      description: `Successfully deleted ${testAccounts.length} test account(s)`,
     });
   } catch (error: any) {
     console.error('Error deleting test accounts:', error);

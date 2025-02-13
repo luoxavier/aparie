@@ -14,7 +14,6 @@ export function SignupForm() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPointer, setShowPointer] = useState(false);
-  const [isTestAccount, setIsTestAccount] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -55,6 +54,9 @@ export function SignupForm() {
         setLoading(false);
         return;
       }
+
+      // Automatically detect if this is a test account based on username
+      const isTestAccount = username.toLowerCase().startsWith('test');
 
       // If username is available, proceed with signup
       await signUp(email, password, username, username, isTestAccount);
@@ -131,18 +133,6 @@ export function SignupForm() {
             required
             minLength={6}
           />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="test-account"
-            checked={isTestAccount}
-            onChange={(e) => setIsTestAccount(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300"
-          />
-          <label htmlFor="test-account" className="text-sm text-muted-foreground">
-            This is a test account
-          </label>
         </div>
         <Button 
           type="submit" 
