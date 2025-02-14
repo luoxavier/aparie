@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default function Study() {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold">{folderName}</h1>
-            <p className="text-sm text-muted-foreground mt-1">Created by {creatorName}</p>
+            <p className="text-sm text-muted-foreground mt-1">{creatorName}</p>
           </div>
 
           <div className="space-y-4">
