@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +53,6 @@ export function NotificationsDialog() {
     staleTime: 1000 * 30,
   });
 
-  // Main query for notification content - only enabled when dialog is open
   const { data: notifications, refetch, isError, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -83,9 +81,7 @@ export function NotificationsDialog() {
           ...notification,
           sender: {
             ...notification.sender,
-            display_name: notification.sender?.username 
-              ? `${notification.sender.display_name} (@${notification.sender.username})`
-              : notification.sender?.display_name || 'Unknown User'
+            display_name: notification.sender?.display_name || 'Unknown User'
           },
           content: notification.content as NotificationContent
         })) || [];
