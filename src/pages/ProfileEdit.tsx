@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +58,7 @@ export default function ProfileEdit() {
           .from('user_streaks')
           .select('current_streak, highest_streak')
           .eq('user_id', user?.id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           if (error.message?.includes('JWT')) {
@@ -69,7 +70,7 @@ export default function ProfileEdit() {
           }
           throw error;
         }
-        return data;
+        return data || { current_streak: 0, highest_streak: 0 };
       } catch (error: any) {
         console.error('Streak fetch error:', error);
         throw error;
