@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +18,6 @@ export default function ProfileEdit() {
   const hasUnsavedChanges = useRef(false);
   const queryClient = useQueryClient();
 
-  // Enhanced profile query with error handling and retry logic
   const { data: profile, isError: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -31,7 +29,6 @@ export default function ProfileEdit() {
           .single();
         
         if (error) {
-          // Check for JWT errors
           if (error.message?.includes('JWT')) {
             const { data: session } = await supabase.auth.getSession();
             if (!session) {
@@ -52,7 +49,6 @@ export default function ProfileEdit() {
     enabled: !!user?.id,
   });
 
-  // Enhanced streaks query with error handling
   const { data: streakData, isError: streakError } = useQuery({
     queryKey: ['streaks', user?.id],
     queryFn: async () => {
@@ -60,7 +56,6 @@ export default function ProfileEdit() {
         const { data, error } = await supabase
           .from('user_streaks')
           .select('current_streak, highest_streak')
-          .eq('user_id', user?.id)
           .single();
         
         if (error) {
@@ -134,7 +129,6 @@ export default function ProfileEdit() {
     }
   };
 
-  // Update bio only when leaving the page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges.current) {
