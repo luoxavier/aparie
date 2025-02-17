@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AdminMessaging() {
@@ -127,7 +127,7 @@ export function AdminMessaging() {
   };
 
   // Check admin status when component mounts
-  useState(() => {
+  useEffect(() => {
     checkAdminStatus();
   }, [user?.id]);
 
