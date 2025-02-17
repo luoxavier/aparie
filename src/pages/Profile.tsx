@@ -9,20 +9,45 @@ import { SettingsDialog } from "@/components/profile/SettingsDialog";
 import { QuestsDialog } from "@/components/profile/QuestsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
-import { PenLine, User, Users } from "lucide-react";
+import { PenLine, User, Users, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { getBorderClass } from "@/utils/level-utils";
-import { AdminMessaging } from "@/components/admin/AdminMessaging";
 
-export default function Home() {
+export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const checkAdminStatus = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('check_is_admin', {
+          user_id: user.id
+        });
+      
+      if (error) {
+        console.error('Error checking admin status:', error);
+        throw error;
+      }
+      
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, [user?.id]);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
@@ -168,6 +193,16 @@ export default function Home() {
             >
               <User className="h-5 w-5" />
             </Button>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                onClick={() => handleNavigate('/admin')}
+              >
+                <ShieldCheck className="h-5 w-5" />
+              </Button>
+            )}
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
@@ -186,9 +221,6 @@ export default function Home() {
             </Dialog>
           </div>
         </div>
-
-        {/* Admin Messaging section - will only show for admin users */}
-        <AdminMessaging />
 
         <Tabs defaultValue="cards" className="w-full">
           <div className="flex justify-center w-full">
