@@ -17,6 +17,7 @@ export const useUserStreak = () => {
       const { data: existingStreak, error: fetchError } = await supabase
         .from('user_streaks')
         .select('current_streak, highest_streak, last_activity_date')
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (fetchError) {

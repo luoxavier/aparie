@@ -56,6 +56,7 @@ export default function ProfileEdit() {
         const { data, error } = await supabase
           .from('user_streaks')
           .select('current_streak, highest_streak')
+          .eq('user_id', user?.id)
           .single();
         
         if (error) {
