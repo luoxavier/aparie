@@ -1,3 +1,4 @@
+
 import { NotificationItem } from "./NotificationItem";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ interface Notification {
   content?: {
     playlistName?: string;
     message?: string;
+    title?: string;
   };
   sender: {
     id: string;
@@ -34,6 +36,10 @@ export function NotificationsList({ notifications, onMarkAsRead }: Notifications
   
   const updateNotifications = notifications.filter(n => 
     ['shared_playlist', 'new_public_playlist'].includes(n.type)
+  );
+
+  const adminNotifications = notifications.filter(n =>
+    ['admin_update', 'admin_message'].includes(n.type)
   );
 
   const handleRemoveAll = async () => {
@@ -71,6 +77,24 @@ export function NotificationsList({ notifications, onMarkAsRead }: Notifications
           >
             Mark All as Read
           </Button>
+        </div>
+      )}
+
+      {adminNotifications.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-semibold">Admin Messages</h3>
+          {adminNotifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              id={notification.id}
+              senderName={notification.sender.display_name}
+              senderAvatar={notification.sender.avatar_url}
+              type={notification.type}
+              senderId={notification.sender.id}
+              content={notification.content}
+              onMarkAsRead={onMarkAsRead}
+            />
+          ))}
         </div>
       )}
 

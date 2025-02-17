@@ -13,6 +13,7 @@ interface NotificationItemProps {
   content?: {
     playlistName?: string;
     message?: string;
+    title?: string;
   };
   onMarkAsRead: (id: string) => void;
 }
@@ -58,6 +59,14 @@ export function NotificationItem({
                 {content?.message || "Shared a playlist with you"}
               </p>
             )}
+            {(type === 'admin_update' || type === 'admin_message') && (
+              <div>
+                <p className="font-semibold text-sm">{content?.title}</p>
+                <p className="text-sm text-gray-600">
+                  {content?.message}
+                </p>
+              </div>
+            )}
           </div>
           {type === 'friend_request' ? (
             <FriendRequestActions
@@ -75,7 +84,7 @@ export function NotificationItem({
               id={id}
               onExit={() => setIsExiting(true)}
             />
-          ) : (
+          ) : type === 'shared_playlist' ? (
             <PlaylistNotification
               content={content}
               senderId={senderId}
@@ -84,6 +93,13 @@ export function NotificationItem({
               id={id}
               onExit={() => setIsExiting(true)}
             />
+          ) : (
+            <button
+              onClick={() => onMarkAsRead(id)}
+              className="text-sm text-blue-500 hover:text-blue-600"
+            >
+              Dismiss
+            </button>
           )}
         </div>
       </CardContent>
