@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
@@ -130,6 +129,12 @@ export default function Profile() {
     navigate(path);
   }, [navigate]);
 
+  const handleAdminNavigate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate('/admin');
+  };
+
   if (profileLoading || statsLoading) {
     return <div className="container mx-auto py-4 px-4 max-w-7xl">Loading...</div>;
   }
@@ -143,7 +148,6 @@ export default function Profile() {
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
       <div className="flex flex-col space-y-6">
-        {/* Profile header section */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
@@ -198,10 +202,7 @@ export default function Profile() {
                 variant="ghost"
                 size="icon"
                 className="rounded-full"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigate('/admin');
-                }}
+                onClick={handleAdminNavigate}
                 type="button"
               >
                 <ShieldCheck className="h-5 w-5" />
