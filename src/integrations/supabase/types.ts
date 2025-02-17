@@ -590,6 +590,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       delete_test_accounts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
