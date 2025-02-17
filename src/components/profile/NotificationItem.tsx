@@ -46,35 +46,35 @@ export function NotificationItem({
 
   return (
     <>
-      <Card className={`relative transition-all duration-300 ${isExiting ? 'opacity-0 translate-x-full' : 'opacity-100'}`}>
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-4">
+      <Card className={`relative transition-all duration-300 mx-2 ${isExiting ? 'opacity-0 translate-x-full' : 'opacity-100'}`}>
+        <CardContent className="p-2 sm:p-4">
+          <div className="flex items-start gap-2 sm:gap-4 max-w-full">
             {senderAvatar && (
               <img
                 src={senderAvatar}
                 alt={senderName}
-                className="w-10 h-10 rounded-full flex-shrink-0"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
               />
             )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{senderName}</p>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="font-medium truncate text-sm sm:text-base">{senderName}</p>
               {type === 'friend_request' && (
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Sent you a friend request
                 </p>
               )}
               {(type === 'shared_playlist' || type === 'folder_deleted') && (
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {content?.message || "Shared a playlist with you"}
                 </p>
               )}
               {(type === 'admin_update' || type === 'admin_message') && (
                 <div 
                   onClick={handleMessageClick}
-                  className="cursor-pointer hover:bg-gray-50 rounded-md p-2 -m-2"
+                  className="cursor-pointer hover:bg-gray-50 rounded-md p-1 sm:p-2 -m-1 sm:-m-2"
                 >
-                  <p className="font-semibold text-sm">{content?.title}</p>
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="font-semibold text-xs sm:text-sm">{content?.title}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                     {content?.message}
                   </p>
                   {content?.message && content.message.length > 100 && (
@@ -112,7 +112,7 @@ export function NotificationItem({
               ) : (
                 <button
                   onClick={() => onMarkAsRead(id)}
-                  className="text-sm text-blue-500 hover:text-blue-600 whitespace-nowrap"
+                  className="text-xs sm:text-sm text-blue-500 hover:text-blue-600 whitespace-nowrap"
                 >
                   Dismiss
                 </button>
@@ -123,7 +123,7 @@ export function NotificationItem({
       </Card>
 
       <Dialog open={showFullMessage} onOpenChange={setShowFullMessage}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-[90vw] sm:max-w-lg mx-2">
           <DialogHeader>
             <DialogTitle>{content?.title || "Message"}</DialogTitle>
           </DialogHeader>
