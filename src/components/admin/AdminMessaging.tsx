@@ -16,18 +16,21 @@ export function AdminMessaging() {
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if current user is admin
+  // Check if current user is admin using the new function
   const checkAdminStatus = async () => {
     if (!user?.id) return;
     
     try {
       const { data, error } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('id', user.id)
-        .single();
+        .rpc('check_is_admin', {
+          user_id: user.id
+        });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking admin status:', error);
+        throw error;
+      }
+      
       setIsAdmin(!!data);
     } catch (error) {
       console.error('Error checking admin status:', error);
@@ -130,6 +133,11 @@ export function AdminMessaging() {
   useEffect(() => {
     checkAdminStatus();
   }, [user?.id]);
+
+  // For debugging
+  useEffect(() => {
+    console.log('Is admin:', isAdmin);
+  }, [isAdmin]);
 
   if (!isAdmin) {
     return null;
