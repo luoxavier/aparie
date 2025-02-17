@@ -10,7 +10,6 @@ import Friends from "./pages/Friends";
 import FriendProfile from "./pages/FriendProfile";
 import ProfileEdit from "./pages/ProfileEdit";
 import Leaderboard from "./pages/Leaderboard";
-import AdminDashboard from "./pages/AdminDashboard";
 
 export default function AppRoutes() {
   return (
@@ -22,14 +21,6 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <Profile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <PrivateRoute>
-            <AdminDashboard />
           </PrivateRoute>
         }
       />
