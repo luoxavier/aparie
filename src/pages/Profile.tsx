@@ -199,6 +199,7 @@ export default function Profile() {
                 size="icon"
                 className="rounded-full"
                 onClick={() => handleNavigate('/admin')}
+                type="button"
               >
                 <ShieldCheck className="h-5 w-5" />
               </Button>
