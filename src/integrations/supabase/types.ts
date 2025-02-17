@@ -610,6 +610,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_no_rls: {
+        Args: {
+          uid: string
+        }
+        Returns: boolean
+      }
       update_leaderboard_score: {
         Args: {
           user_id_param: string
