@@ -26,7 +26,6 @@ export function NotificationsDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Separate query for unread count - always enabled
   const { refetch: refetchCount } = useQuery({
     queryKey: ['notifications-count', user?.id],
     queryFn: async () => {
@@ -100,7 +99,6 @@ export function NotificationsDialog() {
     staleTime: 1000 * 30,
   });
 
-  // Subscribe to real-time notifications
   useEffect(() => {
     if (!user?.id) return;
 
@@ -117,15 +115,12 @@ export function NotificationsDialog() {
         async (payload) => {
           console.log('Notification change received:', payload);
           
-          // Update count immediately
           await refetchCount();
           
-          // Only refetch full data if dialog is open
           if (isOpen) {
             await refetch();
           }
           
-          // Show toast for new notifications
           if (payload.eventType === 'INSERT') {
             const newNotification = payload.new as any;
             toast({
@@ -153,7 +148,6 @@ export function NotificationsDialog() {
 
       if (error) throw error;
       
-      // Update both queries
       await Promise.all([refetch(), refetchCount()]);
     } catch (error: any) {
       console.error('Error marking notification as read:', error);
@@ -184,14 +178,14 @@ export function NotificationsDialog() {
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-[95vw] max-w-md mx-auto overflow-hidden">
         <DialogHeader>
           <DialogTitle>Notifications</DialogTitle>
           <DialogDescription>
             View and manage your notifications
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto max-h-[60vh]">
           {isLoading && (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
