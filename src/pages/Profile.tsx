@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
@@ -17,6 +18,7 @@ import { useCallback } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { getBorderClass } from "@/utils/level-utils";
+import { AdminMessaging } from "@/components/admin/AdminMessaging";
 
 export default function Home() {
   const { user } = useAuth();
@@ -116,6 +118,7 @@ export default function Home() {
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
       <div className="flex flex-col space-y-6">
+        {/* Profile header section */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
@@ -183,6 +186,9 @@ export default function Home() {
             </Dialog>
           </div>
         </div>
+
+        {/* Admin Messaging section - will only show for admin users */}
+        <AdminMessaging />
 
         <Tabs defaultValue="cards" className="w-full">
           <div className="flex justify-center w-full">
