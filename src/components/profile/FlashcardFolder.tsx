@@ -104,8 +104,8 @@ export function FlashcardFolder({
       className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
       onClick={handleFolderClick}
     >
-      <div className="folder-main-area flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-1">
+      <div className="folder-main-area flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <FolderFavoriteButton
             isFavorited={isFavorited}
             onFavoriteClick={(e) => {
@@ -120,30 +120,32 @@ export function FlashcardFolder({
           />
         </div>
 
-        <FolderActions
-          isFavorited={isFavorited}
-          onFavoriteClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(e);
-          }}
-          onStudyClick={(e) => {
-            e.stopPropagation();
-            navigate(`/study-playlist/${creatorId}/${encodeURIComponent(playlistName || '')}`, {
-              state: {
-                flashcards,
-                folderName: title,
-                creatorName: subtitle || user?.email
-              }
-            });
-          }}
-          onEditClick={() => setIsDialogOpen(true)}
-          onExpandClick={() => setShowCards(!showCards)}
-          creatorId={creatorId}
-          playlistName={playlistName}
-          isExpanded={showCards}
-          recipientCanModify={recipientCanModify}
-          isPublic={isPublic}
-        />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <FolderActions
+            isFavorited={isFavorited}
+            onFavoriteClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(e);
+            }}
+            onStudyClick={(e) => {
+              e.stopPropagation();
+              navigate(`/study-playlist/${creatorId}/${encodeURIComponent(playlistName || '')}`, {
+                state: {
+                  flashcards,
+                  folderName: title,
+                  creatorName: subtitle || user?.email
+                }
+              });
+            }}
+            onEditClick={() => setIsDialogOpen(true)}
+            onExpandClick={() => setShowCards(!showCards)}
+            creatorId={creatorId}
+            playlistName={playlistName}
+            isExpanded={showCards}
+            recipientCanModify={recipientCanModify}
+            isPublic={isPublic}
+          />
+        </div>
       </div>
 
       <ModifyFolderDialog

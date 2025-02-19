@@ -74,7 +74,15 @@ export function FeedbackDialog() {
         <Button 
           variant="default" 
           size="sm" 
-          className={`gap-2 fixed ${isMobile ? 'bottom-20' : 'bottom-4'} right-4 shadow-lg z-10`}
+          className={`
+            gap-2 fixed 
+            ${isMobile ? 'bottom-[34px]' : 'bottom-4'} 
+            right-4 
+            shadow-lg 
+            z-10
+            py-3 
+            px-4
+          `}
         >
           <MessageSquare className="h-4 w-4" />
           Feedback

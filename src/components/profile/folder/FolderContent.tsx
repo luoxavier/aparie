@@ -33,10 +33,10 @@ export function FolderContent({ flashcards, showCards, showCreator }: FolderCont
         <Card key={flashcard.id} className="mt-2">
           <CardContent className="p-4">
             <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
-              <p className="text-sm md:text-base">{flashcard.front}</p>
-              <p className="text-sm md:text-base">{flashcard.back}</p>
+              <p className="text-sm md:text-base min-w-0 truncate">{flashcard.front}</p>
+              <p className="text-sm md:text-base min-w-0 truncate">{flashcard.back}</p>
               {isPublicWithMultipleCreators && (
-                <p className="text-[10px] text-muted-foreground text-right">
+                <p className="text-[10px] text-muted-foreground text-right whitespace-nowrap">
                   {flashcard.creator.display_name}
                 </p>
               )}
