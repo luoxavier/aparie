@@ -17,11 +17,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { getBorderClass } from "@/utils/level-utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const isMobile = useIsMobile();
 
   const checkAdminStatus = async () => {
     if (!user?.id) return;
@@ -148,10 +150,10 @@ export default function Profile() {
   return (
     <div className="container mx-auto py-4 px-4 max-w-7xl">
       <div className="flex flex-col space-y-6">
-        <div className="flex flex-col space-y-4">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4">
-              <div className={`rounded-full overflow-hidden ${getBorderClass(userStats?.level)}`}>
+        <div className={`flex flex-col space-y-4 ${isMobile ? 'pt-11' : 'pt-5'}`}>
+          <div className="flex items-start justify-between w-full">
+            <div className="flex items-start gap-4">
+              <div className={`relative rounded-full overflow-hidden ${getBorderClass(userStats?.level)}`}>
                 {profile?.avatar_url && (
                   <img
                     src={profile.avatar_url}
@@ -162,20 +164,28 @@ export default function Profile() {
               </div>
               <div className="flex flex-col items-start gap-1">
                 <div className="flex items-baseline gap-2">
-                  <h1 className="text-xl font-semibold">{profile?.display_name}</h1>
+                  <h1 className="text-xl font-semibold truncate max-w-[150px] sm:max-w-[200px]">
+                    {profile?.display_name}
+                  </h1>
                 </div>
                 {userStats && (
-                  <div className="flex flex-col gap-1 w-full min-w-[200px]">
+                  <div className="flex flex-col gap-1 w-full min-w-[200px] max-w-[250px]">
                     <div className="flex justify-between items-center text-sm">
                       <span className="font-medium">Level {userStats.level}</span>
-                      <span className="text-muted-foreground">{userStats.xp}/{userStats.next_level_xp} XP</span>
+                      <span className="text-muted-foreground">
+                        {userStats.xp}/{userStats.next_level_xp} XP
+                      </span>
                     </div>
                     <Progress value={xpProgress} className="h-2" />
                   </div>
                 )}
               </div>
             </div>
-            <SettingsDialog />
+            
+            <div className="flex items-center gap-2">
+              <NotificationsDialog />
+              <SettingsDialog />
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -187,7 +197,6 @@ export default function Profile() {
             >
               <Users className="h-5 w-5" />
             </Button>
-            <NotificationsDialog />
             <QuestsDialog />
             <Button 
               variant="ghost" 
@@ -211,7 +220,7 @@ export default function Profile() {
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
-                  className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
+                  className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all ml-auto"
                 >
                   <PenLine className="h-5 w-5 mr-2" />
                   <span>Create Cards</span>
