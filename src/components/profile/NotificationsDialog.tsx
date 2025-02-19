@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { NotificationsList } from "./NotificationsList";
 import { useCallback, useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NotificationContent {
   playlistName?: string;
@@ -25,6 +27,7 @@ export function NotificationsDialog() {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isMobile = useIsMobile();
 
   const { refetch: refetchCount } = useQuery({
     queryKey: ['notifications-count', user?.id],
@@ -114,13 +117,10 @@ export function NotificationsDialog() {
         },
         async (payload) => {
           console.log('Notification change received:', payload);
-          
           await refetchCount();
-          
           if (isOpen) {
             await refetch();
           }
-          
           if (payload.eventType === 'INSERT') {
             const newNotification = payload.new as any;
             toast({
@@ -178,14 +178,20 @@ export function NotificationsDialog() {
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-md mx-auto overflow-hidden">
-        <DialogHeader>
+      <DialogContent className={`
+        w-[95vw] max-w-md mx-auto 
+        overflow-hidden
+        ${isMobile ? 'pt-11 pb-[34px] px-4' : 'p-5'}
+      `}>
+        <DialogHeader className="mb-4">
           <DialogTitle>Notifications</DialogTitle>
           <DialogDescription>
             View and manage your notifications
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 overflow-y-auto max-h-[60vh]">
+        <div className="space-y-4 overflow-y-auto" style={{ 
+          maxHeight: isMobile ? 'calc(100vh - 44px - 34px - 120px)' : 'calc(100vh - 200px)'
+        }}>
           {isLoading && (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
