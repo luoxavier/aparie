@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { MessageSquare } from "lucide-react";
@@ -73,18 +74,18 @@ export function FeedbackDialog() {
       <DialogTrigger asChild>
         <Button 
           variant="default" 
-          size="sm" 
           className={`
             gap-2 fixed 
             ${isMobile ? 'bottom-[34px]' : 'bottom-4'} 
             right-4 
             shadow-lg 
-            z-10
+            z-50
             py-3 
-            px-4
+            px-6
+            text-base
           `}
         >
-          <MessageSquare className="h-4 w-4" />
+          <MessageSquare className="h-5 w-5" />
           Feedback
         </Button>
       </DialogTrigger>
@@ -130,7 +131,7 @@ export function FeedbackDialog() {
           <Button
             onClick={handleSubmit}
             disabled={!content.trim() || isSubmitting}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto text-base py-3 px-6"
           >
             Submit Feedback
           </Button>
