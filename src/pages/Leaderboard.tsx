@@ -39,7 +39,7 @@ export default function Leaderboard() {
           .select(`
             user_id,
             points,
-            user:user_id (
+            profiles!playlist_leaderboards_user_id_fkey (
               display_name,
               username,
               avatar_url
@@ -56,10 +56,10 @@ export default function Leaderboard() {
         if (data) {
           const formattedData: LeaderboardEntry[] = data.map(item => ({
             user_id: item.user_id,
-            display_name: item.user.display_name || 'Unknown',
-            username: item.user.username || 'unknown',
+            display_name: item.profiles.display_name || 'Unknown',
+            username: item.profiles.username || 'unknown',
             points: item.points || 0,
-            avatar_url: item.user.avatar_url
+            avatar_url: item.profiles.avatar_url
           }));
           setLeaderboardData(formattedData);
         }

@@ -31,7 +31,7 @@ export default function Friends() {
         .select(`
           id,
           status,
-          profiles:friend_id (
+          friend:profiles!friend_connections_friend_id_fkey (
             id,
             username,
             display_name,
@@ -48,10 +48,7 @@ export default function Friends() {
       return (data || []).map(connection => ({
         connection_id: connection.id,
         status: connection.status,
-        id: connection.profiles.id,
-        username: connection.profiles.username,
-        display_name: connection.profiles.display_name,
-        avatar_url: connection.profiles.avatar_url
+        ...connection.friend,
       })) as Friend[];
     },
     enabled: !!user,
@@ -108,7 +105,7 @@ export default function Friends() {
                 friend={{
                   id: friend.id,
                   username: friend.username || "",
-                  displayName: friend.display_name,
+                  display_name: friend.display_name,
                   avatarUrl: friend.avatar_url,
                   status: friend.status
                 }}

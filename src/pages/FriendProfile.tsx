@@ -1,3 +1,4 @@
+
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -98,7 +99,7 @@ export default function FriendProfile() {
     if (!id || !user) return;
 
     const { error } = await supabase
-      .from('friends')
+      .from('friend_connections')
       .delete()
       .or(`user_id.eq.${user.id},friend_id.eq.${id}`)
       .or(`user_id.eq.${id},friend_id.eq.${user.id}`);
