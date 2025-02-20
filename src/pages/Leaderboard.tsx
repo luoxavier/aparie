@@ -3,7 +3,6 @@ import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -19,7 +18,6 @@ interface LeaderboardEntry {
 
 export default function Leaderboard() {
   const { creatorId, playlistName } = useParams<{ creatorId: string; playlistName: string }>();
-  const { user } = useAuth();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +39,7 @@ export default function Leaderboard() {
           .select(`
             user_id,
             points,
-            profiles:user_id (
+            user:user_id (
               display_name,
               username,
               avatar_url
@@ -58,10 +56,10 @@ export default function Leaderboard() {
         if (data) {
           const formattedData: LeaderboardEntry[] = data.map(item => ({
             user_id: item.user_id,
-            display_name: item.profiles?.display_name || 'Unknown',
-            username: item.profiles?.username || 'unknown',
+            display_name: item.user.display_name || 'Unknown',
+            username: item.user.username || 'unknown',
             points: item.points || 0,
-            avatar_url: item.profiles?.avatar_url
+            avatar_url: item.user.avatar_url
           }));
           setLeaderboardData(formattedData);
         }

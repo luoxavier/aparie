@@ -7,10 +7,10 @@ import { toast } from "react-hot-toast";
 
 interface UserProfile {
   id: string;
-  email: string;
   display_name: string;
-  username: string;
+  username: string | null;
   is_admin?: boolean;
+  // Remove email as it's not available in the profiles table
 }
 
 export default function AdminDashboard() {
@@ -23,7 +23,7 @@ export default function AdminDashboard() {
       try {
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("*");
+          .select("id, display_name, username");
 
         const { data: adminUsers, error: adminError } = await supabase
           .from("admin_users")
@@ -36,10 +36,12 @@ export default function AdminDashboard() {
         }
 
         const adminIds = new Set(adminUsers?.map(admin => admin.id));
-        const usersWithAdmin = profiles?.map(profile => ({
-          ...profile,
+        const usersWithAdmin = (profiles || []).map(profile => ({
+          id: profile.id,
+          display_name: profile.display_name,
+          username: profile.username,
           is_admin: adminIds.has(profile.id)
-        })) || [];
+        }));
 
         setUsers(usersWithAdmin);
       } catch (err) {

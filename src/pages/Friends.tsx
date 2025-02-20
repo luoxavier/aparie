@@ -8,6 +8,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FriendCard } from "@/components/profile/FriendCard";
 import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
 
+interface Friend {
+  id: string;
+  username: string | null;
+  display_name: string;
+  avatar_url: string | null;
+  connection_id: string;
+  status: string;
+}
+
 export default function Friends() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,7 +31,7 @@ export default function Friends() {
         .select(`
           id,
           status,
-          friend:friend_id (
+          profiles:friend_id (
             id,
             username,
             display_name,
@@ -36,11 +45,14 @@ export default function Friends() {
         throw error;
       }
 
-      return data.map(friend => ({
-        id: friend.id,
-        status: friend.status,
-        ...friend.friend
-      }));
+      return (data || []).map(connection => ({
+        connection_id: connection.id,
+        status: connection.status,
+        id: connection.profiles.id,
+        username: connection.profiles.username,
+        display_name: connection.profiles.display_name,
+        avatar_url: connection.profiles.avatar_url
+      })) as Friend[];
     },
     enabled: !!user,
     staleTime: 1000 * 60,
@@ -49,7 +61,7 @@ export default function Friends() {
 
   const filteredFriends = friends.filter(friend =>
     friend.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.username?.toLowerCase().includes(searchTerm.toLowerCase())
+    (friend.username?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
@@ -93,11 +105,13 @@ export default function Friends() {
             {filteredFriends.map((friend) => (
               <FriendCard
                 key={friend.id}
-                friendId={friend.id}
-                username={friend.username || ""}
-                displayName={friend.display_name}
-                avatarUrl={friend.avatar_url}
-                status={friend.status}
+                friend={{
+                  id: friend.id,
+                  username: friend.username || "",
+                  displayName: friend.display_name,
+                  avatarUrl: friend.avatar_url,
+                  status: friend.status
+                }}
               />
             ))}
           </div>
