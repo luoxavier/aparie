@@ -106,7 +106,7 @@ export default function Friends() {
                   id: friend.id,
                   username: friend.username || "",
                   display_name: friend.display_name,
-                  avatarUrl: friend.avatar_url,
+                  avatar_url: friend.avatar_url,
                   status: friend.status
                 }}
               />
