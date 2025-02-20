@@ -1,16 +1,109 @@
-import { FriendsList } from "@/components/profile/FriendsList";
-import PrivateRoute from "@/components/PrivateRoute";
-import { ReturnHomeButton } from "@/components/ReturnHomeButton";
-import { AddFriendDialog } from "@/components/profile/AddFriendDialog";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { PageContainer } from "@/components/ui/page-container";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { FriendCard } from "@/components/profile/FriendCard";
+import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
+import { FriendRequestList } from "@/components/profile/FriendRequestList";
+import { EmptyFriendsState } from "@/components/profile/EmptyFriendsState";
 
 export default function Friends() {
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: friends = [], isLoading, refetch } = useQuery({
+    queryKey: ['friends', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('friends')
+        .select(`
+          id,
+          status,
+          profiles!friends_user_id_fkey (
+            id,
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('friend_id', user.id);
+
+      if (error) {
+        toast.error("Error loading friends");
+        throw error;
+      }
+
+      return data.map(friend => ({
+        id: friend.id,
+        status: friend.status,
+        ...friend.profiles
+      }));
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60,
+    retry: 3,
+  });
+
+  const filteredFriends = friends.filter(friend =>
+    friend.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    friend.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <div className="space-y-4">
+          <FriendSearchInput
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search friends..."
+          />
+          <div className="animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg mb-4" />
+            ))}
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
-    <PrivateRoute>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Friends</h1>
-        <FriendsList />
-        <ReturnHomeButton />
+    <PageContainer>
+      <div className="space-y-6">
+        <FriendRequestList />
+        <FriendSearchInput
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search friends..."
+        />
+
+        {filteredFriends.length === 0 ? (
+          <EmptyFriendsState searchTerm={searchTerm} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredFriends.map((friend) => (
+              <FriendCard
+                key={friend.id}
+                id={friend.id}
+                userId={friend.id}
+                username={friend.username}
+                displayName={friend.display_name}
+                avatarUrl={friend.avatar_url}
+                status={friend.status}
+              />
+            ))}
+          </div>
+        )}
       </div>
-    </PrivateRoute>
+    </PageContainer>
   );
 }

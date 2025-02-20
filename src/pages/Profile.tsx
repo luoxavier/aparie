@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { getBorderClass } from "@/utils/level-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -148,7 +149,7 @@ export default function Profile() {
   const xpProgress = userStats ? (userStats.xp / userStats.next_level_xp) * 100 : 0;
 
   return (
-    <div className="container mx-auto py-4 px-4 max-w-7xl">
+    <PageContainer>
       <div className="flex flex-col space-y-6">
         <div className={`flex flex-col space-y-4 ${isMobile ? 'pt-11' : 'pt-5'}`}>
           <div className="flex items-start justify-between w-full">
@@ -258,6 +259,6 @@ export default function Profile() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PageContainer>
   );
 }

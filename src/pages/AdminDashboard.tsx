@@ -1,238 +1,124 @@
-
-import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { PageContainer } from "@/components/ui/page-container";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ReturnHomeButton } from "@/components/ReturnHomeButton";
-import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { toast } from "react-hot-toast";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const searchUsers = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_url')
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-        .limit(10);
-
-      if (error) throw error;
-      setSearchResults(data || []);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      toast({
-        title: "Error",
-        description: "Failed to search users",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const sendBroadcast = async () => {
-    if (!user?.id || !message.trim()) return;
-    
-    setLoading(true);
-    try {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id')
-        .neq('id', user.id);
-
-      if (profilesError) throw profilesError;
-
-      const notifications = profiles?.map(profile => ({
-        type: 'admin_update',
-        recipient_id: profile.id,
-        sender_id: user.id,
-        content: {
-          title,
-          message: message.trim()
+        if (error) {
+          console.error("Error fetching users:", error);
+          toast.error("Failed to load users.");
+        } else {
+          setUsers(data || []);
         }
-      }));
-
-      if (notifications?.length) {
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert(notifications);
-
-        if (notificationError) throw notificationError;
-
-        toast({
-          title: "Success",
-          description: "Message sent to all users",
-        });
-        
-        setTitle("");
-        setMessage("");
+      } catch (err) {
+        console.error("Unexpected error fetching users:", err);
+        toast.error("Failed to load users.");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const sendDirectMessage = async (recipientId: string) => {
-    if (!user?.id || !message.trim()) return;
-    
-    setLoading(true);
+    fetchUsers();
+  }, []);
+
+  const handlePromote = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('notifications')
-        .insert({
-          type: 'admin_message',
-          recipient_id: recipientId,
-          sender_id: user.id,
-          content: {
-            title,
-            message: message.trim()
-          }
-        });
+        .from("profiles")
+        .update({ is_admin: true })
+        .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error promoting user:", error);
+        toast.error("Failed to promote user.");
+      } else {
+        setUsers(users.map(user => user.id === id ? { ...user, is_admin: true } : user));
+        toast.success("User promoted to admin!");
+      }
+    } catch (err) {
+      console.error("Unexpected error promoting user:", err);
+      toast.error("Failed to promote user.");
+    }
+  };
 
-      toast({
-        title: "Success",
-        description: "Message sent successfully",
-      });
+  const handleDemote = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_admin: false })
+        .eq("id", id);
 
-      setTitle("");
-      setMessage("");
-      setSearchQuery("");
-      setSearchResults([]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      if (error) {
+        console.error("Error demoting user:", error);
+        toast.error("Failed to demote user.");
+      } else {
+        setUsers(users.map(user => user.id === id ? { ...user, is_admin: false } : user));
+        toast.success("User demoted from admin!");
+      }
+    } catch (err) {
+      console.error("Unexpected error demoting user:", err);
+      toast.error("Failed to demote user.");
     }
   };
 
   return (
-    <div className="container mx-auto py-4 px-4 max-w-7xl">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-      
-      <Tabs defaultValue="broadcast" className="w-full">
-        <TabsList className="w-full max-w-md">
-          <TabsTrigger value="broadcast" className="flex-1">Broadcast Message</TabsTrigger>
-          <TabsTrigger value="direct" className="flex-1">Direct Message</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="broadcast" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Send Message to All Users</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input
-                placeholder="Message Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <Textarea
-                placeholder="Enter your message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="min-h-[100px]"
-              />
-              <Button 
-                onClick={sendBroadcast}
-                disabled={loading || !message.trim()}
-              >
-                Send to All Users
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="direct" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Send Direct Message</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FriendSearchInput
-                value={searchQuery}
-                onChange={(value) => {
-                  setSearchQuery(value);
-                  searchUsers(value);
-                }}
-                placeholder="Search for a user..."
-              />
-              
-              {searchResults.length > 0 && (
-                <ScrollArea className="h-[200px] rounded-md border p-4">
-                  <div className="space-y-4">
-                    {searchResults.map((profile) => (
-                      <div key={profile.id} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <img
-                            src={profile.avatar_url}
-                            alt={profile.display_name}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <div>
-                            <p className="font-medium">{profile.display_name}</p>
-                            <p className="text-sm text-muted-foreground">@{profile.username}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          onClick={() => sendDirectMessage(profile.id)}
-                          disabled={!message.trim() || loading}
-                        >
-                          Send Message
+    <PageContainer>
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+        {isLoading ? (
+          <p>Loading users...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 border-b">ID</th>
+                  <th className="py-2 px-4 border-b">Email</th>
+                  <th className="py-2 px-4 border-b">Display Name</th>
+                  <th className="py-2 px-4 border-b">Username</th>
+                  <th className="py-2 px-4 border-b">Is Admin</th>
+                  <th className="py-2 px-4 border-b">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="py-2 px-4 border-b">{user.id}</td>
+                    <td className="py-2 px-4 border-b">{user.email}</td>
+                    <td className="py-2 px-4 border-b">{user.display_name}</td>
+                    <td className="py-2 px-4 border-b">{user.username}</td>
+                    <td className="py-2 px-4 border-b">{user.is_admin ? "Yes" : "No"}</td>
+                    <td className="py-2 px-4 border-b">
+                      {!user.is_admin ? (
+                        <Button onClick={() => handlePromote(user.id)} variant="secondary">
+                          Promote
                         </Button>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-
-              <Input
-                placeholder="Message Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <Textarea
-                placeholder="Enter your message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="min-h-[100px]"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <ReturnHomeButton />
-    </div>
+                      ) : (
+                        <Button onClick={() => handleDemote(user.id)} variant="destructive">
+                          Demote
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </PageContainer>
   );
 }

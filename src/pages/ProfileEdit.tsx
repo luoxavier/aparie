@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import { ArrowLeft, Edit, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function ProfileEdit() {
   const { user, signOut } = useAuth();
@@ -220,7 +220,7 @@ export default function ProfileEdit() {
   }
 
   return (
-    <div className="container mx-auto py-4 px-4 max-w-2xl">
+    <PageContainer>
       <div className="flex justify-between items-center mb-6">
         <Button 
           variant="ghost" 
@@ -291,6 +291,6 @@ export default function ProfileEdit() {
         </div>
       </div>
       <ReturnHomeButton />
-    </div>
+    </PageContainer>
   );
 }

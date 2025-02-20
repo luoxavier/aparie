@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { StudyControls } from "@/components/study/StudyControls";
 import { Home } from "lucide-react";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
+import { PageContainer } from "@/components/ui/page-container";
 
 interface Flashcard {
   id: string;
@@ -17,7 +18,7 @@ interface Flashcard {
 
 type StudyMode = "normal" | "infinite";
 
-export default function StudyFolder() {
+export default function StudyMode() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -91,83 +92,85 @@ export default function StudyFolder() {
   };
 
   return (
-    <div className="container max-w-md mx-auto py-8 px-4">
-      {/* Top bar with user info and sign out */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="text-lg font-medium">{user?.user_metadata?.username || user?.user_metadata?.display_name || user?.email?.split('@')[0]}</div>
-        <Button variant="outline" onClick={handleSignOut}>
-          Sign out
-        </Button>
-      </div>
-
-      {/* Folder title and creator */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">{folderName}</h1>
-        {creatorName && (
-          <p className="text-sm text-muted-foreground mt-1">Created by {creatorName}</p>
-        )}
-      </div>
-
-      {!mode ? (
-        <div className="space-y-4">
-          <Button 
-            className="w-full h-24 text-xl"
-            onClick={() => setMode("normal")}
-          >
-            Study Mode
-          </Button>
-          <Button 
-            className="w-full h-24 text-xl"
-            variant="secondary"
-            onClick={() => setMode("infinite")}
-          >
-            Infinite Mode
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/profile")}
-            className="w-full mt-4 flex items-center justify-center gap-2"
-          >
-            <Home className="h-4 w-4" />
-            Return Home
+    <PageContainer>
+      <div className="container max-w-md mx-auto py-8 px-4">
+        {/* Top bar with user info and sign out */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-lg font-medium">{user?.user_metadata?.username || user?.user_metadata?.display_name || user?.email?.split('@')[0]}</div>
+          <Button variant="outline" onClick={handleSignOut}>
+            Sign out
           </Button>
         </div>
-      ) : isComplete ? (
-        <ScoreDisplay
-          score={score}
-          totalCards={currentDeck.length}
-          mistakes={mistakes}
-          isReviewingMistakes={isReviewingMistakes}
-          onReviewMistakes={handleReviewMistakes}
-        />
-      ) : (
-        <>
-          <FlashcardDisplay
-            currentCard={currentDeck[currentCardIndex]}
-            deck={currentDeck}
-            isCorrect={isCorrect}
-            showAnswer={showAnswer}
-            onAnswer={handleAnswer}
-            onReviewMistakes={handleReviewMistakes}
-            streak={0}
-            mistakes={mistakes}
-          />
-          <StudyProgress
-            currentIndex={currentCardIndex}
+
+        {/* Folder title and creator */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold">{folderName}</h1>
+          {creatorName && (
+            <p className="text-sm text-muted-foreground mt-1">Created by {creatorName}</p>
+          )}
+        </div>
+
+        {!mode ? (
+          <div className="space-y-4">
+            <Button 
+              className="w-full h-24 text-xl"
+              onClick={() => setMode("normal")}
+            >
+              Study Mode
+            </Button>
+            <Button 
+              className="w-full h-24 text-xl"
+              variant="secondary"
+              onClick={() => setMode("infinite")}
+            >
+              Infinite Mode
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/profile")}
+              className="w-full mt-4 flex items-center justify-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Return Home
+            </Button>
+          </div>
+        ) : isComplete ? (
+          <ScoreDisplay
+            score={score}
             totalCards={currentDeck.length}
-            mode={mode}
-            infiniteCycles={infiniteCycles}
-            perfectCycles={perfectCycles}
-          />
-          <StudyControls
-            onExit={() => navigate("/profile")}
-            onReviewMistakes={handleReviewMistakes}
-            mistakesCount={mistakes.length}
+            mistakes={mistakes}
             isReviewingMistakes={isReviewingMistakes}
+            onReviewMistakes={handleReviewMistakes}
           />
-        </>
-      )}
-      <ReturnHomeButton />
-    </div>
+        ) : (
+          <>
+            <FlashcardDisplay
+              currentCard={currentDeck[currentCardIndex]}
+              deck={currentDeck}
+              isCorrect={isCorrect}
+              showAnswer={showAnswer}
+              onAnswer={handleAnswer}
+              onReviewMistakes={handleReviewMistakes}
+              streak={0}
+              mistakes={mistakes}
+            />
+            <StudyProgress
+              currentIndex={currentCardIndex}
+              totalCards={currentDeck.length}
+              mode={mode}
+              infiniteCycles={infiniteCycles}
+              perfectCycles={perfectCycles}
+            />
+            <StudyControls
+              onExit={() => navigate("/profile")}
+              onReviewMistakes={handleReviewMistakes}
+              mistakesCount={mistakes.length}
+              isReviewingMistakes={isReviewingMistakes}
+            />
+          </>
+        )}
+        <ReturnHomeButton />
+      </div>
+    </PageContainer>
   );
 }
