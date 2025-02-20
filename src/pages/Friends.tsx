@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
@@ -6,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FriendCard } from "@/components/profile/FriendCard";
 import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
-import { FriendRequestList } from "@/components/profile/FriendRequestList";
-import { EmptyFriendsState } from "@/components/profile/EmptyFriendsState";
 
 export default function Friends() {
   const { user } = useAuth();
@@ -19,18 +18,18 @@ export default function Friends() {
       if (!user) return [];
 
       const { data, error } = await supabase
-        .from('friends')
+        .from('friend_connections')
         .select(`
           id,
           status,
-          profiles!friends_user_id_fkey (
+          friend:friend_id (
             id,
             username,
             display_name,
             avatar_url
           )
         `)
-        .eq('friend_id', user.id);
+        .eq('user_id', user.id);
 
       if (error) {
         toast.error("Error loading friends");
@@ -40,7 +39,7 @@ export default function Friends() {
       return data.map(friend => ({
         id: friend.id,
         status: friend.status,
-        ...friend.profiles
+        ...friend.friend
       }));
     },
     enabled: !!user,
@@ -50,7 +49,7 @@ export default function Friends() {
 
   const filteredFriends = friends.filter(friend =>
     friend.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.username.toLowerCase().includes(searchTerm.toLowerCase())
+    friend.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
@@ -63,7 +62,7 @@ export default function Friends() {
         <div className="space-y-4">
           <FriendSearchInput
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
             placeholder="Search friends..."
           />
           <div className="animate-pulse">
@@ -79,23 +78,23 @@ export default function Friends() {
   return (
     <PageContainer>
       <div className="space-y-6">
-        <FriendRequestList />
         <FriendSearchInput
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={setSearchTerm}
           placeholder="Search friends..."
         />
 
         {filteredFriends.length === 0 ? (
-          <EmptyFriendsState searchTerm={searchTerm} />
+          <div className="text-center text-gray-500">
+            {searchTerm ? "No friends found matching your search" : "No friends yet"}
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredFriends.map((friend) => (
               <FriendCard
                 key={friend.id}
-                id={friend.id}
-                userId={friend.id}
-                username={friend.username}
+                friendId={friend.id}
+                username={friend.username || ""}
                 displayName={friend.display_name}
                 avatarUrl={friend.avatar_url}
                 status={friend.status}

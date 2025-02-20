@@ -1,28 +1,47 @@
+
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 
+interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string;
+  username: string;
+  is_admin?: boolean;
+}
+
 export default function AdminDashboard() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
+          .select("*");
 
-        if (error) {
-          console.error("Error fetching users:", error);
+        const { data: adminUsers, error: adminError } = await supabase
+          .from("admin_users")
+          .select("id");
+
+        if (profilesError || adminError) {
+          console.error("Error fetching users:", profilesError || adminError);
           toast.error("Failed to load users.");
-        } else {
-          setUsers(data || []);
+          return;
         }
+
+        const adminIds = new Set(adminUsers?.map(admin => admin.id));
+        const usersWithAdmin = profiles?.map(profile => ({
+          ...profile,
+          is_admin: adminIds.has(profile.id)
+        })) || [];
+
+        setUsers(usersWithAdmin);
       } catch (err) {
         console.error("Unexpected error fetching users:", err);
         toast.error("Failed to load users.");
@@ -37,9 +56,8 @@ export default function AdminDashboard() {
   const handlePromote = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("profiles")
-        .update({ is_admin: true })
-        .eq("id", id);
+        .from("admin_users")
+        .insert([{ id }]);
 
       if (error) {
         console.error("Error promoting user:", error);
@@ -57,8 +75,8 @@ export default function AdminDashboard() {
   const handleDemote = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("profiles")
-        .update({ is_admin: false })
+        .from("admin_users")
+        .delete()
         .eq("id", id);
 
       if (error) {
@@ -76,7 +94,7 @@ export default function AdminDashboard() {
 
   return (
     <PageContainer>
-      <div className="container mx-auto py-8">
+      <div className="py-8">
         <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
         {isLoading ? (
           <p>Loading users...</p>
@@ -86,7 +104,6 @@ export default function AdminDashboard() {
               <thead>
                 <tr className="bg-gray-100">
                   <th className="py-2 px-4 border-b">ID</th>
-                  <th className="py-2 px-4 border-b">Email</th>
                   <th className="py-2 px-4 border-b">Display Name</th>
                   <th className="py-2 px-4 border-b">Username</th>
                   <th className="py-2 px-4 border-b">Is Admin</th>
@@ -97,7 +114,6 @@ export default function AdminDashboard() {
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="py-2 px-4 border-b">{user.id}</td>
-                    <td className="py-2 px-4 border-b">{user.email}</td>
                     <td className="py-2 px-4 border-b">{user.display_name}</td>
                     <td className="py-2 px-4 border-b">{user.username}</td>
                     <td className="py-2 px-4 border-b">{user.is_admin ? "Yes" : "No"}</td>

@@ -1,3 +1,4 @@
+
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -12,8 +13,8 @@ interface LeaderboardEntry {
   user_id: string;
   display_name: string;
   username: string;
-  score: number;
-  avatar_url: string;
+  points: number;
+  avatar_url: string | null;
 }
 
 export default function Leaderboard() {
@@ -36,11 +37,11 @@ export default function Leaderboard() {
 
       try {
         const { data, error } = await supabase
-          .from('leaderboard')
+          .from('playlist_leaderboards')
           .select(`
             user_id,
-            score,
-            profiles (
+            points,
+            profiles:user_id (
               display_name,
               username,
               avatar_url
@@ -48,19 +49,19 @@ export default function Leaderboard() {
           `)
           .eq('creator_id', creatorId)
           .eq('playlist_name', playlistName)
-          .order('score', { ascending: false });
+          .order('points', { ascending: false });
 
         if (error) {
           throw error;
         }
 
         if (data) {
-          const formattedData = data.map(item => ({
+          const formattedData: LeaderboardEntry[] = data.map(item => ({
             user_id: item.user_id,
             display_name: item.profiles?.display_name || 'Unknown',
             username: item.profiles?.username || 'unknown',
-            score: item.score,
-            avatar_url: item.profiles?.avatar_url || null,
+            points: item.points || 0,
+            avatar_url: item.profiles?.avatar_url
           }));
           setLeaderboardData(formattedData);
         }
@@ -88,50 +89,48 @@ export default function Leaderboard() {
               <div className="text-center">No scores available for this playlist.</div>
             ) : (
               <ScrollArea className="rounded-md border">
-                <div className="overflow-auto">
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-secondary">
-                      <tr>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                          Rank
-                        </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                          User
-                        </th>
-                        <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-                          Score
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {leaderboardData.map((entry, index) => (
-                        <tr key={entry.user_id}>
-                          <td className="p-4 align-middle font-medium [&:has([role=checkbox])]:pr-0">
-                            {index + 1}
-                          </td>
-                          <td className="p-4 align-middle font-medium [&:has([role=checkbox])]:pr-0">
-                            <div className="flex items-center space-x-2">
-                              <Avatar>
-                                {entry.avatar_url ? (
-                                  <AvatarImage src={entry.avatar_url} alt={entry.display_name} />
-                                ) : (
-                                  <AvatarFallback>{entry.display_name?.charAt(0)}</AvatarFallback>
-                                )}
-                              </Avatar>
-                              <div>
-                                <p className="font-semibold">{entry.display_name}</p>
-                                <p className="text-sm text-muted-foreground">@{entry.username}</p>
-                              </div>
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-secondary">
+                    <tr>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                        Rank
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                        User
+                      </th>
+                      <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
+                        Points
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {leaderboardData.map((entry, index) => (
+                      <tr key={entry.user_id}>
+                        <td className="p-4 align-middle font-medium">
+                          {index + 1}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <div className="flex items-center space-x-2">
+                            <Avatar>
+                              {entry.avatar_url ? (
+                                <AvatarImage src={entry.avatar_url} alt={entry.display_name} />
+                              ) : (
+                                <AvatarFallback>{entry.display_name.charAt(0)}</AvatarFallback>
+                              )}
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold">{entry.display_name}</p>
+                              <p className="text-sm text-muted-foreground">@{entry.username}</p>
                             </div>
-                          </td>
-                          <td className="p-4 text-right align-middle font-medium [&:has([role=checkbox])]:pr-0">
-                            {entry.score}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          </div>
+                        </td>
+                        <td className="p-4 text-right align-middle font-medium">
+                          {entry.points}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </ScrollArea>
             )}
             <Button asChild variant="outline">
