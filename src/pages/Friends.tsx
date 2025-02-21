@@ -14,6 +14,7 @@ interface Friend {
   username: string | null;
   display_name: string;
   avatar_url: string | null;
+  bio?: string | null;
   created_at: string;
   updated_at: string;
   connection_id: string;
@@ -39,6 +40,7 @@ export default function Friends() {
             username,
             display_name,
             avatar_url,
+            bio,
             created_at,
             updated_at
           )
@@ -112,6 +114,7 @@ export default function Friends() {
                   username: friend.username || "",
                   display_name: friend.display_name,
                   avatar_url: friend.avatar_url,
+                  bio: friend.bio,
                   created_at: friend.created_at,
                   updated_at: friend.updated_at,
                   status: friend.status
