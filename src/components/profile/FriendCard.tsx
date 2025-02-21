@@ -28,51 +28,33 @@ interface FriendCardProps {
 export function FriendCard({ friend }: FriendCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userStats, setUserStats] = useState<{ level: number; current_streak: number } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUserStreak = async () => {
+    const fetchUserStats = async () => {
       try {
-        const { data: streakData, error } = await supabase
+        const { data, error } = await supabase
           .from('user_streaks')
-          .select('level')
+          .select('level, current_streak')
           .eq('user_id', friend.id)
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking user streak:', error);
+          console.error('Error fetching user stats:', error);
           return;
         }
 
-        if (!streakData) {
-          // Create a new streak record if one doesn't exist
-          const { error: createError } = await supabase
-            .from('user_streaks')
-            .insert([{
-              user_id: friend.id,
-              level: 1,
-              xp: 0,
-              next_level_xp: 100,
-              current_streak: 0,
-              highest_streak: 0
-            }]);
-
-          if (createError) {
-            console.error('Error creating user streak:', createError);
-            toast({
-              title: "Error",
-              description: "Failed to initialize user data",
-              variant: "destructive",
-            });
-          }
+        if (data) {
+          setUserStats(data);
         }
       } catch (err) {
-        console.error('Error in checkUserStreak:', err);
+        console.error('Error in fetchUserStats:', err);
       }
     };
 
     if (friend?.id) {
-      checkUserStreak();
+      fetchUserStats();
     }
   }, [friend?.id]);
 
@@ -111,11 +93,9 @@ export function FriendCard({ friend }: FriendCardProps) {
         </Avatar>
         <div className="flex-1">
           <p className="font-medium">{friend.display_name || friend.username}</p>
-          {friend.status && (
-            <p className="text-sm text-muted-foreground">
-              {friend.status}
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground">
+            {userStats ? `Level ${userStats.level} • ${userStats.current_streak} day streak` : 'Loading stats...'}
+          </p>
         </div>
         <DropdownMenu 
           open={isMenuOpen} 
