@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
 import { X } from "lucide-react";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 interface UserProfile {
   id: string;
@@ -199,6 +200,8 @@ export default function AdminDashboard() {
             </Button>
           </div>
         </div>
+
+        <ReturnHomeButton />
       </div>
     </PageContainer>
   );
