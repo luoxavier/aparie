@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
@@ -151,7 +152,7 @@ export default function Profile() {
   return (
     <PageContainer>
       <div className="flex flex-col space-y-6">
-        <div className={`flex flex-col space-y-4 ${isMobile ? 'pt-11' : 'pt-5'}`}>
+        <div className="flex flex-col space-y-4">
           <div className="flex items-start justify-between w-full">
             <div className="flex items-start gap-4">
               <div className={`relative rounded-full overflow-hidden ${getBorderClass(userStats?.level)}`}>
