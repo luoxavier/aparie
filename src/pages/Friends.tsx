@@ -13,6 +13,8 @@ interface Friend {
   username: string | null;
   display_name: string;
   avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
   connection_id: string;
   status: string;
 }
@@ -35,7 +37,9 @@ export default function Friends() {
             id,
             username,
             display_name,
-            avatar_url
+            avatar_url,
+            created_at,
+            updated_at
           )
         `)
         .eq('user_id', user.id);
@@ -107,6 +111,8 @@ export default function Friends() {
                   username: friend.username || "",
                   display_name: friend.display_name,
                   avatar_url: friend.avatar_url,
+                  created_at: friend.created_at,
+                  updated_at: friend.updated_at,
                   status: friend.status
                 }}
               />
