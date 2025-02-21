@@ -506,14 +506,20 @@ export type Database = {
       }
       user_streaks: {
         Row: {
+          best_leaderboard_rank: number | null
           created_at: string
           current_streak: number | null
           highest_streak: number | null
+          highest_study_minutes: number | null
           id: string
           last_activity_date: string | null
           level: number | null
           monthly_points: number | null
+          most_competitive_rank: number | null
+          most_competitive_total_players: number | null
           next_level_xp: number | null
+          perfect_playlists: number | null
+          total_playlists_created: number | null
           total_points: number | null
           updated_at: string
           user_id: string
@@ -521,14 +527,20 @@ export type Database = {
           xp: number | null
         }
         Insert: {
+          best_leaderboard_rank?: number | null
           created_at?: string
           current_streak?: number | null
           highest_streak?: number | null
+          highest_study_minutes?: number | null
           id?: string
           last_activity_date?: string | null
           level?: number | null
           monthly_points?: number | null
+          most_competitive_rank?: number | null
+          most_competitive_total_players?: number | null
           next_level_xp?: number | null
+          perfect_playlists?: number | null
+          total_playlists_created?: number | null
           total_points?: number | null
           updated_at?: string
           user_id: string
@@ -536,14 +548,20 @@ export type Database = {
           xp?: number | null
         }
         Update: {
+          best_leaderboard_rank?: number | null
           created_at?: string
           current_streak?: number | null
           highest_streak?: number | null
+          highest_study_minutes?: number | null
           id?: string
           last_activity_date?: string | null
           level?: number | null
           monthly_points?: number | null
+          most_competitive_rank?: number | null
+          most_competitive_total_players?: number | null
           next_level_xp?: number | null
+          perfect_playlists?: number | null
+          total_playlists_created?: number | null
           total_points?: number | null
           updated_at?: string
           user_id?: string
@@ -622,12 +640,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_leaderboard_rankings: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: undefined
+      }
       update_leaderboard_score: {
         Args: {
           user_id_param: string
           playlist_name_param: string
           creator_id_param: string
           score: number
+        }
+        Returns: undefined
+      }
+      update_perfect_playlist_count: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: undefined
+      }
+      update_total_playlists_created: {
+        Args: {
+          user_id_param: string
         }
         Returns: undefined
       }

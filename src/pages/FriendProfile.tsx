@@ -1,3 +1,4 @@
+
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FlashcardFolder } from "@/components/profile/FlashcardFolder";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreHorizontal, Trophy, Star, Calendar, Clock, BookOpen, Trophy as TrophyIcon } from "lucide-react";
+import { MoreHorizontal, Star, Calendar, BookOpen } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,7 +78,18 @@ export default function FriendProfile() {
         return;
       }
 
-      setStats(data);
+      // Ensure all values are numbers, defaulting to 0 if null
+      const processedStats: UserStats = {
+        perfect_playlists: data?.perfect_playlists ?? 0,
+        total_playlists_created: data?.total_playlists_created ?? 0,
+        current_streak: data?.current_streak ?? 0,
+        highest_study_minutes: data?.highest_study_minutes ?? 0,
+        best_leaderboard_rank: data?.best_leaderboard_rank ?? 0,
+        most_competitive_rank: data?.most_competitive_rank ?? 0,
+        most_competitive_total_players: data?.most_competitive_total_players ?? 0
+      };
+
+      setStats(processedStats);
     };
 
     fetchFriend();
