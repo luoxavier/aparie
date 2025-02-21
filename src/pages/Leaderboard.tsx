@@ -1,4 +1,3 @@
-
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -7,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -134,6 +134,7 @@ export default function Leaderboard() {
             <Button asChild variant="outline">
               <Link to="/study">Back to Study</Link>
             </Button>
+            <ReturnHomeButton />
           </>
         )}
       </div>

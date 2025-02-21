@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FriendCard } from "@/components/profile/FriendCard";
 import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 interface Friend {
   id: string;
@@ -119,6 +120,7 @@ export default function Friends() {
             ))}
           </div>
         )}
+        <ReturnHomeButton />
       </div>
     </PageContainer>
   );

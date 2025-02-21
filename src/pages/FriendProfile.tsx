@@ -1,4 +1,3 @@
-
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
+import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
 export default function FriendProfile() {
   const { id } = useParams();
@@ -51,7 +51,6 @@ export default function FriendProfile() {
 
       if (error) throw error;
 
-      // Group flashcards by playlist_name and creator_id
       const groupedFlashcards = data.reduce((acc: any, card) => {
         const key = `${card.creator_id}-${card.playlist_name}`;
         if (!acc[key]) {
@@ -208,6 +207,8 @@ export default function FriendProfile() {
             </ScrollArea>
           )}
         </div>
+
+        <ReturnHomeButton />
       </div>
     </PageContainer>
   );
