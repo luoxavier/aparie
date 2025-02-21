@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FlashcardFolder } from "@/components/profile/FlashcardFolder";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Trophy, Star, Calendar, Clock, BookOpen, Trophy as TrophyIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +19,70 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
+interface UserStats {
+  perfect_playlists: number;
+  total_playlists_created: number;
+  current_streak: number;
+  highest_study_minutes: number;
+  best_leaderboard_rank: number;
+  most_competitive_rank: number;
+  most_competitive_total_players: number;
+}
+
 export default function FriendProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [friend, setFriend] = useState(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+
+  useEffect(() => {
+    const fetchFriend = async () => {
+      if (!id) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching friend:", error);
+        toast.error("Failed to load friend's profile.");
+        return;
+      }
+
+      setFriend(data);
+    };
+
+    const fetchStats = async () => {
+      if (!id) return;
+
+      const { data, error } = await supabase
+        .from('user_streaks')
+        .select(`
+          perfect_playlists,
+          total_playlists_created,
+          current_streak,
+          highest_study_minutes,
+          best_leaderboard_rank,
+          most_competitive_rank,
+          most_competitive_total_players
+        `)
+        .eq('user_id', id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching stats:", error);
+        return;
+      }
+
+      setStats(data);
+    };
+
+    fetchFriend();
+    fetchStats();
+  }, [id]);
 
   const { data: flashcards = [], isLoading, error } = useQuery({
     queryKey: ['friendFlashcards', id],
@@ -72,28 +131,6 @@ export default function FriendProfile() {
     retry: 3,
   });
 
-  useEffect(() => {
-    const fetchFriend = async () => {
-      if (!id) return;
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching friend:", error);
-        toast.error("Failed to load friend's profile.");
-        return;
-      }
-
-      setFriend(data);
-    };
-
-    fetchFriend();
-  }, [id]);
-
   const handleRemoveFriend = async () => {
     if (!id || !user) return;
 
@@ -112,6 +149,14 @@ export default function FriendProfile() {
     toast.success("Friend removed successfully!");
     navigate('/friends');
   };
+
+  const renderStatCard = (title: string, value: string | number, icon: React.ReactNode) => (
+    <div className="flex flex-col items-center justify-center p-4 rounded-md border shadow-sm bg-card">
+      <div className="mb-2 text-muted-foreground">{icon}</div>
+      <span className="text-2xl font-bold">{value}</span>
+      <span className="text-sm text-muted-foreground text-center">{title}</span>
+    </div>
+  );
 
   return (
     <PageContainer>
@@ -154,23 +199,32 @@ export default function FriendProfile() {
           </div>
         </div>
 
-        <div className="rounded-md border">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            <div className="flex flex-col items-center justify-center p-4 rounded-md border shadow-sm">
-              <span className="text-2xl font-bold">{friend?.total_points || 0}</span>
-              <span className="text-sm text-muted-foreground">Total Points</span>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-4 rounded-md border shadow-sm">
-              <span className="text-2xl font-bold">{friend?.total_correct || 0}</span>
-              <span className="text-sm text-muted-foreground">Total Correct</span>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-4 rounded-md border shadow-sm">
-              <span className="text-2xl font-bold">{friend?.total_incorrect || 0}</span>
-              <span className="text-sm text-muted-foreground">Total Incorrect</span>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {stats ? (
+            <>
+              {renderStatCard(
+                "Perfect Playlists",
+                stats.perfect_playlists || 0,
+                <Star className="h-6 w-6" />
+              )}
+              {renderStatCard(
+                "Login Streak",
+                `${stats.current_streak || 0} days`,
+                <Calendar className="h-6 w-6" />
+              )}
+              {renderStatCard(
+                "Scholar",
+                `${stats.highest_study_minutes || 0} mins`,
+                <BookOpen className="h-6 w-6" />
+              )}
+            </>
+          ) : (
+            <>
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </>
+          )}
         </div>
 
         <div className="space-y-2">
