@@ -94,8 +94,8 @@ export function FriendCard({ friend }: FriendCardProps) {
         <div className="flex-1">
           <p className="font-medium">{friend.display_name || friend.username}</p>
           <p className="text-sm text-muted-foreground">
-            {friend.status ? 
-              friend.status : 
+            {friend.bio ? 
+              friend.bio : 
               userStats ? 
                 `Level ${userStats.level} • ${userStats.current_streak} day streak` : 
                 'Loading stats...'
