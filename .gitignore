@@ -44,3 +44,5 @@ yarn-error.log*
 # Ignore IDE/editor files
 .vscode/
 .idea/
+esbuild.config.js
+package.json.save
