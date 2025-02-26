@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useCallback } from "react";
 import { AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/services/auth";
@@ -19,49 +19,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const mountedRef = useRef(false);
+  const initializingRef = useRef(false);
 
-  useEffect(() => {
-    console.log('AuthProvider: Starting session initialization');
-    mountedRef.current = true;
+  const handleAuthStateChange = useCallback(async (event: AuthChangeEvent, currentSession: any) => {
+    console.log('Auth state changed:', event);
     
-    // Initialize session without setting loading state (it's already true by default)
-    initializeSession(mountedRef.current);
+    if (!mountedRef.current) return;
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
-      console.log('Auth state changed:', event, 'Session:', currentSession ? 'exists' : 'null');
-      
-      if (!mountedRef.current) return;
-
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        console.log('User signed in or token refreshed');
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (currentSession) {
         setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        setUser(currentSession.user);
         queryClient.invalidateQueries({ queryKey: ['profile'] });
-        // Only navigate if we're not already on the home page
         if (window.location.pathname !== '/') {
           navigate('/');
         }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
-        // Clear everything on sign out
-        setSession(null);
-        setUser(null);
-        queryClient.clear();
-        await supabase.auth.setSession(null); // Ensure local session is cleared
-        // Only navigate if we're not already on the login page
-        if (window.location.pathname !== '/login') {
-          navigate('/login');
-        }
       }
-    });
+    } else if (event === 'SIGNED_OUT') {
+      setSession(null);
+      setUser(null);
+      queryClient.clear();
+      if (window.location.pathname !== '/login') {
+        navigate('/login');
+      }
+    }
+  }, [navigate, queryClient, setUser, setSession]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    const initAuth = async () => {
+      if (initializingRef.current) return;
+      initializingRef.current = true;
+      
+      try {
+        await initializeSession(mountedRef.current);
+      } finally {
+        initializingRef.current = false;
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
-      console.log('AuthProvider: Cleaning up');
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [navigate, queryClient, setUser, setSession, setLoading, initializeSession]);
+  }, [handleAuthStateChange, initializeSession]);
 
   const signIn = async (identifier: string, password: string) => {
     try {
@@ -75,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     signOut,
-    updateStreak: async () => {}, // Simplified - streak updates will be handled separately
+    updateStreak: async () => {},
     signIn,
     signUp,
   };
@@ -83,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
       </div>
     );
   }
