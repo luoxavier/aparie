@@ -1,73 +1,99 @@
 
-import { createContext, useContext, useEffect, useRef, useCallback } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/services/auth";
 import { AuthContextType } from "@/types/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuthState } from "@/hooks/useAuthState";
-import { useAuthActions } from "@/hooks/useAuthActions";
-import { useSessionInit } from "@/hooks/useSessionInit";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, setUser, session, setSession, loading, setLoading } = useAuthState();
-  const { signOut, signUp } = useAuthActions();
-  const initializeSession = useSessionInit(setUser, setSession, setLoading);
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const mountedRef = useRef(false);
-  const initializingRef = useRef(false);
-
-  const handleAuthStateChange = useCallback(async (event: AuthChangeEvent, currentSession: any) => {
-    console.log('Auth state changed:', event);
-    
-    if (!mountedRef.current) return;
-
-    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-      if (currentSession) {
-        setSession(currentSession);
-        setUser(currentSession.user);
-        queryClient.invalidateQueries({ queryKey: ['profile'] });
-        if (window.location.pathname !== '/') {
-          navigate('/');
-        }
-      }
-    } else if (event === 'SIGNED_OUT') {
-      setSession(null);
-      setUser(null);
-      queryClient.clear();
-      if (window.location.pathname !== '/login') {
-        navigate('/login');
-      }
-    }
-  }, [navigate, queryClient, setUser, setSession]);
 
   useEffect(() => {
     mountedRef.current = true;
-    
-    const initAuth = async () => {
-      if (initializingRef.current) return;
-      initializingRef.current = true;
-      
+
+    // Single initial session check
+    const initSession = async () => {
       try {
-        await initializeSession(mountedRef.current);
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (currentSession && mountedRef.current) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          if (window.location.pathname === '/login') {
+            navigate('/');
+          }
+        }
+      } catch (error) {
+        console.error('Session init error:', error);
       } finally {
-        initializingRef.current = false;
+        if (mountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
-    initAuth();
+    initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, currentSession) => {
+        if (!mountedRef.current) return;
+
+        if (event === 'SIGNED_IN') {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          queryClient.invalidateQueries({ queryKey: ['profile'] });
+          if (window.location.pathname === '/login') {
+            navigate('/');
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          queryClient.clear();
+          if (window.location.pathname !== '/login') {
+            navigate('/login');
+          }
+        }
+      }
+    );
 
     return () => {
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [handleAuthStateChange, initializeSession]);
+  }, [navigate, queryClient]);
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const signUp = async (email: string, password: string, username: string, displayName: string, isTestAccount: boolean = false) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          display_name: displayName,
+          is_test_account: isTestAccount,
+        },
+      },
+    });
+
+    if (error) throw error;
+  };
 
   const signIn = async (identifier: string, password: string) => {
     try {
