@@ -14,6 +14,8 @@ export function FlashcardsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
 
+  console.log('AuthContext user:', user); // Debug auth state
+
   // Create a debounced function that updates the search term with 150ms delay
   const debouncedSearch = useMemo(
     () =>
@@ -35,7 +37,11 @@ export function FlashcardsList() {
   const { data: flashcards = [], isLoading, error } = useQuery({
     queryKey: ['flashcards', user?.id, debouncedTerm],
     queryFn: async () => {
-      if (!user) return [];
+      console.log('Starting flashcards query for user:', user?.id); // Debug query start
+      if (!user) {
+        console.log('No user found, returning empty array'); // Debug auth state
+        return [];
+      }
 
       let query = supabase
         .from('flashcards')
@@ -57,11 +63,18 @@ export function FlashcardsList() {
         .eq('is_public', false);
 
       if (debouncedTerm) {
+        console.log('Applying search term:', debouncedTerm); // Debug search
         query = query.ilike('playlist_name', `%${debouncedTerm}%`);
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Supabase query error:', error); // Debug query error
+        throw error;
+      }
+
+      console.log('Query successful, received data:', data?.length || 0, 'items'); // Debug successful query
 
       // Group flashcards by playlist_name and creator_id
       const groupedFlashcards = data.reduce((acc: any, card) => {
@@ -105,6 +118,7 @@ export function FlashcardsList() {
   }
 
   if (error) {
+    console.error('Rendering error state:', error); // Debug render error
     return (
       <div className="space-y-4">
         <FriendSearchInput
