@@ -15,8 +15,10 @@ export function useSessionInit(
     }
 
     try {
+      // Set loading state first
+      setLoading(true);
+      
       console.log('Fetching current session');
-      // First try to recover the session
       const { data: { session: currentSession }, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -30,6 +32,7 @@ export function useSessionInit(
         setUser(currentSession.user);
       } else {
         console.log('No session found, attempting to refresh token');
+        // Only try to refresh if no current session exists
         const { data: { session: refreshedSession }, error: refreshError } = 
           await supabase.auth.refreshSession();
         
