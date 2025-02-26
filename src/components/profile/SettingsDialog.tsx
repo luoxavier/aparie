@@ -17,12 +17,14 @@ export function SettingsDialog() {
     localStorage.getItem('vibrationEnabled') === 'true'
   );
 
-  // Prevent hydration mismatch
+  // Prevent hydration mismatch and initialize theme
   useEffect(() => {
     setMounted(true);
     // Get stored theme from localStorage or default to 'light'
     const storedTheme = localStorage.getItem('theme') || 'light';
     setTheme(storedTheme);
+    // Ensure the class is set on initial load
+    document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, [setTheme]);
 
   // Handle theme toggle
@@ -30,6 +32,7 @@ export function SettingsDialog() {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle("dark");
   };
 
   // Handle sound toggle
