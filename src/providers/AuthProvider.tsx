@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthProvider: Starting session initialization');
     mountedRef.current = true;
     
-    // Initialize session
+    // Initialize session without setting loading state (it's already true by default)
     initializeSession(mountedRef.current);
 
     // Set up auth state change listener
@@ -38,7 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         queryClient.invalidateQueries({ queryKey: ['profile'] });
-        navigate('/');
+        // Only navigate if we're not already on the home page
+        if (window.location.pathname !== '/') {
+          navigate('/');
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
         // Clear everything on sign out
@@ -46,7 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         queryClient.clear();
         await supabase.auth.setSession(null); // Ensure local session is cleared
-        navigate('/login');
+        // Only navigate if we're not already on the login page
+        if (window.location.pathname !== '/login') {
+          navigate('/login');
+        }
       }
     });
 
@@ -58,11 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [navigate, queryClient, setUser, setSession, setLoading, initializeSession]);
 
   const signIn = async (identifier: string, password: string) => {
-    setLoading(true);
     try {
       await signInWithIdentifier(identifier, password);
     } catch (error) {
-      setLoading(false);
       throw error;
     }
   };
