@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Settings } from "lucide-react";
@@ -22,7 +23,6 @@ export function SettingsDialog() {
     // Get stored theme from localStorage or default to 'light'
     const storedTheme = localStorage.getItem('theme') || 'light';
     setTheme(storedTheme);
-    document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, [setTheme]);
 
   // Handle theme toggle
@@ -30,7 +30,6 @@ export function SettingsDialog() {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle("dark");
   };
 
   // Handle sound toggle
@@ -43,9 +42,8 @@ export function SettingsDialog() {
   const handleVibrationToggle = (checked: boolean) => {
     setVibrationEnabled(checked);
     localStorage.setItem('vibrationEnabled', checked.toString());
-    if (checked) {
-      // Test vibration
-      navigator.vibrate?.(200);
+    if (checked && navigator.vibrate) {
+      navigator.vibrate(200);
     }
   };
 
@@ -75,6 +73,7 @@ export function SettingsDialog() {
               id="dark-mode"
               checked={theme === "dark"}
               onCheckedChange={handleThemeToggle}
+              aria-label="Toggle dark mode"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -83,6 +82,7 @@ export function SettingsDialog() {
               id="sound-enabled"
               checked={soundEnabled}
               onCheckedChange={handleSoundToggle}
+              aria-label="Toggle sound effects"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -91,6 +91,7 @@ export function SettingsDialog() {
               id="vibration-enabled"
               checked={vibrationEnabled}
               onCheckedChange={handleVibrationToggle}
+              aria-label="Toggle vibration"
             />
           </div>
         </div>
