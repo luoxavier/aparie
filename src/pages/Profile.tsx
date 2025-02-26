@@ -1,11 +1,10 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
 import { FavoriteFlashcards } from "@/components/profile/FavoriteFlashcards";
 import { PublicPlaylists } from "@/components/profile/PublicPlaylists";
 import { NotificationsDialog } from "@/components/profile/NotificationsDialog";
-import { SettingsDialog } from "@/components/profile/SettingsDialog";
+import { DarkModeToggle } from "@/components/profile/DarkModeToggle";
 import { QuestsDialog } from "@/components/profile/QuestsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateMultipleCards } from "@/components/CreateMultipleCards";
@@ -186,7 +185,7 @@ export default function Profile() {
             
             <div className="flex items-center gap-2">
               <NotificationsDialog />
-              <SettingsDialog />
+              <DarkModeToggle />
             </div>
           </div>
 
