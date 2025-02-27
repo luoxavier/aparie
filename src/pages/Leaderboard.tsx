@@ -1,3 +1,4 @@
+
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -84,7 +85,10 @@ export default function Leaderboard() {
         ) : (
           <>
             {leaderboardData.length === 0 ? (
-              <div className="text-center">No scores available for this playlist.</div>
+              <div className="text-center">
+                <p>No scores available for this playlist</p>
+                <p className="text-sm text-muted-foreground mt-1">Be the first!</p>
+              </div>
             ) : (
               <ScrollArea className="rounded-md border">
                 <table className="min-w-full divide-y divide-border">
@@ -132,7 +136,7 @@ export default function Leaderboard() {
               </ScrollArea>
             )}
             <Button asChild variant="outline">
-              <Link to="/study">Back to Study</Link>
+              <Link to={`/study-playlist/${creatorId}/${encodeURIComponent(playlistName || '')}`}>Study</Link>
             </Button>
             <ReturnHomeButton />
           </>
