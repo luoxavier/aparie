@@ -134,7 +134,7 @@ export function FavoriteFlashcards() {
             title={favorite.playlist_name}
             subtitle={favorite.creator.display_name}
             flashcards={favorite.flashcards}
-            showCreator={false}
+            showCreator={true}
             creatorId={favorite.creator_id}
             playlistName={favorite.playlist_name}
             onEditSuccess={handleEditSuccess}
