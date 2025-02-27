@@ -104,8 +104,9 @@ export function FlashcardFolder({
       className="p-4 hover:bg-accent/50 transition-colors cursor-pointer mb-3"
       onClick={handleFolderClick}
     >
-      <div className="folder-main-area flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="folder-main-area grid grid-cols-[auto_1fr_auto] gap-2">
+        {/* Favorite button */}
+        <div className="flex items-center">
           <FolderFavoriteButton
             isFavorited={isFavorited}
             onFavoriteClick={(e) => {
@@ -113,14 +114,19 @@ export function FlashcardFolder({
               toggleFavorite(e);
             }}
           />
+        </div>
+        
+        {/* Title and card count section */}
+        <div className="min-w-0">
           <FolderInfo
             title={title}
-            subtitle={subtitle}
+            subtitle={showCreator ? subtitle : undefined}
             cardsCount={flashcards.length}
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Actions section */}
+        <div className="flex items-center">
           <FolderActions
             isFavorited={isFavorited}
             onFavoriteClick={(e) => {

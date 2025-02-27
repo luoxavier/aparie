@@ -1,4 +1,6 @@
 
+import React from "react";
+
 interface FolderInfoProps {
   title: string;
   subtitle?: string;
@@ -7,17 +9,18 @@ interface FolderInfoProps {
 
 export function FolderInfo({ title, subtitle, cardsCount }: FolderInfoProps) {
   return (
-    <div>
-      <div className="flex items-baseline gap-2">
-        <h3 className="text-base font-medium">
-          {title} ({cardsCount})
-        </h3>
-        {subtitle && (
-          <span className="text-xs text-muted-foreground">
-            {subtitle.replace('Created by ', '')}
-          </span>
-        )}
+    <div className="flex flex-col overflow-hidden">
+      <div className="flex items-center">
+        <h3 className="text-base font-medium truncate">{title}</h3>
+        <span className="text-xs ml-2 text-muted-foreground whitespace-nowrap">
+          ({cardsCount} {cardsCount === 1 ? "card" : "cards"})
+        </span>
       </div>
+      {subtitle && (
+        <p className="text-xs text-muted-foreground truncate">
+          by {subtitle}
+        </p>
+      )}
     </div>
   );
 }
