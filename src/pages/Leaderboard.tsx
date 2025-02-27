@@ -1,11 +1,10 @@
 
 import { PageContainer } from "@/components/ui/page-container";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 
@@ -17,14 +16,24 @@ interface LeaderboardEntry {
   avatar_url: string | null;
 }
 
+interface Flashcard {
+  id: string;
+  front: string;
+  back: string;
+  creator_id: string;
+  playlist_name?: string;
+}
+
 export default function Leaderboard() {
   const { creatorId, playlistName } = useParams<{ creatorId: string; playlistName: string }>();
+  const navigate = useNavigate();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
 
@@ -35,7 +44,8 @@ export default function Leaderboard() {
       }
 
       try {
-        const { data, error } = await supabase
+        // Fetch leaderboard data
+        const { data: leaderboardResults, error: leaderboardError } = await supabase
           .from('playlist_leaderboards')
           .select(`
             user_id,
@@ -50,12 +60,23 @@ export default function Leaderboard() {
           .eq('playlist_name', playlistName)
           .order('points', { ascending: false });
 
-        if (error) {
-          throw error;
+        if (leaderboardError) {
+          throw leaderboardError;
         }
 
-        if (data) {
-          const formattedData: LeaderboardEntry[] = data.map(item => ({
+        // Fetch flashcards for this playlist
+        const { data: flashcardsData, error: flashcardsError } = await supabase
+          .from('flashcards')
+          .select('*')
+          .eq('creator_id', creatorId)
+          .eq('playlist_name', playlistName);
+
+        if (flashcardsError) {
+          throw flashcardsError;
+        }
+
+        if (leaderboardResults) {
+          const formattedData: LeaderboardEntry[] = leaderboardResults.map(item => ({
             user_id: item.user_id,
             display_name: item.profiles.display_name || 'Unknown',
             username: item.profiles.username || 'unknown',
@@ -64,15 +85,35 @@ export default function Leaderboard() {
           }));
           setLeaderboardData(formattedData);
         }
+
+        if (flashcardsData) {
+          setFlashcards(flashcardsData);
+        }
       } catch (err: any) {
-        setError(err.message || "Failed to load leaderboard");
+        setError(err.message || "Failed to load data");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchLeaderboard();
+    fetchData();
   }, [creatorId, playlistName]);
+
+  const handleStudyClick = () => {
+    // Get the creator's display name from the first flashcard
+    const creatorName = flashcards.length > 0 ? 
+      flashcards[0].creator_id === creatorId ? 'You' : 'Unknown Creator' : 
+      'Unknown Creator';
+      
+    // Navigate to the study page with state
+    navigate("/study", { 
+      state: { 
+        flashcards,
+        folderName: playlistName,
+        creatorName
+      } 
+    });
+  };
 
   return (
     <PageContainer>
@@ -135,8 +176,12 @@ export default function Leaderboard() {
                 </table>
               </ScrollArea>
             )}
-            <Button asChild variant="outline">
-              <Link to={`/study-playlist/${creatorId}/${encodeURIComponent(playlistName || '')}`}>Study</Link>
+            <Button 
+              variant="outline"
+              onClick={handleStudyClick}
+              disabled={flashcards.length === 0}
+            >
+              Study
             </Button>
             <ReturnHomeButton />
           </>
