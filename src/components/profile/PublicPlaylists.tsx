@@ -3,9 +3,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FlashcardFolder } from "./FlashcardFolder";
-import { Search } from "lucide-react";
-import debounce from "lodash/debounce";
 import { FriendSearchInput } from "./FriendSearchInput";
+import debounce from "lodash/debounce";
 
 interface PublicPlaylistsProps {
   creatorId?: string;
@@ -57,8 +56,10 @@ export function PublicPlaylists({ creatorId }: PublicPlaylistsProps) {
         query = query.eq('creator_id', creatorId);
       }
 
+      // Fix: Apply search term properly
       if (debouncedTerm) {
-        query = query.or(`playlist_name.ilike.*${debouncedTerm}*,profiles.display_name.ilike.*${debouncedTerm}*`);
+        // Use ilike for case-insensitive search on playlist_name
+        query = query.or(`playlist_name.ilike.%${debouncedTerm}%,creator.display_name.ilike.%${debouncedTerm}%`);
       }
 
       const { data, error } = await query;
