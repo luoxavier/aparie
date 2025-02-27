@@ -1,59 +1,57 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
 
 interface DeleteFolderDialogProps {
-  onDelete: () => Promise<void>;
+  onDelete: () => void;
 }
 
 export function DeleteFolderDialog({ onDelete }: DeleteFolderDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleDelete = async (e: React.MouseEvent) => {
-    try {
-      e.stopPropagation();
-      await onDelete();
-      setIsOpen(false);
-      console.log("Deletion successful, UI should refresh now.");
-    } catch (error) {
-      console.error("Error in handleDelete:", error);
-    }
-  };
-
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(false);
-  };
-
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
+        <Button 
+          variant="ghost" 
+          size="xs" 
+          className="h-7 w-7 p-0" 
+          title="Delete"
           onClick={(e) => e.stopPropagation()}
-          className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5 text-destructive" />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+      <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Playlist</AlertDialogTitle>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete this playlist and all its flashcards. This action cannot be undone.
+            This will permanently delete this playlist and all of its flashcards.
+            This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel}>
+          <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleDelete}
+          <AlertDialogAction
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Delete Permanently
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

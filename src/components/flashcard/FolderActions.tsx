@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Edit, Eye, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,6 +7,7 @@ import { usePlaylistDeletion } from "@/hooks/usePlaylistDeletion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FolderActionsProps {
   isFavorited: boolean;
@@ -32,6 +34,7 @@ export function FolderActions({
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { deletePlaylist } = usePlaylistDeletion();
 
@@ -88,34 +91,40 @@ export function FolderActions({
     }
   };
 
+  const buttonSize = "xs";
+  const buttonClass = "h-7 w-7 p-0";
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <Button
         variant="ghost"
-        size="sm"
+        size={buttonSize}
         onClick={handleExpandClick}
-        className="h-8"
+        className={buttonClass}
+        title="View cards"
       >
-        <Eye className="h-4 w-4" />
+        <Eye className="h-3.5 w-3.5" />
       </Button>
       {isPublic && (
         <Button
           variant="ghost"
-          size="sm"
+          size={buttonSize}
           onClick={handleLeaderboardClick}
-          className="h-8"
+          className={buttonClass}
+          title="Leaderboard"
         >
-          <Trophy className="h-4 w-4" />
+          <Trophy className="h-3.5 w-3.5" />
         </Button>
       )}
       {canModify && (
         <Button
           variant="ghost"
-          size="sm"
+          size={buttonSize}
           onClick={handleEditClick}
-          className="h-8"
+          className={buttonClass}
+          title="Edit"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-3.5 w-3.5" />
         </Button>
       )}
       {user?.id === creatorId && (
