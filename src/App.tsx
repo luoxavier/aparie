@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./AppRoutes";
 import { Footer } from "./components/ui/footer";
+import { FeedbackDialog } from "./components/profile/FeedbackDialog";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -55,6 +56,7 @@ function App() {
               <AppRoutes />
             </main>
             <Footer />
+            <FeedbackDialog />
           </div>
           <Toaster />
         </AuthProvider>

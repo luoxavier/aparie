@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlashcardsList } from "@/components/profile/FlashcardsList";
@@ -153,7 +154,7 @@ export default function Profile() {
       <div className="flex flex-col space-y-6">
         <div className="flex flex-col space-y-4">
           <div className="flex items-start justify-between w-full">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 mt-2">
               <div className={`relative rounded-full overflow-hidden ${getBorderClass(userStats?.level)}`}>
                 {profile?.avatar_url && (
                   <img
@@ -183,7 +184,7 @@ export default function Profile() {
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 -mt-1">
               <NotificationsDialog />
               <DarkModeToggle />
             </div>
