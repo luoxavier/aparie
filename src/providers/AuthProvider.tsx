@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const mountedRef = useRef(false);
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Session init error:', error);
+        setAuthError(error instanceof Error ? error : new Error('Unknown authentication error'));
       } finally {
         if (mountedRef.current) {
           setLoading(false);
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN') {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
+          setAuthError(null); // Clear any previous errors on successful sign-in
           queryClient.invalidateQueries({ queryKey: ['profile'] });
           if (window.location.pathname === '/login') {
             navigate('/');
@@ -76,36 +79,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
+      setAuthError(error instanceof Error ? error : new Error('Error signing out'));
     }
   };
 
   const signUp = async (email: string, password: string, username: string, displayName: string, isTestAccount: boolean = false) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-          display_name: displayName,
-          is_test_account: isTestAccount,
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            display_name: displayName,
+            is_test_account: isTestAccount,
+          },
         },
-      },
-    });
+      });
 
-    if (error) throw error;
+      if (error) {
+        setAuthError(error);
+        throw error;
+      }
+    } catch (error) {
+      setAuthError(error instanceof Error ? error : new Error('Error during sign up'));
+      throw error;
+    }
   };
 
   const signIn = async (identifier: string, password: string) => {
     try {
       await signInWithIdentifier(identifier, password);
+      setAuthError(null); // Clear any previous errors on successful sign-in
     } catch (error) {
+      setAuthError(error instanceof Error ? error : new Error('Error during sign in'));
       throw error;
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
+    authError,
     signOut,
     updateStreak: async () => {},
     signIn,
