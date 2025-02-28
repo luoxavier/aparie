@@ -38,6 +38,7 @@ export function PlaylistNotification({
           id,
           front,
           back,
+          creator_id,
           creator:profiles!flashcards_creator_id_fkey (
             display_name,
             username

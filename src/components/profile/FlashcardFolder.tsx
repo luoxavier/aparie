@@ -82,11 +82,15 @@ export function FlashcardFolder({
     }
     
     if (creatorId && playlistName) {
-      // Use encodeURIComponent on playlistName to ensure special characters are properly encoded
-      const encodedPlaylistName = encodeURIComponent(playlistName);
-      navigate(`/study-playlist/${creatorId}/${encodedPlaylistName}`, {
+      // Navigate directly to the Study component with the correct state
+      navigate(`/study`, {
         state: {
-          flashcards,
+          flashcards: flashcards.map(card => ({
+            id: card.id,
+            front: card.front,
+            back: card.back,
+            creator_id: card.creator_id
+          })),
           folderName: title,
           creatorName: subtitle || user?.email
         }
@@ -151,10 +155,15 @@ export function FlashcardFolder({
             onStudyClick={(e) => {
               e.stopPropagation();
               if (creatorId && playlistName) {
-                const encodedPlaylistName = encodeURIComponent(playlistName);
-                navigate(`/study-playlist/${creatorId}/${encodedPlaylistName}`, {
+                // Update Study button click to use the same navigation approach
+                navigate(`/study`, {
                   state: {
-                    flashcards,
+                    flashcards: flashcards.map(card => ({
+                      id: card.id,
+                      front: card.front,
+                      back: card.back,
+                      creator_id: card.creator_id
+                    })),
                     folderName: title,
                     creatorName: subtitle || user?.email
                   }
