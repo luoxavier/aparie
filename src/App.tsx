@@ -1,10 +1,11 @@
 
-import { useEffect } from "react";
-import AppRoutes from "./AppRoutes";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./AppRoutes";
 import { Footer } from "./components/ui/footer";
 
 // Create a client
@@ -46,17 +47,19 @@ function App() {
   }, [toast]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-1">
-            <AppRoutes />
-          </main>
-          <Footer />
-        </div>
-        <Toaster />
-      </AuthProvider>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-1">
+              <AppRoutes />
+            </main>
+            <Footer />
+          </div>
+          <Toaster />
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 }
 
