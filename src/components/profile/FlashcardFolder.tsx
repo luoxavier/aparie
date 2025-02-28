@@ -76,13 +76,28 @@ export function FlashcardFolder({
   }, [showCards]);
 
   const handleFolderClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.folder-main-area')) {
-      navigate(`/study-playlist/${creatorId}/${encodeURIComponent(playlistName || '')}`, {
+    // Make sure we're clicking on the folder itself and not a button
+    if ((e.target as HTMLElement).closest('.folder-actions')) {
+      return; // Don't navigate if clicking on action buttons
+    }
+    
+    if (creatorId && playlistName) {
+      // Use encodeURIComponent on playlistName to ensure special characters are properly encoded
+      const encodedPlaylistName = encodeURIComponent(playlistName);
+      navigate(`/study-playlist/${creatorId}/${encodedPlaylistName}`, {
         state: {
           flashcards,
           folderName: title,
           creatorName: subtitle || user?.email
         }
+      });
+    } else {
+      // Log error for debugging
+      console.error("Missing creatorId or playlistName", { creatorId, playlistName });
+      toast({
+        variant: "destructive",
+        title: "Navigation Error",
+        description: "Could not navigate to this playlist."
       });
     }
   };
@@ -126,7 +141,7 @@ export function FlashcardFolder({
         </div>
 
         {/* Actions section */}
-        <div className="flex items-center">
+        <div className="flex items-center folder-actions">
           <FolderActions
             isFavorited={isFavorited}
             onFavoriteClick={(e) => {
@@ -135,16 +150,25 @@ export function FlashcardFolder({
             }}
             onStudyClick={(e) => {
               e.stopPropagation();
-              navigate(`/study-playlist/${creatorId}/${encodeURIComponent(playlistName || '')}`, {
-                state: {
-                  flashcards,
-                  folderName: title,
-                  creatorName: subtitle || user?.email
-                }
-              });
+              if (creatorId && playlistName) {
+                const encodedPlaylistName = encodeURIComponent(playlistName);
+                navigate(`/study-playlist/${creatorId}/${encodedPlaylistName}`, {
+                  state: {
+                    flashcards,
+                    folderName: title,
+                    creatorName: subtitle || user?.email
+                  }
+                });
+              }
             }}
-            onEditClick={() => setIsDialogOpen(true)}
-            onExpandClick={() => setShowCards(!showCards)}
+            onEditClick={(e) => {
+              e.stopPropagation();
+              setIsDialogOpen(true);
+            }}
+            onExpandClick={(e) => {
+              e.stopPropagation();
+              setShowCards(!showCards);
+            }}
             creatorId={creatorId}
             playlistName={playlistName}
             isExpanded={showCards}

@@ -1,9 +1,11 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { StudyMode } from "@/components/profile/StudyMode";
 import { Home } from "lucide-react";
 import { PageContainer } from "@/components/ui/page-container";
+import { useToast } from "@/hooks/use-toast";
 
 interface Flashcard {
   id: string;
@@ -17,13 +19,33 @@ export default function Study() {
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
-  const { flashcards, folderName, creatorName } = location.state || { 
-    flashcards: [], 
-    folderName: "Untitled",
-    creatorName: "Unknown"
-  };
-
+  const { toast } = useToast();
+  
+  // Get data from location state if available
+  const stateFlashcards = location.state?.flashcards;
+  const stateFolderName = location.state?.folderName;
+  const stateCreatorName = location.state?.creatorName;
+  
+  // Use state or default values
+  const [flashcards, setFlashcards] = useState<Flashcard[]>(stateFlashcards || []);
+  const [folderName, setFolderName] = useState(stateFolderName || "Untitled");
+  const [creatorName, setCreatorName] = useState(stateCreatorName || "Unknown");
   const [selectedMode, setSelectedMode] = useState<"normal" | "infinite" | "mastery" | null>(null);
+
+  // If we don't have flashcards in state, we need to fetch them
+  useEffect(() => {
+    // Only run this if we don't have flashcards already and we have the necessary params
+    if (flashcards.length === 0 && params.creatorId && params.playlistName) {
+      console.log("Flashcards not found in state, fetching from server...");
+      // This is where you would fetch flashcards from your API
+      // For now, we'll just show an error
+      toast({
+        variant: "destructive",
+        title: "Error Loading Flashcards",
+        description: "Please try accessing this playlist from your dashboard.",
+      });
+    }
+  }, [params, flashcards.length]);
 
   const handleHomeClick = () => {
     navigate("/");
@@ -31,12 +53,17 @@ export default function Study() {
 
   if (!flashcards?.length) {
     return (
-      <div className="container max-w-md mx-auto py-8 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">No flashcards found</h1>
-          <Button onClick={handleHomeClick}>Return to Profile</Button>
+      <PageContainer>
+        <div className="container max-w-md mx-auto py-8 px-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">No flashcards found</h1>
+            <p className="text-gray-500 mb-6">
+              We couldn't find any flashcards for this playlist. This may happen if you accessed this page directly.
+            </p>
+            <Button onClick={handleHomeClick}>Return to Home</Button>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
