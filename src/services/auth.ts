@@ -4,10 +4,12 @@ import { toast } from "@/hooks/use-toast";
 
 export async function signInWithIdentifier(identifier: string, password: string) {
   try {
+    console.log('signInWithIdentifier called with identifier:', identifier);
     let email = identifier;
     
     // Only lookup email if the identifier is not already an email
     if (!identifier.includes('@')) {
+      console.log('Looking up email from identifier');
       // Get the email using our database function
       const { data: emailData, error: emailError } = await supabase
         .rpc('get_user_email_from_identifier', { identifier });
@@ -23,6 +25,7 @@ export async function signInWithIdentifier(identifier: string, password: string)
       }
 
       if (!emailData) {
+        console.error('No email found for identifier:', identifier);
         toast({
           variant: "destructive",
           title: "Error signing in",
@@ -32,10 +35,10 @@ export async function signInWithIdentifier(identifier: string, password: string)
       }
 
       email = emailData;
+      console.log('Email found for identifier');
     }
 
-    // Removed debug log that was exposing email addresses
-
+    console.log('Attempting to sign in with email');
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -67,6 +70,7 @@ export async function signInWithIdentifier(identifier: string, password: string)
       throw error;
     }
 
+    console.log('Sign in successful');
     // Success! The AuthProvider will handle the session update
   } catch (error) {
     console.error('Error in signInWithIdentifier:', error);
@@ -82,6 +86,7 @@ export async function signUpWithEmail(
   isTestAccount: boolean = false
 ) {
   try {
+    console.log('signUpWithEmail called');
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -95,6 +100,7 @@ export async function signUpWithEmail(
     });
 
     if (error) {
+      console.error('Error signing up:', error);
       if (error.message.includes('User already registered')) {
         toast({
           variant: "destructive",
@@ -110,6 +116,7 @@ export async function signUpWithEmail(
       }
       throw error;
     }
+    console.log('Sign up successful');
   } catch (error) {
     console.error('Error signing up:', error);
     throw error;
@@ -118,10 +125,12 @@ export async function signUpWithEmail(
 
 export async function signOut() {
   try {
+    console.log('signOut called');
     // First check if we have a session
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
+      console.log('No session found, clearing local state');
       // If there's no session, just clear the local state
       await supabase.auth.setSession(null);
       toast({
@@ -135,8 +144,10 @@ export async function signOut() {
     const { error } = await supabase.auth.signOut();
     
     if (error) {
+      console.error('Error during signout:', error);
       // If it's a session_not_found error, we can ignore it and just clear the local state
       if (error.message.includes('session_not_found')) {
+        console.log('Session not found error, clearing local state');
         await supabase.auth.setSession(null);
         toast({
           title: "Signed out successfully",
@@ -146,7 +157,6 @@ export async function signOut() {
       }
       
       // For other errors, show a toast but still try to clear the local session
-      console.error('Error during signout:', error);
       toast({
         variant: "destructive",
         title: "Error signing out",
@@ -156,6 +166,7 @@ export async function signOut() {
       return;
     }
 
+    console.log('Signout successful');
     // If everything went well, show success message
     toast({
       title: "Signed out successfully",
