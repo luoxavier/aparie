@@ -14,10 +14,32 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import PrivateRoute from "./components/PrivateRoute";
 import ProfileEdit from "./pages/ProfileEdit";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { Button } from "./components/ui/button";
+import { Card } from "./components/ui/card";
+
+// Simple fallback component to show when auth errors occur
+const AuthErrorFallback = () => (
+  <div className="min-h-screen flex items-center justify-center p-4">
+    <Card className="w-full max-w-md p-6">
+      <h2 className="text-2xl font-bold mb-4">Authentication Error</h2>
+      <p className="mb-6">
+        We're having trouble with the authentication system. Please try again or contact support if the issue persists.
+      </p>
+      <div className="flex gap-4">
+        <Button onClick={() => window.location.href = "/login"} variant="default" className="w-full">
+          Go to Login
+        </Button>
+        <Button onClick={() => window.location.reload()} variant="outline" className="w-full">
+          Refresh Page
+        </Button>
+      </div>
+    </Card>
+  </div>
+);
 
 export default function AppRoutes() {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary fallback={<AuthErrorFallback />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
