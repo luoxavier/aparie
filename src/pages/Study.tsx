@@ -11,7 +11,7 @@ interface Flashcard {
   id: string;
   front: string;
   back: string;
-  creator_id?: string;
+  creator_id: string; // Changed from optional to required
   playlist_name?: string;
 }
 
@@ -45,7 +45,7 @@ export default function Study() {
         description: "Please try accessing this playlist from your dashboard.",
       });
     }
-  }, [params, flashcards.length]);
+  }, [params, flashcards.length, toast]);
 
   const handleHomeClick = () => {
     navigate("/");
