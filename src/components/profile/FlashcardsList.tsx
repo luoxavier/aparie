@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,7 +114,7 @@ export function FlashcardsList() {
     enabled: !!user,
     staleTime: 1000 * 60,
     retry: 3,
-    keepPreviousData: true,
+    gcTime: 1000 * 60 * 5, // Keep cache for 5 minutes
   });
 
   useEffect(() => {
