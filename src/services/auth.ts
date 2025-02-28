@@ -34,7 +34,7 @@ export async function signInWithIdentifier(identifier: string, password: string)
       email = emailData;
     }
 
-    console.log('Attempting login with email:', email); // Debug log
+    // Removed debug log that was exposing email addresses
 
     const { error } = await supabase.auth.signInWithPassword({
       email,

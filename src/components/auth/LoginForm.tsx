@@ -19,22 +19,33 @@ export function LoginForm() {
     e.preventDefault();
     if (loading) return; // Prevent multiple submissions
     
+    // Basic input validation
+    if (!identifier.trim()) {
+      setError("Email or username is required");
+      return;
+    }
+
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+    
     setLoading(true);
     setError(null); // Clear any previous errors
 
     try {
-      await signIn(identifier, password);
+      await signIn(identifier.trim(), password);
       // Success toast and navigation are handled by the AuthProvider
     } catch (error: any) {
       console.error("Error signing in:", error);
       setPassword(""); // Clear password on error for security
       
       // Show error message in the form
-      if (error.message.includes("Invalid login credentials")) {
+      if (error.message?.includes("Invalid login credentials")) {
         setError("Invalid email/username or password");
-      } else if (error.message.includes("User not found")) {
+      } else if (error.message?.includes("User not found")) {
         setError("User not found. Please check your email/username");
-      } else if (error.message.includes("Email not confirmed")) {
+      } else if (error.message?.includes("Email not confirmed")) {
         setError("Please verify your email before signing in");
       } else {
         setError("An error occurred while signing in. Please try again.");
@@ -44,7 +55,7 @@ export function LoginForm() {
       toast({
         variant: "destructive",
         title: "Error signing in",
-        description: error.message,
+        description: error.message || "Authentication failed",
       });
     } finally {
       setLoading(false);
