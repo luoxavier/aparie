@@ -1,5 +1,4 @@
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,40 +7,50 @@ import { EmptyFlashcardsState } from "./EmptyFlashcardsState";
 import { FriendSearchInput } from "./FriendSearchInput";
 import { useMemo } from "react";
 import debounce from "lodash/debounce";
+import { Button } from "@/components/ui/button";
+
+const PLAYLISTS_PER_PAGE = 5;
 
 export function FlashcardsList() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [allPlaylists, setAllPlaylists] = useState<any[]>([]);
 
   console.log('AuthContext user:', user); // Debug auth state
 
-  // Create a debounced function that updates the search term with 150ms delay
   const debouncedSearch = useMemo(
     () =>
       debounce((value: string) => {
         setDebouncedTerm(value);
+        setPage(0);
+        setAllPlaylists([]);
+        setHasMore(true);
       }, 150),
     []
   );
 
-  // Handle input change
   const handleSearchChange = useCallback(
     (value: string) => {
-      setSearchTerm(value); // Update the input value immediately
-      debouncedSearch(value); // Debounce the actual search
+      setSearchTerm(value);
+      debouncedSearch(value);
     },
     [debouncedSearch]
   );
 
-  const { data: flashcards = [], isLoading, error } = useQuery({
-    queryKey: ['flashcards', user?.id, debouncedTerm],
+  const { data: paginatedFlashcards = [], isLoading, error, isFetching } = useQuery({
+    queryKey: ['flashcards', user?.id, debouncedTerm, page],
     queryFn: async () => {
-      console.log('Starting flashcards query for user:', user?.id); // Debug query start
+      console.log(`Fetching page ${page} for user:`, user?.id);
       if (!user) {
-        console.log('No user found, returning empty array'); // Debug auth state
+        console.log('No user found, returning empty array');
         return [];
       }
+
+      const from = page * PLAYLISTS_PER_PAGE;
+      const to = from + PLAYLISTS_PER_PAGE - 1;
 
       let query = supabase
         .from('flashcards')
@@ -63,20 +72,26 @@ export function FlashcardsList() {
         .eq('is_public', false);
 
       if (debouncedTerm) {
-        console.log('Applying search term:', debouncedTerm); // Debug search
+        console.log('Applying search term:', debouncedTerm);
         query = query.ilike('playlist_name', `%${debouncedTerm}%`);
       }
 
-      const { data, error } = await query;
+      query = query.order('playlist_name');
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
       
       if (error) {
-        console.error('Supabase query error:', error); // Debug query error
+        console.error('Supabase query error:', error);
         throw error;
       }
 
-      console.log('Query successful, received data:', data?.length || 0, 'items'); // Debug successful query
+      console.log('Query successful, received data:', data?.length || 0, 'items');
 
-      // Group flashcards by playlist_name and creator_id
+      if (data.length < PLAYLISTS_PER_PAGE) {
+        setHasMore(false);
+      }
+
       const groupedFlashcards = data.reduce((acc: any, card) => {
         const key = `${card.creator_id}-${card.playlist_name}`;
         if (!acc[key]) {
@@ -98,9 +113,29 @@ export function FlashcardsList() {
     enabled: !!user,
     staleTime: 1000 * 60,
     retry: 3,
+    keepPreviousData: true,
   });
 
-  if (isLoading) {
+  useEffect(() => {
+    if (paginatedFlashcards?.length > 0) {
+      if (page === 0) {
+        setAllPlaylists(paginatedFlashcards);
+      } else {
+        setAllPlaylists(prev => [...prev, ...paginatedFlashcards]);
+      }
+    } else if (page === 0 && paginatedFlashcards?.length === 0) {
+      setAllPlaylists([]);
+      setHasMore(false);
+    }
+  }, [paginatedFlashcards, page]);
+
+  const loadMore = () => {
+    if (!isFetching && hasMore) {
+      setPage(prevPage => prevPage + 1);
+    }
+  };
+
+  if (isLoading && page === 0) {
     return (
       <div className="space-y-4">
         <FriendSearchInput
@@ -118,7 +153,7 @@ export function FlashcardsList() {
   }
 
   if (error) {
-    console.error('Rendering error state:', error); // Debug render error
+    console.error('Rendering error state:', error);
     return (
       <div className="space-y-4">
         <FriendSearchInput
@@ -133,7 +168,7 @@ export function FlashcardsList() {
     );
   }
 
-  if (!flashcards.length && !debouncedTerm) {
+  if (!allPlaylists.length && !debouncedTerm) {
     return <EmptyFlashcardsState />;
   }
 
@@ -146,23 +181,44 @@ export function FlashcardsList() {
       />
 
       <div className="space-y-4">
-        {flashcards.length === 0 ? (
+        {allPlaylists.length === 0 ? (
           <div className="text-center text-muted-foreground">
             {debouncedTerm ? "No playlists found" : "No playlists available"}
           </div>
         ) : (
-          flashcards.map((playlist: any) => (
-            <FlashcardFolder
-              key={`${playlist.creatorId}-${playlist.playlistName}`}
-              title={playlist.playlistName}
-              subtitle={`Created by ${playlist.creator.display_name}`}
-              flashcards={playlist.flashcards}
-              showCreator={true}
-              creatorId={playlist.creatorId}
-              playlistName={playlist.playlistName}
-              recipientCanModify={playlist.recipientCanModify && playlist.isRecipient}
-            />
-          ))
+          <>
+            {allPlaylists.map((playlist: any) => (
+              <FlashcardFolder
+                key={`${playlist.creatorId}-${playlist.playlistName}`}
+                title={playlist.playlistName}
+                subtitle={`Created by ${playlist.creator.display_name}`}
+                flashcards={playlist.flashcards}
+                showCreator={true}
+                creatorId={playlist.creatorId}
+                playlistName={playlist.playlistName}
+                recipientCanModify={playlist.recipientCanModify && playlist.isRecipient}
+              />
+            ))}
+            
+            {hasMore && (
+              <div className="flex justify-center mt-4">
+                <Button 
+                  onClick={loadMore} 
+                  disabled={isFetching}
+                  variant="outline"
+                  className="w-full max-w-xs"
+                >
+                  {isFetching ? "Loading..." : "Load More Playlists"}
+                </Button>
+              </div>
+            )}
+            
+            {isFetching && page > 0 && (
+              <div className="animate-pulse mt-4">
+                <div className="h-32 bg-gray-200 rounded-lg mb-4" />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
