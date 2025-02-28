@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Flashcard } from "@/components/Flashcard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,147 +36,77 @@ export function StudySession({
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [totalAnswers, setTotalAnswers] = useState(0);
   const [highestStreak, setHighestStreak] = useState(0);
+  
+  // Use refs to prevent unnecessary re-renders and updates
+  const questsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastQuestUpdateTimeRef = useRef<number>(0);
+
+  // Debounced quest progress updates to reduce database calls
+  const updateQuestProgress = () => {
+    // Only update quests every 60 seconds at most
+    const currentTime = Date.now();
+    if (currentTime - lastQuestUpdateTimeRef.current < 60000) {
+      return;
+    }
+    
+    lastQuestUpdateTimeRef.current = currentTime;
+    
+    if (questsUpdateTimeoutRef.current) {
+      clearTimeout(questsUpdateTimeoutRef.current);
+    }
+    
+    questsUpdateTimeoutRef.current = setTimeout(async () => {
+      if (!user) return;
+      
+      try {
+        // Update study time quest progress
+        const currentTime = Date.now();
+        if (currentTime - lastActivityTime > 15000) {
+          return;
+        }
+
+        const elapsedMinutes = Math.floor((currentTime - studyStartTime) / 60000);
+        
+        // Use a single RPC call to update quest progress
+        await supabase.rpc('update_study_quests', {
+          user_id_param: user.id,
+          minutes_studied: elapsedMinutes,
+          accuracy_percent: totalAnswers > 0 ? Math.floor((correctAnswers / totalAnswers) * 100) : 0,
+          streak_count: Math.max(highestStreak, streak)
+        });
+        
+        // Clear the timeout
+        questsUpdateTimeoutRef.current = null;
+      } catch (error) {
+        console.error('Error updating quest progress:', error);
+      }
+    }, 1000);
+  };
 
   // Update study time quest progress
   useEffect(() => {
     if (!user) return;
-
-    const updateStudyTime = async () => {
-      const currentTime = Date.now();
-      if (currentTime - lastActivityTime > 15000) {
-        return;
-      }
-
-      const elapsedMinutes = Math.floor((currentTime - studyStartTime) / 60000);
-      
-      const { data: timeQuests } = await supabase
-        .from('user_quests')
-        .select('*, quests(*)')
-        .eq('user_id', user.id)
-        .gte('expires_at', new Date().toISOString());
-
-      if (timeQuests && timeQuests.length > 0) {
-        const infiniteQuests = timeQuests.filter(q => 
-          q.quests?.type === 'infinite'
-        );
-
-        for (const quest of infiniteQuests) {
-          if (!quest.completed && quest.quests) {
-            const newProgress = Math.min(elapsedMinutes, quest.quests.requirement_count);
-            
-            if (newProgress > quest.progress) {
-              const { data: updatedQuest } = await supabase
-                .from('user_quests')
-                .update({ 
-                  progress: newProgress,
-                  completed: newProgress >= quest.quests.requirement_count,
-                  completed_at: newProgress >= quest.quests.requirement_count ? new Date().toISOString() : null
-                })
-                .eq('id', quest.id)
-                .select()
-                .single();
-
-              if (updatedQuest?.completed) {
-                playSound('complete');
-                toast({
-                  title: "Quest Completed! 🎉",
-                  description: `You've earned ${quest.quests.xp_reward} XP!`,
-                });
-              }
-            }
-          }
-        }
+    
+    const studyTimeInterval = setInterval(() => {
+      updateQuestProgress();
+    }, 60000); // Check and possibly update every minute
+    
+    return () => {
+      clearInterval(studyTimeInterval);
+      if (questsUpdateTimeoutRef.current) {
+        clearTimeout(questsUpdateTimeoutRef.current);
       }
     };
+  }, [user, lastActivityTime]);
 
-    const timer = setInterval(updateStudyTime, 60000);
-    return () => clearInterval(timer);
-  }, [user, studyStartTime, lastActivityTime]);
-
-  // Update accuracy and streak quest progress
+  // Cleanup on unmount
   useEffect(() => {
-    const updateProgress = async () => {
-      if (!user) return;
-
-      const { data: quests } = await supabase
-        .from('user_quests')
-        .select('*, quests(*)')
-        .eq('user_id', user.id)
-        .gte('expires_at', new Date().toISOString());
-
-      if (quests) {
-        // Handle accuracy quests
-        if (totalAnswers > 0) {
-          const accuracy = Math.floor((correctAnswers / totalAnswers) * 100);
-          const accuracyQuests = quests.filter(q => 
-            q.quests?.type.includes('playlist_')
-          );
-
-          for (const quest of accuracyQuests) {
-            if (!quest.completed && quest.quests && accuracy >= quest.quests.requirement_count) {
-              const { data: updatedQuest } = await supabase
-                .from('user_quests')
-                .update({ 
-                  progress: accuracy,
-                  completed: true,
-                  completed_at: new Date().toISOString()
-                })
-                .eq('id', quest.id)
-                .select()
-                .single();
-
-              if (updatedQuest?.completed) {
-                playSound('complete');
-                toast({
-                  title: "Quest Completed! 🎉",
-                  description: `You've achieved ${accuracy}% accuracy and earned ${quest.quests.xp_reward} XP!`,
-                });
-              }
-            } else if (quest.quests && accuracy > quest.progress) {
-              await supabase
-                .from('user_quests')
-                .update({ progress: accuracy })
-                .eq('id', quest.id);
-            }
-          }
-        }
-
-        // Handle mastery/streak quests
-        const streakQuests = quests.filter(q => 
-          q.quests?.type === 'mastery'
-        );
-
-        for (const quest of streakQuests) {
-          if (!quest.completed && quest.quests) {
-            const newProgress = Math.max(highestStreak, streak); // Use the higher of current streak or highest achieved
-            
-            if (newProgress > quest.progress) {
-              const { data: updatedQuest } = await supabase
-                .from('user_quests')
-                .update({ 
-                  progress: newProgress,
-                  completed: newProgress >= quest.quests.requirement_count,
-                  completed_at: newProgress >= quest.quests.requirement_count ? new Date().toISOString() : null
-                })
-                .eq('id', quest.id)
-                .select()
-                .single();
-
-              if (updatedQuest?.completed) {
-                playSound('complete');
-                toast({
-                  title: "Perfect Streak Quest Completed! 🎯",
-                  description: `You've achieved a ${newProgress} card streak and earned ${quest.quests.xp_reward} XP!`,
-                });
-              }
-            }
-          }
-        }
+    return () => {
+      if (questsUpdateTimeoutRef.current) {
+        clearTimeout(questsUpdateTimeoutRef.current);
       }
     };
-
-    updateProgress();
-  }, [correctAnswers, totalAnswers, streak, highestStreak, user]);
+  }, []);
 
   const handleAnswer = async (isCorrect: boolean) => {
     setLastActivityTime(Date.now());
@@ -191,6 +121,11 @@ export function StudySession({
     }
     
     onResult(isCorrect);
+    
+    // Trigger an update after significant progress (but not every answer)
+    if (totalAnswers % 5 === 0) {
+      updateQuestProgress();
+    }
   };
 
   const getOtherAnswers = (currentCard: FlashcardType) => {

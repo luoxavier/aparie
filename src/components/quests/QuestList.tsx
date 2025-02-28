@@ -1,7 +1,8 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QuestProgress } from "./QuestProgress";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Quest {
@@ -22,9 +23,11 @@ interface UserQuest {
 
 export function QuestList() {
   const { user } = useAuth();
+  const [manuallyRefetch, setManuallyRefetch] = useState(false);
+  const lastFetchTimeRef = useRef<number>(Date.now());
 
-  // Fetch quests data
-  const { data: quests, refetch: refetchQuests } = useQuery({
+  // Fetch quests data - cache for 5 minutes
+  const { data: quests } = useQuery({
     queryKey: ['quests'],
     queryFn: async () => {
       console.log('Fetching quests');
@@ -36,13 +39,17 @@ export function QuestList() {
       if (error) throw error;
       return data as Quest[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Fetch user quests with more frequent updates
+  // Fetch user quests with less frequent updates
   const { data: userQuests, refetch: refetchUserQuests } = useQuery({
-    queryKey: ['user-quests', user?.id],
+    queryKey: ['user-quests', user?.id, manuallyRefetch],
     queryFn: async () => {
       console.log('Fetching user quests for:', user?.id);
+      lastFetchTimeRef.current = Date.now();
+      
       const { data, error } = await supabase
         .from('user_quests')
         .select('*')
@@ -53,10 +60,11 @@ export function QuestList() {
       return data as UserQuest[];
     },
     enabled: !!user && !!quests,
-    refetchInterval: 2000, // Update every 2 seconds for more responsive progress
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 2 * 60 * 1000, // Only auto-refresh every 2 minutes
   });
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates but throttle to avoid excessive refreshes
   useEffect(() => {
     if (!user) return;
 
@@ -70,8 +78,12 @@ export function QuestList() {
           table: 'user_quests',
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
-          refetchUserQuests();
+        (payload) => {
+          // Only refetch if it's been at least 15 seconds since the last fetch
+          const now = Date.now();
+          if (now - lastFetchTimeRef.current > 15000) {
+            setManuallyRefetch(prev => !prev); // Toggle to trigger refetch
+          }
         }
       )
       .subscribe();
@@ -79,24 +91,38 @@ export function QuestList() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refetchUserQuests]);
+  }, [user]);
 
-  // Assign daily quests if none exist
+  // Assign daily quests if none exist, but don't spam the assignment
+  const assignQuestsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const assignDailyQuests = async () => {
     if (!user?.id) return;
     
-    await supabase.rpc('assign_daily_quests', { 
-      user_id_param: user.id 
-    });
+    if (assignQuestsTimeoutRef.current) {
+      clearTimeout(assignQuestsTimeoutRef.current);
+    }
     
-    refetchUserQuests();
+    assignQuestsTimeoutRef.current = setTimeout(async () => {
+      await supabase.rpc('assign_daily_quests', { 
+        user_id_param: user.id 
+      });
+      
+      refetchUserQuests();
+      assignQuestsTimeoutRef.current = null;
+    }, 1000);
   };
 
-  // Check and assign quests if needed
+  // Check and assign quests only once
   useEffect(() => {
     if (user && (!userQuests || userQuests.length === 0)) {
       assignDailyQuests();
     }
+    
+    return () => {
+      if (assignQuestsTimeoutRef.current) {
+        clearTimeout(assignQuestsTimeoutRef.current);
+      }
+    };
   }, [user, userQuests]);
 
   if (!quests || !userQuests) {

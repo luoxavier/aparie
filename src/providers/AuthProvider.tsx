@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { AuthChangeEvent } from "@supabase/supabase-js";
+import { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/services/auth";
 import { AuthContextType } from "@/types/auth";
@@ -10,13 +10,14 @@ import { useNavigate } from "react-router-dom";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const mountedRef = useRef(false);
+  const initCalled = useRef(false);
   
   // Add render counter for debugging
   const renderCount = useRef(0);
@@ -24,8 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   console.log('AuthProvider rendering, count:', renderCount.current);
 
+  // Only run this effect once on mount
   useEffect(() => {
+    if (initCalled.current) return;
+    
     console.log('AuthProvider mounting effect running');
+    initCalled.current = true;
     mountedRef.current = true;
 
     // Single initial session check
@@ -56,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initSession();
 
+    // Set up auth state change listener (only once)
     console.log('Setting up auth state change listener');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, currentSession) => {
@@ -93,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [navigate, queryClient]);
+  }, []); // Empty dependency array ensures this only runs once
 
   const signOut = async () => {
     try {
@@ -103,6 +109,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error signing out:', error);
       setAuthError(error instanceof Error ? error : new Error('Error signing out'));
+    }
+  };
+
+  const updateStreak = async () => {
+    if (!user) return;
+    
+    try {
+      // This is a simplified implementation to reduce excessive calls
+      const { error } = await supabase.rpc('update_user_streak');
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating streak:', error);
     }
   };
 
@@ -152,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     authError,
     signOut,
-    updateStreak: async () => {},
+    updateStreak,
     signIn,
     signUp,
   };
