@@ -1,6 +1,6 @@
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState } from "react";
+import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/services/auth";
 import { AuthContextType } from "@/types/auth";
@@ -16,76 +16,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const mountedRef = useRef(false);
-  const initCalled = useRef(false);
-  
-  // Add render counter for debugging
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  
-  console.log('AuthProvider rendering, count:', renderCount.current);
 
-  // Only run this effect once on mount
+  // Initialize auth state once on mount
   useEffect(() => {
-    if (initCalled.current) return;
+    console.log('AuthProvider: Initializing auth state');
     
-    console.log('AuthProvider mounting effect running');
-    initCalled.current = true;
-    mountedRef.current = true;
-
-    // Single initial session check
-    const initSession = async () => {
-      console.log('Initializing session check');
+    // Get current session
+    const getInitialSession = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log('Session check result:', currentSession ? 'Session found' : 'No session');
+        const { data } = await supabase.auth.getSession();
+        console.log('Initial session check:', data.session ? 'Found session' : 'No session');
         
-        if (currentSession && mountedRef.current) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          if (window.location.pathname === '/login') {
-            console.log('Redirecting from login to home after session init');
-            navigate('/');
-          }
-        }
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
       } catch (error) {
-        console.error('Session init error:', error);
-        setAuthError(error instanceof Error ? error : new Error('Unknown authentication error'));
+        console.error('Error getting initial session:', error);
+        setAuthError(error instanceof Error ? error : new Error('Failed to get initial session'));
       } finally {
-        if (mountedRef.current) {
-          setLoading(false);
-          console.log('Session initialization complete, loading set to false');
-        }
+        setLoading(false);
       }
     };
-
-    initSession();
-
-    // Set up auth state change listener (only once)
-    console.log('Setting up auth state change listener');
+    
+    getInitialSession();
+    
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, currentSession) => {
+      (event, currentSession) => {
         console.log('Auth state change event:', event);
-        if (!mountedRef.current) {
-          console.log('Component unmounted, ignoring auth state change');
-          return;
-        }
-
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
         if (event === 'SIGNED_IN') {
           console.log('User signed in, updating state');
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          setAuthError(null); // Clear any previous errors on successful sign-in
+          setAuthError(null); // Clear any previous errors
           queryClient.invalidateQueries({ queryKey: ['profile'] });
+          
+          // Navigate to home if on login page
           if (window.location.pathname === '/login') {
             console.log('Redirecting from login to home after sign in');
             navigate('/');
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out, clearing state');
-          setSession(null);
-          setUser(null);
           queryClient.clear();
+          
+          // Navigate to login if not already there
           if (window.location.pathname !== '/login') {
             console.log('Redirecting to login after sign out');
             navigate('/login');
@@ -93,22 +69,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     );
-
+    
+    // Cleanup subscription on unmount
     return () => {
-      console.log('AuthProvider unmounting, cleaning up');
-      mountedRef.current = false;
+      console.log('AuthProvider: Cleaning up auth subscription');
       subscription.unsubscribe();
     };
   }, []); // Empty dependency array ensures this only runs once
-
+  
+  // Helper functions
   const signOut = async () => {
     try {
       console.log('Attempting to sign out');
       await supabase.auth.signOut();
       console.log('Sign out successful');
+      // Auth change listener will handle state updates and navigation
     } catch (error) {
       console.error('Error signing out:', error);
       setAuthError(error instanceof Error ? error : new Error('Error signing out'));
+      throw error;
     }
   };
 
@@ -116,7 +95,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     
     try {
-      // This is a simplified implementation to reduce excessive calls
       const { error } = await supabase.rpc('update_user_streak');
       if (error) throw error;
     } catch (error) {
@@ -157,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Attempting to sign in user:', identifier);
       await signInWithIdentifier(identifier, password);
       console.log('Sign in successful');
-      setAuthError(null); // Clear any previous errors on successful sign-in
+      setAuthError(null); // Clear any previous errors
     } catch (error) {
       console.error('Error during sign in:', error);
       setAuthError(error instanceof Error ? error : new Error('Error during sign in'));
@@ -165,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Create auth context value
   const value: AuthContextType = {
     user,
     session,
@@ -175,15 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
   };
 
-  console.log('AuthProvider state:', { 
-    hasUser: !!user, 
-    hasSession: !!session, 
-    hasError: !!authError, 
-    isLoading: loading 
-  });
-
+  // Display loading indicator while initializing
   if (loading) {
-    console.log('Rendering loading state');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
@@ -191,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  console.log('Rendering children with auth context');
+  // Provide auth context to children
   return (
     <AuthContext.Provider value={value}>
       {children}
