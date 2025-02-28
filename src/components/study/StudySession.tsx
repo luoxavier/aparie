@@ -66,14 +66,21 @@ export function StudySession({
         }
 
         const elapsedMinutes = Math.floor((currentTime - studyStartTime) / 60000);
+        const accuracyPercent = totalAnswers > 0 ? Math.floor((correctAnswers / totalAnswers) * 100) : 0;
+        const maxStreak = Math.max(highestStreak, streak);
         
-        // Use a single RPC call to update quest progress
-        await supabase.rpc('update_study_quests', {
-          user_id_param: user.id,
-          minutes_studied: elapsedMinutes,
-          accuracy_percent: totalAnswers > 0 ? Math.floor((correctAnswers / totalAnswers) * 100) : 0,
-          streak_count: Math.max(highestStreak, streak)
-        });
+        // Temporarily use separate updates until the RPC function is available
+        // Time-based quests
+        await updateTimeBasedQuests(elapsedMinutes);
+        
+        // Accuracy-based quests
+        await updateAccuracyQuests(accuracyPercent);
+        
+        // Streak-based quests
+        await updateStreakQuests(maxStreak);
+        
+        // Update user streak
+        await updateUserStreak();
         
         // Clear the timeout
         questsUpdateTimeoutRef.current = null;
@@ -81,6 +88,122 @@ export function StudySession({
         console.error('Error updating quest progress:', error);
       }
     }, 1000);
+  };
+
+  // Helper functions for updating different types of quests
+  const updateTimeBasedQuests = async (minutes: number) => {
+    if (!user) return;
+    
+    // Get all time-based quests
+    const { data: timeQuests, error } = await supabase
+      .from('user_quests')
+      .select('*, quests(*)')
+      .eq('user_id', user.id)
+      .gte('expires_at', new Date().toISOString())
+      .filter('quests.type', 'eq', 'infinite');
+      
+    if (error) {
+      console.error('Error fetching time quests:', error);
+      return;
+    }
+    
+    // Update each quest if needed
+    for (const quest of timeQuests || []) {
+      if (!quest.completed && quest.quests && minutes > quest.progress) {
+        const newProgress = Math.min(minutes, quest.quests.requirement_count);
+        const isCompleted = newProgress >= quest.quests.requirement_count;
+        
+        await supabase
+          .from('user_quests')
+          .update({
+            progress: newProgress,
+            completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : null
+          })
+          .eq('id', quest.id);
+      }
+    }
+  };
+  
+  const updateAccuracyQuests = async (accuracyPercent: number) => {
+    if (!user) return;
+    
+    // Get all accuracy-based quests
+    const { data: accuracyQuests, error } = await supabase
+      .from('user_quests')
+      .select('*, quests(*)')
+      .eq('user_id', user.id)
+      .gte('expires_at', new Date().toISOString())
+      .or('quests.type.eq.playlist_public,quests.type.eq.playlist_private');
+      
+    if (error) {
+      console.error('Error fetching accuracy quests:', error);
+      return;
+    }
+    
+    // Update each quest if needed
+    for (const quest of accuracyQuests || []) {
+      if (!quest.completed && quest.quests && accuracyPercent > quest.progress) {
+        const isCompleted = accuracyPercent >= quest.quests.requirement_count;
+        
+        await supabase
+          .from('user_quests')
+          .update({
+            progress: accuracyPercent,
+            completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : null
+          })
+          .eq('id', quest.id);
+      }
+    }
+  };
+  
+  const updateStreakQuests = async (streakCount: number) => {
+    if (!user) return;
+    
+    // Get all streak-based quests
+    const { data: streakQuests, error } = await supabase
+      .from('user_quests')
+      .select('*, quests(*)')
+      .eq('user_id', user.id)
+      .gte('expires_at', new Date().toISOString())
+      .filter('quests.type', 'eq', 'mastery');
+      
+    if (error) {
+      console.error('Error fetching streak quests:', error);
+      return;
+    }
+    
+    // Update each quest if needed
+    for (const quest of streakQuests || []) {
+      if (!quest.completed && quest.quests && streakCount > quest.progress) {
+        const isCompleted = streakCount >= quest.quests.requirement_count;
+        
+        await supabase
+          .from('user_quests')
+          .update({
+            progress: streakCount,
+            completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : null
+          })
+          .eq('id', quest.id);
+      }
+    }
+  };
+  
+  const updateUserStreak = async () => {
+    if (!user) return;
+    
+    try {
+      // Update the user streak for today
+      await supabase
+        .from('user_streaks')
+        .update({ last_activity_date: new Date().toISOString().split('T')[0] })
+        .eq('user_id', user.id)
+        .lt('last_activity_date', new Date().toISOString().split('T')[0]);
+    } catch (error) {
+      console.error('Error updating user streak:', error);
+    }
   };
 
   // Update study time quest progress
