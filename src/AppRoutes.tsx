@@ -110,7 +110,7 @@ export default function AppRoutes() {
         />
         
         <Route
-          path="/study-playlist/:creatorId/:playlistName"
+          path="/study"
           element={
             <PrivateRoute>
               <Study />

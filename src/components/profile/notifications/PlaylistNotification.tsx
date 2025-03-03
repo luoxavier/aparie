@@ -54,7 +54,12 @@ export function PlaylistNotification({
         onMarkAsRead(id);
         navigate('/study', {
           state: {
-            flashcards,
+            flashcards: flashcards.map(card => ({
+              id: card.id,
+              front: card.front,
+              back: card.back,
+              creator_id: card.creator_id
+            })),
             folderName: content.playlistName,
             creatorName: senderName
           }
