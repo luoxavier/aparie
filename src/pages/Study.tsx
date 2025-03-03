@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { StudyMode } from "@/components/profile/StudyMode";
-import { Home } from "lucide-react";
+import { Home, BookOpen, Zap, GraduationCap } from "lucide-react";
 import { PageContainer } from "@/components/ui/page-container";
 import { useToast } from "@/hooks/use-toast";
 
@@ -79,23 +79,26 @@ export default function Study() {
 
             <div className="space-y-4">
               <Button 
-                className="w-full h-16 text-lg"
+                className="w-full h-16 text-lg flex items-center gap-3 justify-center"
                 onClick={() => setSelectedMode("normal")}
               >
+                <BookOpen className="h-5 w-5" />
                 Study Mode
               </Button>
               <Button 
-                className="w-full h-16 text-lg"
+                className="w-full h-16 text-lg flex items-center gap-3 justify-center"
                 variant="secondary"
                 onClick={() => setSelectedMode("infinite")}
               >
+                <Zap className="h-5 w-5" />
                 Infinite Mode
               </Button>
               <Button 
-                className="w-full h-16 text-lg"
+                className="w-full h-16 text-lg flex items-center gap-3 justify-center"
                 variant="default"
                 onClick={() => setSelectedMode("mastery")}
               >
+                <GraduationCap className="h-5 w-5" />
                 Mastery Mode
               </Button>
               <Button

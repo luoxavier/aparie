@@ -82,7 +82,7 @@ export function FlashcardFolder({
     }
     
     if (creatorId && playlistName) {
-      // Navigate directly to the Study component with the correct state
+      // Navigate to the Study component with the correct state
       navigate(`/study`, {
         state: {
           flashcards: flashcards.map(card => ({
