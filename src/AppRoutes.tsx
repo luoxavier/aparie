@@ -74,6 +74,15 @@ export default function AppRoutes() {
         />
         
         <Route
+          path="/profile/:id"
+          element={
+            <PrivateRoute>
+              <FriendProfile />
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
           path="/study-mode"
           element={
             <PrivateRoute>
@@ -87,15 +96,6 @@ export default function AppRoutes() {
           element={
             <PrivateRoute>
               <Friends />
-            </PrivateRoute>
-          }
-        />
-        
-        <Route
-          path="/friends/:username"
-          element={
-            <PrivateRoute>
-              <FriendProfile />
             </PrivateRoute>
           }
         />
