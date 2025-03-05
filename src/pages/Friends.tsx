@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
@@ -75,36 +74,6 @@ export default function Friends() {
     refetch();
   }, [refetch]);
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Friends</h1>
-            <Button 
-              disabled
-              variant="default"
-              className="mb-4"
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Friend
-            </Button>
-          </div>
-          <FriendSearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search friends..."
-          />
-          <div className="animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg mb-4" />
-            ))}
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
-
   return (
     <PageContainer>
       <div className="space-y-6">
@@ -119,7 +88,13 @@ export default function Friends() {
           placeholder="Search friends..."
         />
 
-        {filteredFriends.length === 0 ? (
+        {isLoading ? (
+          <div className="animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg mb-4" />
+            ))}
+          </div>
+        ) : filteredFriends.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             {searchTerm ? "No friends found matching your search" : "No friends yet"}
             <div className="mt-4">
