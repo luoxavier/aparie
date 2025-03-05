@@ -78,9 +78,9 @@ export default function Friends() {
   return (
     <PageContainer>
       <div className="space-y-6">
-        {/* Header with title and button */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Friends</h1>
+        {/* Header with title and button - Making this more prominent */}
+        <div className="flex justify-between items-center mb-6 pb-3 border-b">
+          <h1 className="text-3xl font-bold">Friends</h1>
           <AddFriendButton />
         </div>
 
@@ -91,12 +91,12 @@ export default function Friends() {
           placeholder="Search friends..."
         />
         
-        {/* Add Friend Section - New prominent section below search */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Add Friend Section - More prominent and clearly visible */}
+        <div className="p-6 my-6 bg-primary/10 dark:bg-primary/5 rounded-lg shadow-sm border border-primary/20">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-medium">Add New Friends</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <h2 className="text-xl font-semibold">Add New Friends</h2>
+              <p className="text-sm text-muted-foreground mt-1">
                 Find and connect with other users
               </p>
             </div>
@@ -112,9 +112,9 @@ export default function Friends() {
           </div>
         </div>
 
-        {/* Friends List */}
-        <div>
-          <h2 className="text-lg font-medium mb-3">Your Friends</h2>
+        {/* Friends List with more visible heading */}
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-4">Your Friends</h2>
           
           {isLoading ? (
             <div className="animate-pulse">
@@ -157,7 +157,9 @@ export default function Friends() {
           )}
         </div>
         
-        <ReturnHomeButton />
+        <div className="mt-8">
+          <ReturnHomeButton />
+        </div>
       </div>
     </PageContainer>
   );
