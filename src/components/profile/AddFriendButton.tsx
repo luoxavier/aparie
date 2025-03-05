@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -145,7 +145,9 @@ export function AddFriendButton() {
         onClick={() => setOpen(true)}
         variant="default"
         className="mb-4"
+        data-add-friend-button="true"
       >
+        <UserPlus className="mr-2 h-4 w-4" />
         Add Friend
       </Button>
       

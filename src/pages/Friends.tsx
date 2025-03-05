@@ -9,6 +9,8 @@ import { FriendCard } from "@/components/profile/FriendCard";
 import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
 import { AddFriendButton } from "@/components/profile/AddFriendButton";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
 
 interface Friend {
   id: string;
@@ -77,6 +79,17 @@ export default function Friends() {
     return (
       <PageContainer>
         <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Friends</h1>
+            <Button 
+              disabled
+              variant="default"
+              className="mb-4"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Friend
+            </Button>
+          </div>
           <FriendSearchInput
             value={searchTerm}
             onChange={setSearchTerm}
@@ -107,8 +120,18 @@ export default function Friends() {
         />
 
         {filteredFriends.length === 0 ? (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 py-8">
             {searchTerm ? "No friends found matching your search" : "No friends yet"}
+            <div className="mt-4">
+              <Button 
+                onClick={() => document.querySelector<HTMLButtonElement>('[data-add-friend-button="true"]')?.click()}
+                variant="outline"
+                className="mx-auto"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add your first friend
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
