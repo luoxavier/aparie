@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FriendCard } from "@/components/profile/FriendCard";
 import { FriendSearchInput } from "@/components/profile/FriendSearchInput";
 import { ReturnHomeButton } from "@/components/ReturnHomeButton";
+import { AddFriendButton } from "@/components/profile/AddFriendButton";
 
 interface Friend {
   id: string;
@@ -94,6 +95,11 @@ export default function Friends() {
   return (
     <PageContainer>
       <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Friends</h1>
+          <AddFriendButton />
+        </div>
+
         <FriendSearchInput
           value={searchTerm}
           onChange={setSearchTerm}
