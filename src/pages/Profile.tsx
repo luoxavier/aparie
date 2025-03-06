@@ -133,11 +133,17 @@ export default function Profile() {
     navigate(path);
   }, [navigate]);
 
-  const handleAdminNavigate = (e: React.MouseEvent) => {
+  // Modified admin navigation handler to avoid event bubbling issues
+  const handleAdminNavigate = useCallback((e: React.MouseEvent) => {
+    console.log("Admin button clicked");
     e.preventDefault();
     e.stopPropagation();
-    navigate('/admin');
-  };
+    
+    // Use setTimeout to ensure event propagation is complete before navigation
+    setTimeout(() => {
+      navigate('/admin');
+    }, 10);
+  }, [navigate]);
 
   if (profileLoading || statsLoading) {
     return <div className="container mx-auto py-4 px-4 max-w-7xl">Loading...</div>;
@@ -212,11 +218,12 @@ export default function Profile() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full"
+                className="rounded-full bg-primary/10 hover:bg-primary/20"
                 onClick={handleAdminNavigate}
                 type="button"
+                data-admin-button="true"
               >
-                <ShieldCheck className="h-5 w-5" />
+                <ShieldCheck className="h-5 w-5 text-primary" />
               </Button>
             )}
             <Dialog>
